@@ -12,7 +12,6 @@ from wpilibextra.coroutine.coroutine_command import autoroutine2command
 from wpilib import Timer
 import wpimath.geometry
 import const
-import subsystems.ground_intake
 
 # from commands import autonomous
 # from commands.autonomous import DriveTrajectory
