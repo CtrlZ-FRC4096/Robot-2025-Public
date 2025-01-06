@@ -2,7 +2,6 @@ from timeit import Timer
 import typing
 
 from phoenix6 import controls, configs, hardware, signals
-from phoenix6.signals import AbsoluteSensorRangeValue as AbsoluteSensorRange
 
 from phoenix6.hardware import TalonFX, Pigeon2, CANcoder
 from wpimath.controller import SimpleMotorFeedforwardMeters

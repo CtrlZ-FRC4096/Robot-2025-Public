@@ -42,11 +42,7 @@ from wpimath.controller import PIDController, ProfiledPIDController
 from wpimath.trajectory import TrapezoidProfile
 from pathplannerlib.path import PathPlannerPath
 from pathplannerlib.auto import AutoBuilder, PathPlannerAuto
-from pathplannerlib.config import (
-    HolonomicPathFollowerConfig,
-    ReplanningConfig,
-    PIDConstants,
-)
+from pathplannerlib.config import PIDConstants
 
 from pathplannerlib.path import PathPlannerTrajectory
 from pathplannerlib.path import PathPlannerPath, PathConstraints
