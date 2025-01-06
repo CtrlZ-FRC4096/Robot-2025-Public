@@ -1,0 +1,61 @@
+{
+  "version": 1.0,
+  "startingPose": {
+    "position": {
+      "x": 1.45,
+      "y": 1.5
+    },
+    "rotation": 0
+  },
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "RTCS_1"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "stop_intake"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "RTCS_3"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "locked_on_speaker_and_shoot"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "RTCS_4"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "stop_intake"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "set_shooter_angle_default"
+          }
+        }
+      ]
+    }
+  },
+  "folder": "Midwest Autos",
+  "choreoAuto": false
+}

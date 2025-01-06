@@ -1,0 +1,91 @@
+{
+  "version": 1.0,
+  "startingPose": {
+    "position": {
+      "x": 1.38,
+      "y": 5.555
+    },
+    "rotation": 0.0
+  },
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "named",
+          "data": {
+            "name": "start_shooter"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 1.0
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "locked_on_speaker_and_shoot"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "5note_truss_to_close_1"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "5note_truss_to_close_2"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "locked_on_speaker_and_shoot"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": " 5note_truss_to_close_3"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "note_unlock"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "locked_on_speaker_and_shoot"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "5note_truss_to_close_4"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "note_unlock"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "locked_on_speaker_and_shoot"
+          }
+        }
+      ]
+    }
+  },
+  "folder": "Midwest Autos",
+  "choreoAuto": false
+}

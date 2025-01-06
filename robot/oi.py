@@ -1,0 +1,161 @@
+"""
+Ctrl-Z FRC Team 4096
+FIRST Robotics Competition 2023
+Code for robot ""
+contact@team4096.org
+
+Some code adapted from:
+https://github.com/SwerveDriveSpecialties
+"""
+
+# This is to help vscode
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from robot import Robot  # type: ignore
+
+import wpilib
+import wpilib.interfaces
+import subsystems.leds
+from commands2 import ParallelCommandGroup, Subsystem, WaitCommand
+
+# from commands2.button import Button
+from wpilibextra.customcontroller.custom_button import CustomButton as Button
+from wpilib import DriverStation
+from wpilib import Timer
+from wpimath.geometry import Pose2d, Rotation2d, Translation2d
+import math
+
+from wpimath.estimator import SwerveDrive4PoseEstimator
+
+import const
+
+
+# Controls
+from wpilibextra.customcontroller import XboxCommandController
+
+###  IMPORTS ###
+
+
+class OI:
+    """
+    Operator Input - This class ties together controls and commands.
+    """
+
+    def __init__(self, robot: "Robot"):
+        self.robot = robot
+
+        # Controllers
+        self.driver1 = XboxCommandController(0)
+        self.driver2 = XboxCommandController(1)
+
+        # self.driver1.LEFT_JOY_Y.setInverted(True)
+
+        self.driver1.LEFT_JOY_X.setDeadzone(0.02)
+        self.driver1.LEFT_JOY_Y.setDeadzone(0.02)
+        self.driver1.RIGHT_JOY_X.setDeadzone(0.1)
+        self.driver1.RIGHT_JOY_Y.setDeadzone(0.1)
+
+        self.driver2.LEFT_JOY_X.setDeadzone(0.02)
+        self.driver2.LEFT_JOY_Y.setDeadzone(0.02)
+        self.driver2.RIGHT_JOY_X.setDeadzone(0.1)
+        self.driver2.RIGHT_JOY_Y.setDeadzone(0.1)
+
+        # self.driver1.LEFT_JOY_X.setDeadzone(0.000)
+        # self.driver1.LEFT_JOY_Y.setDeadzone(0.000)
+        # self.driver1.RIGHT_JOY_X.setDeadzone(0.00)
+        # self.driver1.RIGHT_JOY_Y.setDeadzone(0.00)
+
+        ### Driving ###
+        self.cardinal = 0
+        self.cardinal_directing = False
+        self.speaker_directing = False
+        self.robot_oriented_angle = self.robot.poseEstimator.getYaw().degrees()
+
+        self.rumble_button = Button(lambda: self.robot.has_note)
+        self.midfield_pass_mode = False
+        self.corner_directing = False
+
+        self.amp_shot = False
+        self.can_crash = False
+
+        self.looking_for_note = False
+
+        @self.rumble_button.whenPressed
+        def _():
+            timer = Timer()
+            timer.start()
+            self.driver2.setRumble(1)
+            self.driver1.setRumble(1)
+            while not timer.hasElapsed(0.5):
+                yield
+            self.driver2.setRumble(0)
+            self.driver1.setRumble(0)
+
+        @self.robot.drivetrain.setDefaultCommand
+        def _():
+            while True:
+                yield
+
+                def square(x):
+                    return abs(x) * x
+
+                forward_back = -square(self.driver1.LEFT_JOY_Y())
+                left_right = -square(self.driver1.LEFT_JOY_X())
+                if not self.driver1.RIGHT_TRIGGER_AS_BUTTON():  # boost
+                    forward_back *= 0.8
+                    left_right *= 0.8
+                
+                rotate = -self.driver1.RIGHT_JOY_X() 
+                self.robot_oriented_angle += rotate * 15.0  # Type: ignore
+
+                self.robot.drivetrain.drive_with_pid(
+                    Translation2d(forward_back, left_right)
+                    * const.SWERVE_MAX_SPEED,
+                    self.robot_oriented_angle,
+                )
+
+        @self.driver1.X.whenPressed  # Turn 90 degrees left
+        def _():
+            self.cardinal_directing = True
+            self.cardinal = 270
+            self.robot_oriented_angle = 270
+
+        @self.driver1.B.whenPressed  # Turn 90 degrees right
+        def _():
+            self.cardinal_directing = True
+            self.cardinal = 90
+            self.robot_oriented_angle = 90
+
+        @self.driver1.A.whenReleased  # Turn 180 degrees aways
+        def _():
+            self.cardinal_directing = True
+            self.cardinal = 0
+            self.robot_oriented_angle = 0
+
+        @self.driver1.Y.whenPressed  # Turn 180 degrees towards
+        def _():
+            self.cardinal_directing = True
+            self.cardinal = 180
+            self.robot_oriented_angle = 180
+
+        @self.driver1.POV.DOWN.whenPressed  # Reset Gyro
+        def _():
+            robot.poseEstimator.set_yaw(0.0)
+
+        @self.driver1.POV.LEFT.whenHeld  # Code Crash Input 1
+        def _():
+            self.can_crash = True
+
+        @self.driver1.POV.LEFT.whenReleased  # Code Crash Input 1
+        def _():
+            self.can_crash = False
+
+        @self.driver1.START.whenPressed  # Code Crash Input 2
+        def _():
+            if self.can_crash:
+                4096 / 0
+
+
+    def log(self):
+        pass

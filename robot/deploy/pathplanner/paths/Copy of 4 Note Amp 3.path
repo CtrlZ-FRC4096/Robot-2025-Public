@@ -1,0 +1,142 @@
+{
+  "version": 1.0,
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 4.05,
+        "y": 6.06
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 4.32558204511758,
+        "y": 6.055699103455451
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 8.153314996088682,
+        "y": 7.449176379834242
+      },
+      "prevControl": {
+        "x": 7.997696647359081,
+        "y": 7.420882134610678
+      },
+      "nextControl": {
+        "x": 8.314857501642386,
+        "y": 7.47854774448037
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 4.363865042578029,
+        "y": 6.711356821640298
+      },
+      "prevControl": {
+        "x": 4.344476170526583,
+        "y": 6.711356821640298
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": null
+    }
+  ],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 1.0,
+      "rotationDegrees": 18.0,
+      "rotateFast": false
+    },
+    {
+      "waypointRelativePos": 0.4,
+      "rotationDegrees": 18.0,
+      "rotateFast": false
+    },
+    {
+      "waypointRelativePos": 1.4,
+      "rotationDegrees": 15.0,
+      "rotateFast": false
+    }
+  ],
+  "constraintZones": [],
+  "eventMarkers": [
+    {
+      "name": "stop_intake",
+      "waypointRelativePos": 1.2,
+      "command": {
+        "type": "sequential",
+        "data": {
+          "commands": [
+            {
+              "type": "named",
+              "data": {
+                "name": "stop_intake"
+              }
+            },
+            {
+              "type": "named",
+              "data": {
+                "name": "note_unlock"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "start_intake",
+      "waypointRelativePos": 0.05,
+      "command": {
+        "type": "sequential",
+        "data": {
+          "commands": [
+            {
+              "type": "named",
+              "data": {
+                "name": "turn_on_front_intake"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "aim shooter to speaker",
+      "waypointRelativePos": 1.3,
+      "command": {
+        "type": "sequential",
+        "data": {
+          "commands": [
+            {
+              "type": "named",
+              "data": {
+                "name": "aim_at_speaker_with_shooter"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "globalConstraints": {
+    "maxVelocity": 5.5,
+    "maxAcceleration": 3.2,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0
+  },
+  "goalEndState": {
+    "velocity": 0.0,
+    "rotation": 10.713123022790972,
+    "rotateFast": true
+  },
+  "reversed": false,
+  "folder": "4 note Amp Side",
+  "previewStartingState": {
+    "rotation": 10.71,
+    "velocity": 0
+  },
+  "useDefaultConstraints": true
+}

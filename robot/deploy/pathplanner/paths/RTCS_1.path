@@ -1,0 +1,191 @@
+{
+  "version": 1.0,
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 1.45,
+        "y": 1.5
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 2.1571581385443066,
+        "y": 1.9889506762386457
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 3.804867277192988,
+        "y": 2.0864482584072066
+      },
+      "prevControl": {
+        "x": 3.24913105883219,
+        "y": 2.5251873781657306
+      },
+      "nextControl": {
+        "x": 4.64489218224429,
+        "y": 1.4232707017877582
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 8.3,
+        "y": 0.8579787230833371
+      },
+      "prevControl": {
+        "x": 8.264618278040421,
+        "y": 0.25210230893929464
+      },
+      "nextControl": {
+        "x": 8.367754122681642,
+        "y": 2.0181999508892132
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 8.356380855618854,
+        "y": 4.128469828368229
+      },
+      "prevControl": {
+        "x": 8.280006298729937,
+        "y": 3.431914892333348
+      },
+      "nextControl": {
+        "x": 8.436888948001503,
+        "y": 4.862723635188348
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 8.3,
+        "y": 7.45
+      },
+      "prevControl": {
+        "x": 8.19738379477157,
+        "y": 6.6144109002499265
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": null
+    }
+  ],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 2.4,
+      "rotationDegrees": 71.38430495149,
+      "rotateFast": false
+    },
+    {
+      "waypointRelativePos": 3.1,
+      "rotationDegrees": 73.53326552651288,
+      "rotateFast": false
+    },
+    {
+      "waypointRelativePos": 1.9,
+      "rotationDegrees": 35.661559387143285,
+      "rotateFast": false
+    },
+    {
+      "waypointRelativePos": 0.85,
+      "rotationDegrees": -40.97102252333035,
+      "rotateFast": false
+    }
+  ],
+  "constraintZones": [
+    {
+      "name": "slow zone",
+      "minWaypointRelativePos": 1.55,
+      "maxWaypointRelativePos": 4.0,
+      "constraints": {
+        "maxVelocity": 3.0,
+        "maxAcceleration": 2.0,
+        "maxAngularVelocity": 540.0,
+        "maxAngularAcceleration": 720.0
+      }
+    }
+  ],
+  "eventMarkers": [
+    {
+      "name": "start_shooter and set_angle",
+      "waypointRelativePos": 0,
+      "command": {
+        "type": "sequential",
+        "data": {
+          "commands": [
+            {
+              "type": "named",
+              "data": {
+                "name": "start_shooter"
+              }
+            },
+            {
+              "type": "named",
+              "data": {
+                "name": "shoot_command"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "passthrough_outtake style",
+      "waypointRelativePos": 0.9,
+      "command": {
+        "type": "sequential",
+        "data": {
+          "commands": [
+            {
+              "type": "named",
+              "data": {
+                "name": "outtake_passthrough"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "stop_feed (as stop_shooter)",
+      "waypointRelativePos": 3.75,
+      "command": {
+        "type": "sequential",
+        "data": {
+          "commands": [
+            {
+              "type": "named",
+              "data": {
+                "name": "stop_shooter"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "globalConstraints": {
+    "maxVelocity": 5.5,
+    "maxAcceleration": 3.2,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": 72.01038769611755,
+    "rotateFast": false
+  },
+  "reversed": false,
+  "folder": "RTCStraight",
+  "previewStartingState": {
+    "rotation": -0.8898539913901621,
+    "velocity": 0
+  },
+  "useDefaultConstraints": true
+}

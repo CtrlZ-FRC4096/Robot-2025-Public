@@ -1,0 +1,61 @@
+{
+  "version": 1.0,
+  "startingPose": {
+    "position": {
+      "x": 1.38,
+      "y": 5.55
+    },
+    "rotation": 0.0
+  },
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "named",
+          "data": {
+            "name": "start_shooter"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "set_shooter_down_bad"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 3.0
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "shoot_command"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "stop_shooter"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 4.0
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "1 Note Center + Move"
+          }
+        }
+      ]
+    }
+  },
+  "folder": "Champs Autos",
+  "choreoAuto": false
+}

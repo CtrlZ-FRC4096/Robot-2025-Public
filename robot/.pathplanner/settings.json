@@ -1,0 +1,29 @@
+{
+  "robotWidth": 0.84,
+  "robotLength": 0.85,
+  "holonomicMode": true,
+  "pathFolders": [
+    "1 Note Autos",
+    "3 note from center",
+    "4 note Amp Side",
+    "4 note from center",
+    "4 note from center with locks",
+    "4note_amp_to_centerline",
+    "4note_truss_to_close_pieces",
+    "5note_auto_from_center",
+    "4 Note Middle to Centerline",
+    "Miscallaneous",
+    "RTCStraight",
+    "chute_to_center"
+  ],
+  "autoFolders": [
+    "Champs Autos",
+    "Midwest Autos",
+    "New Folder"
+  ],
+  "defaultMaxVel": 5.5,
+  "defaultMaxAccel": 3.2,
+  "defaultMaxAngVel": 540.0,
+  "defaultMaxAngAccel": 720.0,
+  "maxModuleSpeed": 6.0
+}
