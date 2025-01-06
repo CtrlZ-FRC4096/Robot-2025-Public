@@ -32,12 +32,8 @@ import ntcore
 import subsystems.drivetrain
 
 # import subsystems.limelight
-import subsystems.ground_intake
-import subsystems.over_bumper_intake
-import subsystems.shooter
 import subsystems.leds
 
-import subsystems.climber
 import subsystems.limelight
 import subsystems.poseEstimator
 
