@@ -45,15 +45,15 @@ import inspect
 import autoroutines
 
 from pathplannerlib.path import PathPlannerPath
-from pathplannerlib.auto import AutoBuilder, PathPlannerAuto
+from pathplannerlib.auto import AutoBuilder, PathPlannerAuto, NamedCommands
 from pathplannerlib.config import (
-    HolonomicPathFollowerConfig,
-    ReplanningConfig,
     PIDConstants,
+    RobotConfig
 )
-from wpimath.geometry import Rotation2d
-from pathplannerlib.auto import NamedCommands
 from pathplannerlib.controller import PPHolonomicDriveController
+
+from wpimath.geometry import Rotation2d
+
 
 log = logging.getLogger("robot")
 
@@ -134,38 +134,24 @@ class Robot(CoroutineRobot):
             self.leds.periodicX()
             pass
 
-        AutoBuilder.configureHolonomic(
-            self.drivetrain.get_pose,  # Robot pose supplier
-            self.drivetrain.reset_odometry,  # Method to reset odometry (will be called if your auto has a starting pose)
-            self.drivetrain.get_robot_relative_speeds,  # ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
-            self.drivetrain.drive_robot_relative,  # Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds
-            HolonomicPathFollowerConfig(  # HolonomicPathFollowerConfig, this should likely live in your Constants class
-                PIDConstants(
-                    const.X_KP, const.X_KI, const.X_KD
-                ),  # Translation PID constants
-                PIDConstants(
-                    const.THETA_KP, const.THETA_KI, const.THETA_KD
-                ),  # Rotation PID constants
-                const.SWERVE_MAX_SPEED,  # Max module speed, in m/s
-                const.DRIVE_BASE_RADIUS_METERS,  # Drive base radius in meters. Distance from robot center to furthest module.
-                ReplanningConfig(
-                    False, False
-                ),  # Default path replanning config. See the API for the options here
+        config = RobotConfig.fromGUISettings()
+
+        AutoBuilder.configure(
+            self.drivetrain.get_pose, # Robot pose supplier
+            self.drivetrain.reset_odometry, # Method to reset odometry (will be called if your auto has a starting pose)
+            self.drivetrain.get_robot_relative_speeds, # ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
+            lambda speeds, feedforwards: self.drivetrain.drive_robot_relative(speeds), # Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds. Also outputs individual module feedforwards
+            PPHolonomicDriveController( # PPHolonomicController is the built in path following controller for holonomic drive trains
+                PIDConstants(const.X_KP, const.X_KI, const.X_KD), # Translation PID constants
+                PIDConstants(const.THETA_KP, const.THETA_KI, const.THETA_KD) # Rotation PID constants
             ),
-            self.drivetrain.shouldFlipPath,
-            self.drivetrain,  # Reference to this subsystem to set requirements
+            config, # The robot configuration
+            self.drivetrain.shouldFlipPath, # Supplier to control path flipping based on alliance color
+            self.drivetrain # Reference to this subsystem to set requirements
         )
 
         ## Need to change this and redeloy
-        self.path = PathPlannerAuto("Copy of 4 Note Amp v1")  # centerline steal 2nd match
-
-        # 3 Note Source to Lower Centerline 2-1
-        # 4 Note From Center to Close Pieces
-        # 3 Note from Center
-        # 4 Note Amp v1
-        # 3 Note Source to Lower Centerline
-        # 4 Note to Middle Centerline
-        # Centerline Steal Source Side
+        self.path = PathPlannerAuto("Test Auto")  # centerline steal 2nd match
 
         self.in_autonomous_mode = False
 

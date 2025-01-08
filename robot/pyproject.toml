@@ -26,4 +26,4 @@ robotpy_extras = ["apriltag", "commands2", "pathplannerlib", "phoenix6", "phoeni
     # "xrp"
 
 # Other pip packages to install
-# requires = ["photonlibpy"]
+# requires = ["photonlibpy==2025.0.0b8"]

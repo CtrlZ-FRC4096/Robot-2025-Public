@@ -148,6 +148,9 @@ CAN_PDH = 13
 LIMELIGHT_HEIGHT_METERS = 0.381
 LIMELIGHT_OFFSET_ANGLE_DEG = -25
 
+FIELD_LENGTH_METERS = 15.98
+FIELD_WIDTH_METERS = 8.21
+
 # Auto
 AUTO_RESOLUTION = 0.02  # path resolution in seconds
 MAX_VEL_METERS_AUTO = 6.5  # This is the max velocity you want the robot to drive at, not its true max velocity

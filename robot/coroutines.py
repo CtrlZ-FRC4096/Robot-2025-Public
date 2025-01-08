@@ -29,11 +29,11 @@ class Coroutines:
 
 
         # Example for when we begin working on autonomous mode
-        @commandify(requirements=[robot.ground_intake, robot.over_bumper_intake])
-        def ground_intake_back_passthrough_command():
-            yield
-            robot.ground_intake.back_passthrough()
+        # @commandify(requirements=[robot.ground_intake, robot.over_bumper_intake])
+        # def ground_intake_back_passthrough_command():
+        #     yield
+        #     robot.ground_intake.back_passthrough()
 
-        self.ground_intake_back_passthrough_command = (
-            ground_intake_back_passthrough_command()
-        )
+        # self.ground_intake_back_passthrough_command = (
+        #     ground_intake_back_passthrough_command()
+        # )

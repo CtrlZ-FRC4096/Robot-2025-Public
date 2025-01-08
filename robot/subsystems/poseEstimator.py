@@ -43,8 +43,8 @@ from wpimath.controller import PIDController
 from pathplannerlib.path import PathPlannerPath
 from pathplannerlib.auto import AutoBuilder, PathPlannerAuto
 from pathplannerlib.config import (
-    HolonomicPathFollowerConfig,
-    ReplanningConfig,
+    # HolonomicPathFollowerConfig,
+    # ReplanningConfig,
     PIDConstants,
 )
 
@@ -287,17 +287,14 @@ class PoseEstimator(Subsystem):
         ):  # Check if the robot is on the field
             self.curEstPose = candidate_pose
 
-        if (
-            self.robot.leds.mode != self.robot.leds.MODE_READY_TO_SHOOT
-            and self.robot.leds.mode != self.robot.leds.MODE_OFF
+        
+        if (self.robot.leds.mode == self.robot.leds.MODE_LOST_ODOMETRY) or (
+            self.robot.leds.mode == self.robot.leds.MODE_ODOMETRY
         ):
-            if (self.robot.leds.mode == self.robot.leds.MODE_LOST_ODOMETRY) or (
-                self.robot.leds.mode == self.robot.leds.MODE_ODOMETRY
-            ):
-                if not self.poseConverge:
-                    self.robot.leds.set_mode(self.robot.leds.MODE_LOST_ODOMETRY)
-                elif self.poseConverge:
-                    self.robot.leds.set_mode(self.robot.leds.MODE_ODOMETRY)
+            if not self.poseConverge:
+                self.robot.leds.set_mode(self.robot.leds.MODE_LOST_ODOMETRY)
+            elif self.poseConverge:
+                self.robot.leds.set_mode(self.robot.leds.MODE_ODOMETRY)
 
         SmartDashboard.putData("Field", self.field)
         self.field.setRobotPose(self.poseEst.getEstimatedPosition())
@@ -307,8 +304,6 @@ class PoseEstimator(Subsystem):
         SmartDashboard.putNumber(
             "Camera/Odometry Theta", self.curEstPose.rotation().degrees()
         )
-
-        SmartDashboard.putString("Alliance side: ", allianceColor)
 
         SmartDashboard.putNumber(
             "Swerve/Odometry X", self.odometry.getPose().x_feet * 0.305

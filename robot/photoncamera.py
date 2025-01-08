@@ -10,7 +10,7 @@ from wpimath.geometry import Pose2d
 import const
 from wpilib import DriverStation, SmartDashboard, Timer, Field2d
 
-from robotpy_apriltag import AprilTagField, loadAprilTagLayoutField
+from robotpy_apriltag import AprilTagField, AprilTagFieldLayout
 
 
 ## Code from 1736
@@ -60,7 +60,7 @@ class WrapperedPhotonCamera:
         # latency = res.getLatencyMillis()
         # obsTime = wpilib.Timer.getFPGATimestamp() - latency
 
-        obsTime = res.getTimestamp()
+        obsTime = res.getTimestampSeconds()
 
         # Update our disconnected fault since we have something from the camera
 
@@ -128,7 +128,7 @@ class WrapperedPhotonCamera:
         #             self.tagPositions.append(tagFieldPose)
 
         ## MultiTag code
-        tag_map = loadAprilTagLayoutField(AprilTagField.k2024Crescendo)
+        tag_map = AprilTagFieldLayout([], const.FIELD_LENGTH_METERS, const.FIELD_WIDTH_METERS)
         photon_pose_estimator = photonPoseEstimator.PhotonPoseEstimator(
             tag_map,
             photonPoseEstimator.PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
@@ -151,8 +151,8 @@ class WrapperedPhotonCamera:
                 ):
                     self.saw_speaker_tag = True
 
-                tagFieldPose = loadAprilTagLayoutField(
-                    AprilTagField.k2024Crescendo
+                tagFieldPose = AprilTagFieldLayout(
+                    [], const.FIELD_LENGTH_METERS, const.FIELD_WIDTH_METERS
                 ).getTagPose(tgtID)
                 self.tagAmbiguity.append(target.getPoseAmbiguity())
                 self.tagPositions.append(tagFieldPose)
