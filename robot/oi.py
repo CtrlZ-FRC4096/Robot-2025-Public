@@ -69,17 +69,12 @@ class OI:
         ### Driving ###
         self.cardinal = 0
         self.cardinal_directing = False
-        self.speaker_directing = False
         self.robot_oriented_angle = self.robot.poseEstimator.getYaw().degrees()
 
         self.rumble_button = Button(lambda: self.robot.has_note)
-        self.midfield_pass_mode = False
-        self.corner_directing = False
-
-        self.amp_shot = False
         self.can_crash = False
 
-        self.looking_for_note = False
+        self.looking_for_algae = False
 
         @self.rumble_button.whenPressed
         def _():
@@ -109,11 +104,61 @@ class OI:
                 rotate = -self.driver1.RIGHT_JOY_X() 
                 self.robot_oriented_angle += rotate * 15.0  # Type: ignore
 
-                self.robot.drivetrain.drive_with_pid(
-                    Translation2d(forward_back, left_right)
-                    * const.SWERVE_MAX_SPEED,
-                    self.robot_oriented_angle,
-                )
+                if self.looking_for_algae:
+                    drive_magnitude = math.hypot(forward_back, left_right)
+                    angle_result = self.robot.limelight.angle_to_nearest_algae
+
+                    if angle_result is not None and (
+                        rotate == 0
+                    ):  # If the limelight sees note
+                        self.robot.leds.set_mode(robot.leds.MODE_LOCKED_ON)
+                        angle_to_nearest_algae = (
+                            self.robot.poseEstimator.getYaw().degrees()
+                            - angle_result * 0.65
+                        ) % 360
+
+                        direction_angle = (
+                            math.atan2(forward_back, -left_right) * (180 / math.pi)
+                            - 90
+                            + 360
+                        ) % 360
+                        # If the drive input is not within 180 degrees of the angle to the note
+                        if (direction_angle >= angle_to_nearest_algae + 90) or (
+                            direction_angle <= angle_to_nearest_algae - 90
+                        ):
+                            # Drive with the driver input
+                            self.robot.drivetrain.drive_with_pid(
+                                Translation2d(forward_back, left_right)
+                                * const.SWERVE_MAX_SPEED,
+                                angle_to_nearest_algae,
+                            )
+                        else:  # Drive toward the algae
+                            note_front_back = drive_magnitude * math.cos(
+                                math.radians(angle_to_nearest_algae)
+                            )
+                            note_left_right = drive_magnitude * math.sin(
+                                math.radians(angle_to_nearest_algae)
+                            )
+                            self.robot.drivetrain.drive_with_pid(
+                                Translation2d(note_front_back, note_left_right)
+                                * const.SWERVE_MAX_SPEED,
+                                angle_to_nearest_algae,
+                            )
+                            self.robot_oriented_angle = angle_to_nearest_algae
+                    else:  # If the limelight does not see the note, drive normally
+                        self.robot.leds.set_mode(robot.leds.MODE_INTAKING)
+                        self.robot.drivetrain.drive_with_pid(
+                            Translation2d(forward_back, left_right)
+                            * const.SWERVE_MAX_SPEED,
+                            self.robot_oriented_angle,
+                        )
+                else:
+                    self.looking_for_algae = False
+                    self.robot.drivetrain.drive_with_pid(
+                        Translation2d(forward_back, left_right)
+                        * const.SWERVE_MAX_SPEED,
+                        self.robot_oriented_angle,
+                    )
 
         @self.driver1.X.whenPressed  # Turn 90 degrees left
         def _():
@@ -156,6 +201,10 @@ class OI:
             if self.can_crash:
                 4096 / 0
 
+        @self.driver2.A.whenPressed # Intaking algae
+        def _():
+            self.robot.leds.set_mode(robot.leds.MODE_INTAKING)
+            self.looking_for_algae = True
 
     def log(self):
         pass

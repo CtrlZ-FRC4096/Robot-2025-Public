@@ -23,15 +23,13 @@ class Limelight_Wrapper(Limelight):
     def set_to_retroreflective(self):
         self.pipeline_index = retroreflective_idx
 
-
-    # Example function for when we get to limelight processing
     @property
-    def angle_to_nearest_note(self) -> float | None:
+    def angle_to_nearest_algae(self) -> float | None:
         results = self.latest_results
         if not results:
             return None
         results = results.detector_results
-        results = [x for x in results if x.class_name == "note"]
+        results = [x for x in results if x.class_name == "algae"] # Will need to change this to the correct class name
         if not results or not self.pipeline_index == 3:
             return None
         nearest = max(results, key=lambda x: x.ta)

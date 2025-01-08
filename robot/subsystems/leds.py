@@ -21,6 +21,7 @@ class LEDs(Subsystem):
     MODE_WAITING = "waiting"  # blue for waiting
     MODE_STANDBY = "standby"
     MODE_LOST_ODOMETRY = "lost odometry"
+    MODE_LOCKED_ON = "locked on"
 
     # RGB Colors
     COLOR_PURPLE = (100, 0, 255)
@@ -165,6 +166,10 @@ class LEDs(Subsystem):
 
         elif self.mode == self.MODE_STANDBY:
             self.fill(self.COLOR_BLUE)
+
+        elif self.mode == self.MODE_LOCKED_ON:
+            self.fill(self.COLOR_WHITE)
+
         else:
             pass
 
