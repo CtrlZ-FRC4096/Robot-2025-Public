@@ -140,7 +140,7 @@ class Drivetrain(Subsystem):
             pose,
         )
 
-    def get_robot_relative_speeds(self):  # probably incorrect method
+    def get_robot_relative_speeds(self):
         module_states = (
             self.robot.poseEstimator.get_module_states()
         )  # Check this in swervemodule.py, we need to convert kraken speed to m/s

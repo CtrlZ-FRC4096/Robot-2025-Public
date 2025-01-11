@@ -215,11 +215,13 @@ class PoseEstimator(Subsystem):
         allianceColor = DriverStation.getAlliance()
 
         for idx, cam in enumerate(self.cams):
+            if cam.cam.getName() == "Camera1": # Change this to name of camera facing april tag on reef
+                pass
+
             cam.update(self.curEstPose, allianceColor=allianceColor)
 
             observations = cam.getPoseEstimates()
             tags = cam.getTagPositions()
-            cam_saw_tag = cam.saw_speaker_tag
 
             tag_dist = 0.0
             min_ambiguity = 10.0

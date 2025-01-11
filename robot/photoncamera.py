@@ -43,7 +43,6 @@ class WrapperedPhotonCamera:
         self.poseEstimates = []
         self.tagPositions = []
         self.tagAmbiguity = []
-        self.saw_speaker_tag = False  # speaker tag: 4 for red, 7 for blue
         # if (self.counter % 20 == 0):
         #     if not self.cam.isConnected():
         #         # Faulted - no estimates, just return.
@@ -145,11 +144,6 @@ class WrapperedPhotonCamera:
             self.poseEstimates.append(CameraPoseObservation(obsTime, robot_pose))
             for target in res.getTargets():
                 tgtID = target.getFiducialId()
-
-                if (allianceColor == DriverStation.Alliance.kRed and tgtID == 4) or (
-                    allianceColor == DriverStation.Alliance.kBlue and tgtID == 7
-                ):
-                    self.saw_speaker_tag = True
 
                 tagFieldPose = AprilTagFieldLayout(
                     [], const.FIELD_LENGTH_METERS, const.FIELD_WIDTH_METERS
