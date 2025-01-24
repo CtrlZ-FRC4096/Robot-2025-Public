@@ -103,13 +103,29 @@ class OI:
                     forward_back *= 0.8
                     left_right *= 0.8
 
-                rotate = -self.driver1.RIGHT_JOY_X()
-                self.robot_oriented_angle += rotate * 5.0  # Type: ignore
+                rotate = self.driver1.RIGHT_JOY_X()
 
-                self.robot.drivetrain.drive_with_pid(
-                    Translation2d(forward_back, left_right) * const.SWERVE_MAX_SPEED,
-                    self.robot_oriented_angle,
-                )
+                if abs(rotate) >= 0.01:
+                    self.robot.drivetrain.drive(
+                        Translation2d(forward_back, left_right)
+                        * const.SWERVE_MAX_SPEED,
+                        rotate * 5.0,
+                        True,
+                        False,
+                    )
+                    self.robot_oriented_angle = (
+                        self.robot.poseEstimator.getYaw().degrees()
+                    )
+                else:
+                    if not self.cardinal_directing:
+                        self.robot_oriented_angle = (
+                            self.robot.poseEstimator.getYaw().degrees()
+                        )
+                    self.robot.drivetrain.drive_with_pid(
+                        Translation2d(forward_back, left_right)
+                        * const.SWERVE_MAX_SPEED,
+                        self.robot_oriented_angle,
+                    )
 
         @self.driver1.X.whenPressed  # Turn 90 degrees left
         def _():

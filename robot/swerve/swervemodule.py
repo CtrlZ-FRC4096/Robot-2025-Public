@@ -117,9 +117,9 @@ class SwerveModule:
 
         swerve_drive_motor_config = configs.TalonFXConfiguration()
         # self.drive_motor.configurator.apply(swerve_drive_motor_config)  # type: ignore
-        swerve_drive_motor_config.slot0.k_p = 2.2
-        swerve_drive_motor_config.slot0.k_s = 0.125
-        swerve_drive_motor_config.slot0.k_v = 0.24
+        swerve_drive_motor_config.slot0.k_p = 2.2  # 2.2
+        swerve_drive_motor_config.slot0.k_s = 4
+        swerve_drive_motor_config.slot0.k_v = 0.24  # 0.24
         ## Feed Forward
         # swerve_drive_motor_config.slot0.k_v = const.SWERVE_DRIVE_KV
         # swerve_drive_motor_config.slot0.k_a = const.SWERVE_DRIVE_KA

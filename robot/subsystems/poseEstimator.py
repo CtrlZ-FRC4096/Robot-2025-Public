@@ -210,9 +210,9 @@ class PoseEstimator(Subsystem):
 
     def getYaw(self):
         if const.SWERVE_INVERT_GYRO:
-            return Rotation2d.fromDegrees(360 - self.gyro.get_yaw().value)
+            return Rotation2d.fromDegrees((360 - self.gyro.get_yaw().value) % 360)
         else:
-            return Rotation2d.fromDegrees(self.gyro.get_yaw().value)
+            return Rotation2d.fromDegrees(self.gyro.get_yaw().value % 360)
 
     def reset_modules_to_absolute(self):
         for module in self.modules:
@@ -324,7 +324,7 @@ class PoseEstimator(Subsystem):
         SmartDashboard.putNumber(
             "Swerve/Odometry Theta", self.odometry.getPose().rotation().degrees()
         )
-        SmartDashboard.putNumber("Gyro/Yaw", self.gyro.get_yaw().value)
+        SmartDashboard.putNumber("Gyro/Yaw", self.getYaw().degrees())
         # SmartDashboard.putNumber("Gyro/Roll", self.roll)
 
         self.odometry.update(self.getYaw(), self.get_module_positions())

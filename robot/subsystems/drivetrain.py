@@ -56,7 +56,7 @@ class Drivetrain(Subsystem):
         super().__init__()
         self.robot = robot
 
-        self.angle_pid = PIDController(0.16, 0, 0.003)
+        self.angle_pid = PIDController(0.075, 0.0, 0.001)
         self.angle_pid.enableContinuousInput(0, 360)
         self.angle_pid.setTolerance(0.5)  # Set position tolerance to 0.5 degrees
 
@@ -97,14 +97,11 @@ class Drivetrain(Subsystem):
             math.isclose(translation.x, 0, abs_tol=0.2)
             and math.isclose(translation.y, 0, abs_tol=0.2)
         )
-        if in_motion:
-            # self.angle_pid.setPID(0.07, 0.001, 0.0) #Working
-            self.angle_pid.setPID(0.01, 0.0, 0.01)
-        else:
-            # self.angle_pid.setPID(0.125, 0.0001, 0.008) #Working
-            # self.angle_pid.setPID(0.14, 0.15, 0.005)  # kp: .14
-            self.angle_pid.setPID(0.01, 0.0, 0.01)
-        pid_output = self.angle_pid.calculate(self.robot.poseEstimator.getYaw().degrees() % 360, target_angle % 360)  # type: ignore
+
+        pid_output = -self.angle_pid.calculate(self.robot.poseEstimator.getYaw().degrees(), target_angle)  # type: ignore
+
+        if self.angle_pid.atSetpoint():
+            pid_output = 0
 
         # if not in_motion:
         #     pid_output += math.copysign(0.2, pid_output)
@@ -155,7 +152,9 @@ class Drivetrain(Subsystem):
         # if DriverStation.isDisabled():
         #     self.reset_modules_to_absolute()
 
-        pass
+        SmartDashboard.putData("PID Controller (Drivetrain)", self.angle_pid)
+        SmartDashboard.putBoolean("Angle at Setpoint", self.angle_pid.atSetpoint())
+        SmartDashboard.putNumber("PID Controller Error", self.angle_pid.getError())
 
     def log(self):
         pass
