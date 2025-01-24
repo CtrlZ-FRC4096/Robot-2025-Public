@@ -99,12 +99,13 @@ class Drivetrain(Subsystem):
         )
         if in_motion:
             # self.angle_pid.setPID(0.07, 0.001, 0.0) #Working
-            self.angle_pid.setPID(0.07, 0.001, 0.0)
+            self.angle_pid.setPID(0.01, 0.0, 0.01)
         else:
             # self.angle_pid.setPID(0.125, 0.0001, 0.008) #Working
             # self.angle_pid.setPID(0.14, 0.15, 0.005)  # kp: .14
-            self.angle_pid.setPID(0.14, 0.15, 0.005)
-        pid_output = self.angle_pid.calculate(self.robot.poseEstimator.getYaw().degrees() % 360, target_angle)  # type: ignore
+            self.angle_pid.setPID(0.01, 0.0, 0.01)
+        pid_output = self.angle_pid.calculate(self.robot.poseEstimator.getYaw().degrees() % 360, target_angle % 360)  # type: ignore
+
         # if not in_motion:
         #     pid_output += math.copysign(0.2, pid_output)
         SmartDashboard.putBoolean("Swerve/With PID", True)

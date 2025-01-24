@@ -9,7 +9,14 @@ if TYPE_CHECKING:
     from robot import Robot
 
 from phoenix6.hardware import Pigeon2, TalonFX
-from wpilib import DriverStation, SmartDashboard, Timer, Field2d, AnalogAccelerometer, BuiltInAccelerometer
+from wpilib import (
+    DriverStation,
+    SmartDashboard,
+    Timer,
+    Field2d,
+    AnalogAccelerometer,
+    BuiltInAccelerometer,
+)
 from wpimath.geometry import (
     Pose2d,
     Rotation2d,
@@ -215,7 +222,9 @@ class PoseEstimator(Subsystem):
         allianceColor = DriverStation.getAlliance()
 
         for idx, cam in enumerate(self.cams):
-            if cam.cam.getName() == "Camera1": # Change this to name of camera facing april tag on reef
+            if (
+                cam.cam.getName() == "Camera1"
+            ):  # Change this to name of camera facing april tag on reef
                 pass
 
             cam.update(self.curEstPose, allianceColor=allianceColor)
@@ -289,7 +298,6 @@ class PoseEstimator(Subsystem):
         ):  # Check if the robot is on the field
             self.curEstPose = candidate_pose
 
-        
         if (self.robot.leds.mode == self.robot.leds.MODE_LOST_ODOMETRY) or (
             self.robot.leds.mode == self.robot.leds.MODE_ODOMETRY
         ):

@@ -46,10 +46,7 @@ import autoroutines
 
 from pathplannerlib.path import PathPlannerPath
 from pathplannerlib.auto import AutoBuilder, PathPlannerAuto, NamedCommands
-from pathplannerlib.config import (
-    PIDConstants,
-    RobotConfig
-)
+from pathplannerlib.config import PIDConstants, RobotConfig
 from pathplannerlib.controller import PPHolonomicDriveController
 
 from wpimath.geometry import Rotation2d
@@ -137,17 +134,23 @@ class Robot(CoroutineRobot):
         config = RobotConfig.fromGUISettings()
 
         AutoBuilder.configure(
-            self.drivetrain.get_pose, # Robot pose supplier
-            self.drivetrain.reset_odometry, # Method to reset odometry (will be called if your auto has a starting pose)
-            self.drivetrain.get_robot_relative_speeds, # ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
-            lambda speeds, feedforwards: self.drivetrain.drive_robot_relative(speeds), # Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds. Also outputs individual module feedforwards
-            PPHolonomicDriveController( # PPHolonomicController is the built in path following controller for holonomic drive trains
-                PIDConstants(const.X_KP, const.X_KI, const.X_KD), # Translation PID constants
-                PIDConstants(const.THETA_KP, const.THETA_KI, const.THETA_KD) # Rotation PID constants
+            self.drivetrain.get_pose,  # Robot pose supplier
+            self.drivetrain.reset_odometry,  # Method to reset odometry (will be called if your auto has a starting pose)
+            self.drivetrain.get_robot_relative_speeds,  # ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
+            lambda speeds, feedforwards: self.drivetrain.drive_robot_relative(
+                speeds
+            ),  # Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds. Also outputs individual module feedforwards
+            PPHolonomicDriveController(  # PPHolonomicController is the built in path following controller for holonomic drive trains
+                PIDConstants(
+                    const.X_KP, const.X_KI, const.X_KD
+                ),  # Translation PID constants
+                PIDConstants(
+                    const.THETA_KP, const.THETA_KI, const.THETA_KD
+                ),  # Rotation PID constants
             ),
-            config, # The robot configuration
-            self.drivetrain.shouldFlipPath, # Supplier to control path flipping based on alliance color
-            self.drivetrain # Reference to this subsystem to set requirements
+            config,  # The robot configuration
+            self.drivetrain.shouldFlipPath,  # Supplier to control path flipping based on alliance color
+            self.drivetrain,  # Reference to this subsystem to set requirements
         )
 
         ## Need to change this and redeloy
@@ -181,6 +184,7 @@ class Robot(CoroutineRobot):
 
     ### TELEOPERATED ###
     def teleop_mode(self):
+        self.poseEstimator.zero_gyro()
         self.leds.set_mode(self.leds.MODE_ODOMETRY)
         self.scheduler.cancelAll()
         self.in_autonomous_mode = False
@@ -199,6 +203,9 @@ class Robot(CoroutineRobot):
 
         self.match_time = self.driverstation.getMatchTime()
         wpilib.SmartDashboard.putNumber("Match Time", self.match_time)
+        wpilib.SmartDashboard.putNumber(
+            "robot oriented angle", self.oi.robot_oriented_angle
+        )
 
 
 ### MAIN ###

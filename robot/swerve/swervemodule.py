@@ -57,10 +57,9 @@ class SwerveModule:
         swerve_angle_motor_config = configs.TalonFXConfiguration()
         #        self.talonfx.configurator.apply(configs.TalonFXConfiguration())
         #        swerve_angle_motor_config = hardware.TalonFXConfiguration()
-        swerve_angle_motor_config.slot0.k_p = const.SWERVE_ANGLE_KP
-        swerve_angle_motor_config.slot0.k_d = const.SWERVE_ANGLE_KD
-        swerve_angle_motor_config.slot0.k_i = const.SWERVE_ANGLE_KI
-        swerve_angle_motor_config.slot0.k_v = const.SWERVE_ANGLE_KF
+        swerve_angle_motor_config.slot0.k_p = 2.4
+        swerve_angle_motor_config.slot0.k_d = 0.1
+        swerve_angle_motor_config.slot0.k_i = 0.0
         swerve_angle_motor_config.current_limits.supply_current_limit = (
             25  # I am not sure if this is correct
         )
@@ -118,9 +117,9 @@ class SwerveModule:
 
         swerve_drive_motor_config = configs.TalonFXConfiguration()
         # self.drive_motor.configurator.apply(swerve_drive_motor_config)  # type: ignore
-        swerve_drive_motor_config.slot0.k_p = const.SWERVE_DRIVE_KP
-        swerve_drive_motor_config.slot0.k_i = const.SWERVE_DRIVE_KI
-        swerve_drive_motor_config.slot0.k_d = const.SWERVE_DRIVE_KD
+        swerve_drive_motor_config.slot0.k_p = 2.2
+        swerve_drive_motor_config.slot0.k_s = 0.125
+        swerve_drive_motor_config.slot0.k_v = 0.24
         ## Feed Forward
         # swerve_drive_motor_config.slot0.k_v = const.SWERVE_DRIVE_KV
         # swerve_drive_motor_config.slot0.k_a = const.SWERVE_DRIVE_KA
@@ -202,7 +201,7 @@ class SwerveModule:
 
         self.angle_motor.set_control(
             controls.PositionVoltage(
-                angle.degrees() / 360 * const.SWERVE_ANGLE_GEAR_RATIO, enable_foc= True
+                angle.degrees() / 360 * const.SWERVE_ANGLE_GEAR_RATIO, enable_foc=True
             )
             # conversions.degrees_to_falcon(
             #     angle.degrees(), const.SWERVE_ANGLE_GEAR_RATIO

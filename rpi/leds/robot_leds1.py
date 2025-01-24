@@ -5,15 +5,15 @@
 import os
 import sys
 import time
-import board
-import keyboard
-import neopixel
+import board  # type: ignore
+import keyboard  # type: ignore
+import neopixel  # type: ignore
 import ntcore
 
 
 # Roborio IP
-#ROBORIO_IP = 'roborio-4096-frc.local'
-ROBORIO_IP = '10.40.96.2'
+# ROBORIO_IP = 'roborio-4096-frc.local'
+ROBORIO_IP = "10.40.96.2"
 
 # Choose an open pin connected to the Data In of the NeoPixel strip, i.e. board.D18
 # NeoPixels must be connected to D10, D12, D18 or D21 to work.
@@ -22,7 +22,7 @@ LED2_PIN = board.D12
 
 # The number of NeoPixels
 NUM_LEDS = 14
-#NUM_LEDS = 29
+# NUM_LEDS = 29
 
 # The order of the pixel colors - RGB or GRB. Some NeoPixels have red and green reversed!
 # For RGBW NeoPixels, simply change the ORDER to RGBW or GRBW.
@@ -36,11 +36,11 @@ strip2 = neopixel.NeoPixel(
 )
 
 # LED pattern modes to cycle through
-MODE_OFF      = 'off'
-MODE_CONE     = 'cone'
-MODE_CUBE     = 'cube'
-MODE_CARRYING = 'carrying'
-MODE_WAITING  = 'waiting'
+MODE_OFF = "off"
+MODE_CONE = "cone"
+MODE_CUBE = "cube"
+MODE_CARRYING = "carrying"
+MODE_WAITING = "waiting"
 
 MODES = [
     MODE_OFF,
@@ -49,11 +49,11 @@ MODES = [
     MODE_CARRYING,
 ]
 
-COLOR_PURPLE   = (100, 0, 255)
-COLOR_YELLOW   = (255, 180, 0)
-COLOR_WHITE    = (255, 255, 255)
-COLOR_ORANGE   = (255, 40, 0)
-COLOR_BLUE     = (0, 0, 255)
+COLOR_PURPLE = (100, 0, 255)
+COLOR_YELLOW = (255, 180, 0)
+COLOR_WHITE = (255, 255, 255)
+COLOR_ORANGE = (255, 40, 0)
+COLOR_BLUE = (0, 0, 255)
 
 
 def pattern_scroll(strips, colors, steps=5):
@@ -76,16 +76,16 @@ def pattern_scroll(strips, colors, steps=5):
                     strip[i] = cur_color
 
                 cur_color = tuple([int(c * multiplier) for c in cur_color])
-                #print('pos =', pos, 'i =', i, 'n =', n, 'mult = {0:.2f}'.format(multiplier), 'color =', cur_color)
+                # print('pos =', pos, 'i =', i, 'n =', n, 'mult = {0:.2f}'.format(multiplier), 'color =', cur_color)
 
             if i > 0:
                 for strip in strips:
-                    strip[i-1] = (0,0,0)
+                    strip[i - 1] = (0, 0, 0)
 
             for strip in strips:
                 strip.write()
 
-            time.sleep(.015)
+            time.sleep(0.015)
 
             pos += 1
 
@@ -94,9 +94,10 @@ def pattern_flash(strip, color):
     strip.fill(color)
     strip.write()
     time.sleep(0.25)
-    strip.fill((0,0,0))
+    strip.fill((0, 0, 0))
     strip.write()
     time.sleep(0.25)
+
 
 def pattern_pulse(strip, colors):
     for color in colors:
@@ -129,7 +130,7 @@ def get_robot_intake_mode(nt_inst):
 
 def clear_strips(strips):
     for strip in strips:
-        strip.fill((0,0,0))
+        strip.fill((0, 0, 0))
 
         while True:
             try:
@@ -141,48 +142,48 @@ def clear_strips(strips):
 
 ### MAIN ###
 
-print('STARTING LEDs SCRIPT:', __file__)
+print("STARTING LEDs SCRIPT:", __file__)
 
 # Start networktables client
 nt_inst = ntcore.NetworkTableInstance.getDefault()
 identity = os.path.basename(__file__)
 nt_inst.startClient4(identity)
 nt_inst.setServer(ROBORIO_IP)
-nt_robot = nt_inst.getTable('robot')
+nt_robot = nt_inst.getTable("robot")
 
-#mode_idx = 0
-last_mode = ''
+# mode_idx = 0
+last_mode = ""
 
 while True:
     mode = get_robot_intake_mode(nt_inst)
-    #mode = MODES[mode_idx]
-    #mode = nt_robot.getString('led_mode', MODE_CONE)
+    # mode = MODES[mode_idx]
+    # mode = nt_robot.getString('led_mode', MODE_CONE)
     if mode != last_mode:
         print(mode)
         last_mode = mode
 
     try:
         # Check for keypress
-        if keyboard.is_pressed('esc'):
+        if keyboard.is_pressed("esc"):
             break
 
-        #if keyboard.is_pressed('space'):
-            #mode_idx += 1
-            #if mode_idx == len(MODES):
-                #mode_idx = 0
+        # if keyboard.is_pressed('space'):
+        # mode_idx += 1
+        # if mode_idx == len(MODES):
+        # mode_idx = 0
 
-            #time.sleep(.1)
+        # time.sleep(.1)
 
         # Run appropriate mode
         if mode == MODE_OFF:
-            #print('OFF')
+            # print('OFF')
             clear_strips((strip1, strip2))
         elif mode == MODE_CUBE:
-            #print('CUBE')
+            # print('CUBE')
             pattern_pulse(strip1, [COLOR_PURPLE])
             pattern_pulse(strip2, [COLOR_PURPLE])
         elif mode == MODE_CONE:
-            #print('CONE')
+            # print('CONE')
             pattern_pulse(strip1, [COLOR_YELLOW])
             pattern_pulse(strip2, [COLOR_YELLOW])
         elif mode == MODE_CARRYING:
@@ -190,7 +191,7 @@ while True:
             pattern_flash(strip2, COLOR_WHITE)
         elif mode == MODE_WAITING:
             pattern_scroll([strip1, strip2], [COLOR_ORANGE, COLOR_BLUE], steps=16)
-            #pattern_scroll([strip1], [COLOR_ORANGE, COLOR_BLUE], steps=16)
+            # pattern_scroll([strip1], [COLOR_ORANGE, COLOR_BLUE], steps=16)
         else:
             pass
 
@@ -198,6 +199,6 @@ while True:
         break
 
 # Exited, so turn LEDs off
-#clear_strips((strip1, strip2))
+# clear_strips((strip1, strip2))
 
 sys.exit(0)
