@@ -14,6 +14,8 @@ DEBUG = True
 import logging
 
 # Import our files
+import field_const
+
 from commands2 import (
     Command,
     ParallelCommandGroup,

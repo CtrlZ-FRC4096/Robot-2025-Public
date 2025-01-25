@@ -1,5 +1,6 @@
 import time
 import math
+import field_const
 
 from collections import deque
 
@@ -305,6 +306,9 @@ class PoseEstimator(Subsystem):
                 self.robot.leds.set_mode(self.robot.leds.MODE_LOST_ODOMETRY)
             elif self.poseConverge:
                 self.robot.leds.set_mode(self.robot.leds.MODE_ODOMETRY)
+        #TEST PRINTING FIELD CONST VALUES
+        
+
 
         SmartDashboard.putData("Field", self.field)
         self.field.setRobotPose(self.poseEst.getEstimatedPosition())
