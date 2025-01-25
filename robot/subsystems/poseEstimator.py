@@ -306,8 +306,9 @@ class PoseEstimator(Subsystem):
                 self.robot.leds.set_mode(self.robot.leds.MODE_LOST_ODOMETRY)
             elif self.poseConverge:
                 self.robot.leds.set_mode(self.robot.leds.MODE_ODOMETRY)
+        
         #TEST PRINTING FIELD CONST VALUES
-        print(FieldConstants)
+        print(FieldConstants.Barge.farCage)
 
 
         SmartDashboard.putData("Field", self.field)

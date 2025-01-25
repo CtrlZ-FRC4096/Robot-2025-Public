@@ -32,23 +32,27 @@ def inchesToMeters(inch):
     return inch/39.37
 
 class FieldConstants():
-    def __init__(self):
-        self.fieldLength = inchesToMeters(690.876)
-        self.fieldWidth = inchesToMeters(317)
-        self.startingLineX = inchesToMeters(299.438) #Measured from the inside of starting line
+    fieldLength = inchesToMeters(690.876)
+    fieldWidth = inchesToMeters(317)
+    startingLineX = inchesToMeters(299.438) #Measured from the inside of starting line
+
+    class Processor:
+        centerFace = Pose2d(inchesToMeters(235.726), 0, Rotation2d.fromDegrees(90))
     
-    @property
-    def Processor(self) -> None:
-        self.centerFace = Pose2d(inchesToMeters(235.726), 0, Rotation2d.fromDegrees(90))
-    
-    @property
-    def Barge(self) -> None:
-        self.farCage = Translation2d(inchesToMeters(345.428), inchesToMeters(286.779)) # cage closest to the middle
-        self.middleCage = Translation2d(inchesToMeters(345.428), inchesToMeters(242.855))
-        self.closeCage = Translation2d() #cage closest to outside wall
-    @property
-    def CoralStation(self) -> None:
+    class Barge:
+        farCage = Translation2d(inchesToMeters(345.428), inchesToMeters(286.779)) # cage closest to the middle
+        middleCage = Translation2d(inchesToMeters(345.428), inchesToMeters(242.855))
+        closeCage = Translation2d() #cage closest to outside wall
         
+    class CoralStation:
+        
+    class Reef:
+        
+    class StagingPositions:
+        
+    class ReefHeight:
+    
+    
         
         
         
