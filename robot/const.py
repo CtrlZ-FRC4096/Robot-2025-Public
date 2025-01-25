@@ -161,16 +161,20 @@ MAX_ACCEL_AUTO = 3  # This is the max rate you want the robot to accelerate at, 
 MAX_ANG_ACCEL_AUTO = (
     6 * math.pi
 )  # This is the max rate you want the robot to accelerate at, not its true max acceleration
-X_KP = 4  # 8 # 5  # 0.12667925	#0.73225
-X_KI = 0.0  # 0.015  # 0.015 #0.0346173		#0.2001
-X_KD = 0.01
-4  # 0.01165449	#0.067367
+X_KP = 1.5  # 8 # 5  # 0.12667925	#0.73225
+X_KI = 0.05  # 0.015  # 0.015 #0.0346173		#0.2001
+X_KD = 0.2  # 0.01165449	#0.067367
+
 Y_KP = X_KP
 Y_KI = X_KI
 Y_KD = X_KD
-THETA_KP = 5  # 1.9 #0.232  # * 2.866 * 5.0
+THETA_KP = 0.075  # 1.9 #0.232  # * 2.866 * 5.0
 THETA_KI = 0.0  # 0.07  # 0.0625  # * 2.866 * 5.0
-THETA_KD = 0.08  # 0.01
+THETA_KD = 0.001  # 0.01
+
+THETA_KP_AUTO = 0.075
+THETA_KI_AUTO = 0.0
+THETA_KD_AUTO = 0.001
 
 
 JENNY = 8675_309
