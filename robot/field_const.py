@@ -43,12 +43,11 @@ class FieldConstants():
             Rotation2d.fromDegrees(144.011 - 90)
         )
 
-    class ReefHeight():
-        class L4():
-            height = inchesToMeters(72)
+    '''class ReefHeight():
+        height = inchesToMeters(72)
             pitch = -90
         class L3():
-            height = inchesToMeters(47.625)
+           height = inchesToMeters(47.625)
             pitch = -35
         class L2():
             height = inchesToMeters(31.875)
@@ -56,9 +55,21 @@ class FieldConstants():
         class L1():
             height = inchesToMeters(18)
             pitch = 0
+            '''
+    class ReefHeight(Enum):
+        L4 = (inchesToMeters(72), -90)
+        L3 = (inchesToMeters(47.625),-35)
+        L2 = (inchesToMeters(31.875),-35)
+        L1 = (inchesToMeters(18),0)
+
+        def __init__(self, height, pitch):
+            self.height = height
+            self.pitch = pitch
+            
 
     class Reef():
         center = Translation2d(inchesToMeters(176.746), inchesToMeters(158.501))
+        #reefHeights = ReefHeight
         faceToZoneLine = inchesToMeters(12) # Side of the reef to the inside of the reef zone line
         centerFaces = [Pose2d(inchesToMeters(144.003), inchesToMeters(158.500), Rotation2d.fromDegrees(180)),
                        Pose2d(inchesToMeters(160.373), inchesToMeters(186.857), Rotation2d.fromDegrees(120)),
@@ -67,7 +78,7 @@ class FieldConstants():
                        Pose2d(inchesToMeters(193.118), inchesToMeters(130.145), Rotation2d.fromDegrees(-60)),
                        Pose2d(inchesToMeters(160.375),inchesToMeters(130.144),Rotation2d.fromDegrees(-120))
                        ]# Starting facing the driver station in clockwise order
-        branchPositions = {}
+        branchPositions = []
         
         for face in range(6):
             fillRight = {}
@@ -77,9 +88,7 @@ class FieldConstants():
                 poseDirection = Pose2d(center, Rotation2d.fromDegrees(180 - (60 * face)))
                 adjustX = inchesToMeters(30.738)
                 adjustY = inchesToMeters(6.469)
-                fillRight.update({
-                    level:
-                    Pose3d(
+                fillRight[level] = Pose3d(
                         Translation3d(
                             poseDirection.transformBy(Transform2d(adjustX, adjustY, Rotation2d())).X(),
                             poseDirection.transformBy(Transform2d(adjustX, adjustY, Rotation2d())).Y(),
@@ -91,10 +100,7 @@ class FieldConstants():
                             poseDirection.rotation().radians()
                         )
                     )
-                })
-                fillLeft.update({
-                    level:
-                    Pose3d(
+                fillLeft[level] = Pose3d(
                         Translation3d(
                             poseDirection.transformBy(Transform2d(adjustX, -adjustY, Rotation2d())).X(),
                             poseDirection.transformBy(Transform2d(adjustX, -adjustY, Rotation2d())).Y(),
@@ -106,9 +112,8 @@ class FieldConstants():
                             poseDirection.rotation().radians()
                         )
                     )
-                })
-                branchPositions.update({(face * 2) + 1: fillRight})
-                branchPositions.update({(face * 2) + 2: fillLeft})
+                branchPositions.insert((face * 2) + 1, fillRight)
+                branchPositions.insert((face * 2) + 2, fillLeft)
 
     
     class StagingPositions():

@@ -309,6 +309,9 @@ class PoseEstimator(Subsystem):
         
         #TEST PRINTING FIELD CONST VALUES
         print(self.robot.fieldConstants.Barge.farCage)
+        print(self.robot.fieldConstants.ReefHeight.L4.height)
+        print(self.robot.fieldConstants.Reef.centerFaces[0])
+        print(self.robot.fieldConstants.Reef.branchPositions[0])
 
 
         SmartDashboard.putData("Field", self.field)
