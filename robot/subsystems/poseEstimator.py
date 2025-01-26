@@ -1,6 +1,6 @@
 import time
 import math
-from field_const import FieldConstants
+import field_const
 
 from collections import deque
 
@@ -308,7 +308,7 @@ class PoseEstimator(Subsystem):
                 self.robot.leds.set_mode(self.robot.leds.MODE_ODOMETRY)
         
         #TEST PRINTING FIELD CONST VALUES
-        print(FieldConstants.Barge.farCage)
+        print(self.robot.fieldConstants.Barge.farCage)
 
 
         SmartDashboard.putData("Field", self.field)

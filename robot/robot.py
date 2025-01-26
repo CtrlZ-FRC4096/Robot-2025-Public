@@ -14,7 +14,7 @@ DEBUG = True
 import logging
 
 # Import our files
-import field_const
+
 
 from commands2 import (
     Command,
@@ -53,6 +53,8 @@ from pathplannerlib.controller import PPHolonomicDriveController
 
 from wpimath.geometry import Rotation2d
 
+from field_const import FieldConstants
+
 
 log = logging.getLogger("robot")
 
@@ -82,6 +84,7 @@ class Robot(CoroutineRobot):
         # Match Stuff
         self.match_time = -1
         const.IS_SIMULATION = self.isSimulation()
+        self.fieldConstants = FieldConstants()
 
         self.has_note = False
 
