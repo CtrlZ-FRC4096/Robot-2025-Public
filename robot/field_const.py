@@ -10,13 +10,27 @@ from enum import Enum
 
 from wpimath.geometry import Rotation2d, Rotation3d, Translation2d, Translation3d, Pose2d, Pose3d, Transform2d
 from wpimath.kinematics import SwerveDrive4Kinematics
+from wpimath.units import inchesToMeters, degreesToRadians
 
 from phoenix6 import signals
+from wpilib import DriverStation
 
-def inchesToMeters(inch):
-    return inch/39.37
-def degreesToRadians(deg):
-    return deg * math.pi/180
+
+class AllianceFlipUtil():
+    shouldFlip = DriverStation.getAlliance.get() == DriverStation.Alliance.kRed
+    
+    def flip_X_coord(self, x):
+        return FieldConstants.fieldLength - x if self.shouldFlip else x
+    def flip_Y_coord(self, y):
+        return FieldConstants.fieldWidth - y if self.shouldFlip else y
+    def flip_Translation2d (self, translation):
+        return Translation2d(self.flip_X_coord(translation.getX()), self.flip_Y_coord(translation.getY())) if self.shouldFlip else translation
+    def flip_Rotation2d(self, rotation):
+        return rotation.rotateBy(Rotation2d.kPi) if self.shouldFlip else rotation
+    def flip_Pose2d(self, pose):
+        return Pose2d(self.flip_Translation2d(pose.getTranslation()), self.flip_Rotation2d(pose.getRotation())) if self.shouldFlip else pose
+    #def flip_VehicleState(self, state):
+    
 
 class FieldConstants():
     fieldLength = inchesToMeters(690.876)
@@ -30,6 +44,10 @@ class FieldConstants():
         farCage = Translation2d(inchesToMeters(345.428), inchesToMeters(286.779)) # cage closest to the middle
         middleCage = Translation2d(inchesToMeters(345.428), inchesToMeters(242.855))
         closeCage = Translation2d() #cage closest to outside wall
+
+        #from floor to bottom of cage
+        deepHeight = inchesToMeters(3.125)
+        shallowHeight = inchesToMeters(30.125)
         
     class CoralStation():
         leftCenterFace = Pose2d(
@@ -122,3 +140,4 @@ class FieldConstants():
         leftIceCream  = Translation2d(inchesToMeters(48), inchesToMeters(230.5))
         middleIceCream = Translation2d(inchesToMeters(48), inchesToMeters(158.5))
         rightIceCream = Translation2d(inchesToMeters(48), inchesToMeters(86.5))
+
