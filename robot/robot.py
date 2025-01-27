@@ -14,6 +14,8 @@ DEBUG = True
 import logging
 
 # Import our files
+
+
 from commands2 import (
     Command,
     ParallelCommandGroup,
@@ -51,6 +53,8 @@ from pathplannerlib.controller import PPHolonomicDriveController
 
 from wpimath.geometry import Rotation2d
 
+from field_const import FieldConstants
+
 
 log = logging.getLogger("robot")
 
@@ -80,6 +84,7 @@ class Robot(CoroutineRobot):
         # Match Stuff
         self.match_time = -1
         const.IS_SIMULATION = self.isSimulation()
+        self.fieldConstants = FieldConstants()
 
         self.has_note = False
 
@@ -149,7 +154,7 @@ class Robot(CoroutineRobot):
                 ),  # Rotation PID constants
             ),
             config,  # The robot configuration
-            self.drivetrain.shouldFlipPath,  # Supplier to control path flipping based on alliance color
+            self.fieldConstants.shouldFlip,  # Supplier to control path flipping based on alliance color
             self.drivetrain,  # Reference to this subsystem to set requirements
         )
 
