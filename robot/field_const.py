@@ -62,6 +62,21 @@ class FieldConstants():
             inchesToMeters(25.824),
             Rotation2d.fromDegrees(144.011 - 90)
         )
+        #from floor to bottom of cage
+        deepHeight = inchesToMeters(3.125)
+        shallowHeight = inchesToMeters(30.125)
+        
+    class CoralStation():
+        leftCenterFace = Pose2d(
+            inchesToMeters(33.526), 
+            inchesToMeters(291.176),
+            Rotation2d.fromDegrees(90 - 144.011)
+        )
+        rightCenterFace = Pose2d(
+            inchesToMeters(33.526), 
+            inchesToMeters(25.824),
+            Rotation2d.fromDegrees(144.011 - 90)
+        )
 
     class ReefHeight(Enum):
         L4 = (inchesToMeters(72), -90)
