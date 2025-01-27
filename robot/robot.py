@@ -154,7 +154,7 @@ class Robot(CoroutineRobot):
                 ),  # Rotation PID constants
             ),
             config,  # The robot configuration
-            self.drivetrain.shouldFlipPath,  # Supplier to control path flipping based on alliance color
+            self.fieldConstants.shouldFlip,  # Supplier to control path flipping based on alliance color
             self.drivetrain,  # Reference to this subsystem to set requirements
         )
 

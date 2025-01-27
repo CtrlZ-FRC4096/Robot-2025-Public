@@ -1,6 +1,5 @@
 import time
 import math
-import field_const
 
 from collections import deque
 
@@ -20,6 +19,7 @@ from wpilib import (
 )
 from wpimath.geometry import (
     Pose2d,
+    Pose3d,
     Rotation2d,
     Translation2d,
     Translation3d,
@@ -293,9 +293,9 @@ class PoseEstimator(Subsystem):
 
         if (
             (candidate_pose.x > -0.5)
-            and (candidate_pose.x < const.FIELD_LENGTH_METERS + 0.5)
+            and (candidate_pose.x < self.robot.fieldConstants.fieldLength + 0.5)
             and (candidate_pose.y > -0.5)
-            and (candidate_pose.y < const.FIELD_WIDTH_METERS + 0.5)
+            and (candidate_pose.y < self.robot.fieldConstants.fieldWidth + 0.5)
         ):  # Check if the robot is on the field
             self.curEstPose = candidate_pose
 
@@ -306,13 +306,6 @@ class PoseEstimator(Subsystem):
                 self.robot.leds.set_mode(self.robot.leds.MODE_LOST_ODOMETRY)
             elif self.poseConverge:
                 self.robot.leds.set_mode(self.robot.leds.MODE_ODOMETRY)
-        
-        #TEST PRINTING FIELD CONST VALUES
-        print(self.robot.fieldConstants.Barge.farCage)
-        print(self.robot.fieldConstants.ReefHeight.L4.height)
-        print(self.robot.fieldConstants.Reef.centerFaces[0])
-        print(self.robot.fieldConstants.Reef.branchPositions[0])
-
 
         SmartDashboard.putData("Field", self.field)
         self.field.setRobotPose(self.poseEst.getEstimatedPosition())
@@ -346,3 +339,4 @@ class PoseEstimator(Subsystem):
 
     def log(self):
         pass
+
