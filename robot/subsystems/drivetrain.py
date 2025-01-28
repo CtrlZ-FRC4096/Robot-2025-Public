@@ -49,6 +49,7 @@ from pathplannerlib.path import PathPlannerPath, PathConstraints
 from wpimath.estimator import SwerveDrive4PoseEstimator
 from photoncamera import WrapperedPhotonCamera
 from wpimath.units import degreesToRadians
+from phoenix6.hardware import CANrange
 
 
 class Drivetrain(Subsystem):
@@ -63,6 +64,8 @@ class Drivetrain(Subsystem):
         ### Field Visualisation - Needs testing ###
         self.previous_chassisspeeds = ChassisSpeeds()
 
+        # self.canrange_1 = CANrange(const.CANRange_1_CAN_ID, "carnivore")
+
     def drive(self, translation: Translation2d, rotation, field_relative, is_open_loop):
         SmartDashboard.putNumber("Swerve/Translation X", translation.x)
         SmartDashboard.putNumber("Swerve/Translation Y", translation.y)
@@ -73,7 +76,7 @@ class Drivetrain(Subsystem):
                 ChassisSpeeds.fromFieldRelativeSpeeds(
                     translation.x,
                     translation.y,
-                    rotation,
+                    -rotation,
                     self.robot.poseEstimator.getYaw(),
                 )
             )
@@ -93,12 +96,7 @@ class Drivetrain(Subsystem):
             module.set_desired_state(module_states[idx], is_open_loop)
 
     def drive_with_pid(self, translation: Translation2d, target_angle):
-        in_motion = not (
-            math.isclose(translation.x, 0, abs_tol=0.2)
-            and math.isclose(translation.y, 0, abs_tol=0.2)
-        )
-
-        pid_output = -self.angle_pid.calculate(self.robot.poseEstimator.getYaw().degrees(), target_angle)  # type: ignore
+        pid_output = self.angle_pid.calculate(self.robot.poseEstimator.getYaw().degrees(), target_angle)  # type: ignore
 
         if self.angle_pid.atSetpoint():
             pid_output = 0
@@ -114,6 +112,7 @@ class Drivetrain(Subsystem):
     def drive_robot_relative(
         self, chassis_speeds: ChassisSpeeds
     ):  # only use for pathplannerlib
+        chassis_speeds.omega = -chassis_speeds.omega
         module_states = const.SWERVE_KINEMATICS.toSwerveModuleStates(chassis_speeds)
 
         SwerveDrive4Kinematics.desaturateWheelSpeeds(
