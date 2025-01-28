@@ -184,7 +184,6 @@ class Robot(CoroutineRobot):
 
     ### TELEOPERATED ###
     def teleop_mode(self):
-        self.poseEstimator.zero_gyro()
         self.leds.set_mode(self.leds.MODE_ODOMETRY)
         self.scheduler.cancelAll()
         self.in_autonomous_mode = False

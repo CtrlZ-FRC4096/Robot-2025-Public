@@ -103,9 +103,10 @@ class OI:
                     forward_back *= 0.8
                     left_right *= 0.8
 
-                rotate = self.driver1.RIGHT_JOY_X()
+                rotate = -self.driver1.RIGHT_JOY_X()
 
-                if abs(rotate) >= 0.01:
+                if abs(rotate) >= 0.02:
+                    self.cardinal_directing = False
                     self.robot.drivetrain.drive(
                         Translation2d(forward_back, left_right)
                         * const.SWERVE_MAX_SPEED,
@@ -121,6 +122,7 @@ class OI:
                         self.robot_oriented_angle = (
                             self.robot.poseEstimator.getYaw().degrees()
                         )
+                    self.cardinal_directing = True
                     self.robot.drivetrain.drive_with_pid(
                         Translation2d(forward_back, left_right)
                         * const.SWERVE_MAX_SPEED,
