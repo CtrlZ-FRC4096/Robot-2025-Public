@@ -114,9 +114,9 @@ class OI:
                         True,
                         False,
                     )
-                    self.robot_oriented_angle = (
-                        self.robot.poseEstimator.getYaw().degrees()
-                    )
+                    # self.robot_oriented_angle = (
+                    #     self.robot.poseEstimator.getYaw().degrees()
+                    # )
                 else:
                     if not self.cardinal_directing:
                         self.robot_oriented_angle = (
