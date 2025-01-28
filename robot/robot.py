@@ -154,12 +154,12 @@ class Robot(CoroutineRobot):
                 ),  # Rotation PID constants
             ),
             config,  # The robot configuration
-            self.fieldConstants.shouldFlip,  # Supplier to control path flipping based on alliance color
+            self.drivetrain.shouldFlipPath,  # Supplier to control path flipping based on alliance color
             self.drivetrain,  # Reference to this subsystem to set requirements
         )
 
         ## Need to change this and redeloy
-        self.path = PathPlannerAuto("Test Auto")  # centerline steal 2nd match
+        self.path = PathPlannerAuto("4 piece auto test")  # centerline steal 2nd match
 
         self.in_autonomous_mode = False
 
