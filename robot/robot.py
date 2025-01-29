@@ -198,6 +198,9 @@ class Robot(CoroutineRobot):
 
     ### MISC ###
 
+    def stop_all_subsystems(self): # Update as we add more subsystems
+        self.funnel_intake.is_running = False
+
     def log(self):
         """
         Logs some info to shuffleboard, and standard output

@@ -49,7 +49,6 @@ from pathplannerlib.path import PathPlannerPath, PathConstraints
 from wpimath.estimator import SwerveDrive4PoseEstimator
 from photoncamera import WrapperedPhotonCamera
 from wpimath.units import degreesToRadians
-from phoenix6.hardware import CANrange
 
 
 class Drivetrain(Subsystem):
@@ -63,8 +62,6 @@ class Drivetrain(Subsystem):
 
         ### Field Visualisation - Needs testing ###
         self.previous_chassisspeeds = ChassisSpeeds()
-
-        # self.canrange_1 = CANrange(const.CANRange_1_CAN_ID, "carnivore")
 
     def drive(self, translation: Translation2d, rotation, field_relative, is_open_loop):
         SmartDashboard.putNumber("Swerve/Translation X", translation.x)
