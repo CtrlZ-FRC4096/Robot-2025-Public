@@ -6,49 +6,13 @@ if TYPE_CHECKING:
 
 import time
 import math
-from phoenix6.hardware import Pigeon2, TalonFX
-from wpilib import DriverStation, SmartDashboard, Timer, Field2d
-from wpimath.geometry import (
-    Pose2d,
-    Rotation2d,
-    Translation2d,
-    Translation3d,
-    Transform3d,
-    Rotation3d,
-)
-from wpimath.kinematics import (
-    ChassisSpeeds,
-    SwerveDrive4Kinematics,
-    SwerveDrive4Odometry,
-    SwerveModulePosition,
-)
-from phoenix6 import configs
-
-
-# from pathplannerlib.commands import PathfindHolonomic
-
+from phoenix6.hardware import TalonFX
+from wpilib import SmartDashboard, Timer
+from phoenix6 import configs, hardware, controls, signals
+from commands2 import Subsystem
 
 import const
 
-# from leds import LEDs
-# from shooter import Shooter
-
-# from pathplannerlib.path import PathConstraints
-
-# from commands2 import SubsystemBase
-from wpilibextra.coroutine.subsystem import Subsystem
-from swerve.swervemodule import SwerveModule
-from wpimath.controller import PIDController, ProfiledPIDController
-from wpimath.trajectory import TrapezoidProfile
-from pathplannerlib.path import PathPlannerPath
-from pathplannerlib.auto import AutoBuilder, PathPlannerAuto
-from pathplannerlib.config import PIDConstants
-
-from pathplannerlib.path import PathPlannerTrajectory
-from pathplannerlib.path import PathPlannerPath, PathConstraints
-from wpimath.estimator import SwerveDrive4PoseEstimator
-from photoncamera import WrapperedPhotonCamera
-from wpimath.units import degreesToRadians
 from phoenix6.hardware import CANrange
 
 
@@ -56,12 +20,43 @@ class FunnelIntake(Subsystem):
     def __init__(self, robot: "Robot"):
         super().__init__()
         self.robot = robot
+        self.intake_motor = hardware.TalonFX(22, "rio")
+        funnel_intake_config = configs.TalonFXConfiguration()  # apply config file
+        funnel_intake_config.motor_output.inverted = signals.InvertedValue(0)
+        funnel_intake_config.current_limits.supply_current_limit = 40
+        funnel_intake_config.current_limits.supply_current_threshold = 0
+        funnel_intake_config.current_limits.supply_time_threshold = 0
+        funnel_intake_config.current_limits.supply_current_limit_enable = True
+        funnel_intake_config.slot0.k_p = const.SWERVE_DRIVE_KP
+        funnel_intake_config.slot0.k_i = const.SWERVE_DRIVE_KI
+        funnel_intake_config.slot0.k_d = const.SWERVE_DRIVE_KD
+        funnel_intake_config.slot0.k_v = const.SWERVE_DRIVE_KF
 
+        funnel_intake_config.closed_loop_ramps.torque_closed_loop_ramp_period = 0.02
+        funnel_intake_config.open_loop_ramps.torque_open_loop_ramp_period = 0.02
+        funnel_intake_config.closed_loop_ramps.duty_cycle_closed_loop_ramp_period = 0.02
+        funnel_intake_config.open_loop_ramps.duty_cycle_open_loop_ramp_period = 0.02
+        funnel_intake_config.closed_loop_ramps.voltage_closed_loop_ramp_period = 0.02
+        funnel_intake_config.open_loop_ramps.voltage_open_loop_ramp_period = 0.02
+
+        self.intake_motor.configurator.apply(funnel_intake_config)  # type: ignore
+
+        self.is_running = False
         self.canrange_1 = CANrange(const.CANRange_1_CAN_ID, "carnivore")
 
     def stop(self):
-        pass
+        self.intake_motor.set_control(controls.DutyCycleOut(0))
 
+    def intake(self, speed=83):
+        self.intake_motor.set_control(controls.VelocityTorqueCurrentFOC(speed))
+    
+    def get_current_intake(self):
+        return self.intake_motor.get_torque_current().value
+
+    def outake(self):
+        self.intake(83)
+        self.pickup(-83)
+    
     def periodic(self):
         pass
 
