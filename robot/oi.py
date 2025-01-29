@@ -77,6 +77,7 @@ class OI:
         self.can_crash = False
 
         self.looking_for_algae = False
+        self.manual_turning = True
 
         @self.rumble_button.whenPressed
         def _():
@@ -106,6 +107,7 @@ class OI:
                 rotate = -self.driver1.RIGHT_JOY_X()
 
                 if abs(rotate) >= 0.02:
+                    self.manual_turning = True
                     self.cardinal_directing = False
                     self.robot.drivetrain.drive(
                         Translation2d(forward_back, left_right)
@@ -118,11 +120,11 @@ class OI:
                     #     self.robot.poseEstimator.getYaw().degrees()
                     # )
                 else:
-                    if not self.cardinal_directing:
+                    if self.manual_turning:
                         self.robot_oriented_angle = (
                             self.robot.poseEstimator.getYaw().degrees()
                         )
-                    self.cardinal_directing = True
+                        self.manual_turning = False
                     self.robot.drivetrain.drive_with_pid(
                         Translation2d(forward_back, left_right)
                         * const.SWERVE_MAX_SPEED,
