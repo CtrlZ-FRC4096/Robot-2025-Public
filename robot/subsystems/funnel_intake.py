@@ -20,7 +20,8 @@ class FunnelIntake(Subsystem):
     def __init__(self, robot: "Robot"):
         super().__init__()
         self.robot = robot
-        self.intake_motor = hardware.TalonFX(22, "rio")
+        self.intake_motor = hardware.TalonFX(const.INTAKE_MOTOR_CAN_ID, "rio")
+
         funnel_intake_config = configs.TalonFXConfiguration()  # apply config file
         funnel_intake_config.motor_output.inverted = signals.InvertedValue(0)
         funnel_intake_config.current_limits.supply_current_limit = 40
@@ -42,23 +43,20 @@ class FunnelIntake(Subsystem):
         self.intake_motor.configurator.apply(funnel_intake_config)  # type: ignore
 
         self.is_running = False
-        self.canrange_1 = CANrange(const.CANRange_1_CAN_ID, "carnivore")
+        self.canrange_1 = CANrange(const.CANRANGE_1_CAN_ID, "carnivore")
 
     def stop(self):
-        self.intake_motor.set_control(controls.DutyCycleOut(0))
+        self.intake_motor.set_control(controls.VelocityTorqueCurrentFOC(0))
 
     def intake(self, speed=83):
         self.intake_motor.set_control(controls.VelocityTorqueCurrentFOC(speed))
     
-    def get_current_intake(self):
-        return self.intake_motor.get_torque_current().value
-
-    def outake(self):
-        self.intake(83)
-        self.pickup(-83)
-    
     def periodic(self):
-        pass
+        if self.is_running:
+            if self.canrange_1.get_distance() < 0.1:
+                self.stop()
+                self.is_running = False
+            self.intake()
 
     def log(self):
         pass

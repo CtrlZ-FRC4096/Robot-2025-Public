@@ -76,7 +76,6 @@ class OI:
         self.rumble_button = Button(lambda: self.robot.has_note)
         self.can_crash = False
 
-        self.looking_for_algae = False
         self.manual_turning = True
 
         @self.rumble_button.whenPressed
@@ -173,10 +172,14 @@ class OI:
             if self.can_crash:
                 4096 / 0
 
-        @self.driver2.A.whenPressed  # Intaking algae
+        @self.driver2.POV.UP.whenPressed  # Run funnel intake
         def _():
-            self.robot.leds.set_mode(robot.leds.MODE_INTAKING)
-            self.looking_for_algae = True
+            self.robot.funnel_intake.is_running = True
+        
+        @self.driver2.POV.RIGHT.whenPressed # STOP ALL SUBSYSTEMS
+        def _():
+            self.robot.stop()
+
 
     def log(self):
         SmartDashboard.putNumber("robot oriented angle", self.robot_oriented_angle)
