@@ -76,7 +76,8 @@ class OI:
         self.rumble_button = Button(lambda: self.robot.has_note)
         self.can_crash = False
 
-        self.manual_turning = True
+        self.find_heading = True
+        self.tick_count = 0
 
         @self.rumble_button.whenPressed
         def _():
@@ -106,24 +107,39 @@ class OI:
                 rotate = -self.driver1.RIGHT_JOY_X()
 
                 if abs(rotate) >= 0.02:
-                    self.manual_turning = True
                     self.cardinal_directing = False
+                    self.find_heading = True
+                    self.wait_one_tick = False
+                    self.tick_count = 0
                     self.robot.drivetrain.drive(
                         Translation2d(forward_back, left_right)
                         * const.SWERVE_MAX_SPEED,
-                        rotate * 5.0,
+                        rotate * 3.0,
                         True,
                         False,
                     )
-                    # self.robot_oriented_angle = (
-                    #     self.robot.poseEstimator.getYaw().degrees()
-                    # )
+                    self.robot_oriented_angle = (
+                        self.robot.poseEstimator.getYaw().degrees()
+                    )
                 else:
-                    if self.manual_turning:
-                        self.robot_oriented_angle = (
-                            self.robot.poseEstimator.getYaw().degrees()
-                        )
-                        self.manual_turning = False
+                    # if not self.cardinal_directing:
+                    #     if self.find_heading:
+                    #         if self.wait_one_tick:
+                    #             self.robot_oriented_angle = (
+                    #                 self.robot.poseEstimator.getYaw().degrees()
+                    #             )
+                    #             self.find_heading = False
+                    #         else:
+                    #             self.wait_one_tick = True
+                    if not self.cardinal_directing:
+                        if self.find_heading:
+                            if self.tick_count <= 5:
+                                self.robot_oriented_angle = (
+                                    self.robot.poseEstimator.getYaw().degrees()
+                                )
+                                self.tick_count += 1
+                            else:
+                                self.find_heading = False
                     self.robot.drivetrain.drive_with_pid(
                         Translation2d(forward_back, left_right)
                         * const.SWERVE_MAX_SPEED,
@@ -175,11 +191,10 @@ class OI:
         @self.driver2.POV.UP.whenPressed  # Run funnel intake
         def _():
             self.robot.funnel_intake.is_running = True
-        
-        @self.driver2.POV.RIGHT.whenPressed # STOP ALL SUBSYSTEMS
+
+        @self.driver2.POV.RIGHT.whenPressed  # STOP ALL SUBSYSTEMS
         def _():
             self.robot.stop()
-
 
     def log(self):
         SmartDashboard.putNumber("robot oriented angle", self.robot_oriented_angle)
