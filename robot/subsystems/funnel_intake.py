@@ -52,7 +52,7 @@ from wpimath.units import degreesToRadians
 from phoenix6.hardware import CANrange
 
 
-class Drivetrain(Subsystem):
+class FunnelIntake(Subsystem):
     def __init__(self, robot: "Robot"):
         super().__init__()
         self.robot = robot
