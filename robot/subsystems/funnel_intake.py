@@ -14,6 +14,8 @@ from commands2 import Subsystem
 import const
 
 from phoenix6.hardware import CANrange
+from phoenix6.configs import CANcoderConfigurator
+from phoenix6.configs.config_groups import ProximityParamsConfigs 
 
 
 class FunnelIntake(Subsystem):
@@ -44,6 +46,15 @@ class FunnelIntake(Subsystem):
 
         self.is_running = False
         self.canrange_1 = CANrange(const.CANRANGE_1_CAN_ID, "carnivore")
+
+        self.canrange_1_config = configs.CANrangeConfiguration()
+        self.canrange_1_prox_config = ProximityParamsConfigs()
+        self.canrange_1_prox_config.proximity_threshold = 0.3048 #1 foot
+        self.canrange_1_prox_config.proximity_hysteresis = 0.0508
+        self.canrange_1_config.with_proximity_params(self.canrange_1_prox_config)
+        
+        self.canrange_1.configurator.apply(self.canrange_1_config)
+
 
     def stop(self):
         self.intake_motor.set_control(controls.VelocityTorqueCurrentFOC(0))
