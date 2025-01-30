@@ -194,7 +194,7 @@ class OI:
 
         @self.driver2.POV.RIGHT.whenPressed  # STOP ALL SUBSYSTEMS
         def _():
-            self.robot.stop()
+            self.robot.stop_all_subsystems()
 
     def log(self):
         SmartDashboard.putNumber("robot oriented angle", self.robot_oriented_angle)
