@@ -138,43 +138,43 @@ class PoseEstimator(Subsystem):
         self.xystd = 0.1  # .1
         self.thetastd = 0.15  # .15
 
-        # Update with position on robot
+        #test position of camera 1 on front right module
         ROBOT_TO_CAM1 = Transform3d(
-            Translation3d(-0.1570, -0.2819, 0.2023),  # X  # Y  # Z
+            Translation3d(0.2868, -0.2973, 0.2144),  # X  # Y  # Z
             Rotation3d(
-                0.0, 30.0 * (math.pi / 180), 180.0 * (math.pi / 180)
+                0.0, -10 * (math.pi / 180), 0 * (math.pi / 180)
             ),  # Roll  # Pitch  # Yaw
         )
 
         # Update with positionon robot
-        ROBOT_TO_CAM2 = Transform3d(
-            Translation3d(
-                0.06, 0.286, 0.423
-            ),  # X  # Y  # Z # .0692 for super structure
-            Rotation3d(
-                0 * (math.pi / 180),
-                -10.0 * (math.pi / 180),
-                24.62 * (math.pi / 180),
-            ),  # Roll  # Pitch  # Yaw
-        )
+        # ROBOT_TO_CAM2 = Transform3d(
+        #     Translation3d(
+        #         0.06, 0.286, 0.423
+        #     ),  # X  # Y  # Z # .0692 for super structure
+        #     Rotation3d(
+        #         0 * (math.pi / 180),
+        #         -10.0 * (math.pi / 180),
+        #         24.62 * (math.pi / 180),
+        #     ),  # Roll  # Pitch  # Yaw
+        # )
 
-        # Update with positionon robot
-        ROBOT_TO_CAM3 = Transform3d(
-            Translation3d(-0.2764, 0.2805, 0.2949),  # X  # Y  # Z
-            Rotation3d(
-                0.0, 31.32 * (math.pi / 180), 180.0 * (math.pi / 180)
-            ),  # Roll  # Pitch  # Yaw
-        )
+        # # Update with positionon robot
+        # ROBOT_TO_CAM3 = Transform3d(
+        #     Translation3d(-0.2764, 0.2805, 0.2949),  # X  # Y  # Z
+        #     Rotation3d(
+        #         0.0, 31.32 * (math.pi / 180), 180.0 * (math.pi / 180)
+        #     ),  # Roll  # Pitch  # Yaw
+        # )
 
-        # Update with positionon robot
-        ROBOT_TO_CAM4 = Transform3d(
-            Translation3d(0.045, -0.286, 0.588),  # X  # Y  # Z
-            Rotation3d(
-                0 * (math.pi / 180),
-                -10.0 * (math.pi / 180),
-                -24.62 * (math.pi / 180),
-            ),  # Roll  # Pitch  # Yaw
-        )
+        # # Update with positionon robot
+        # ROBOT_TO_CAM4 = Transform3d(
+        #     Translation3d(0.045, -0.286, 0.588),  # X  # Y  # Z
+        #     Rotation3d(
+        #         0 * (math.pi / 180),
+        #         -10.0 * (math.pi / 180),
+        #         -24.62 * (math.pi / 180),
+        #     ),  # Roll  # Pitch  # Yaw
+        # )
 
         self.cams = [
             WrapperedPhotonCamera("Camera1", ROBOT_TO_CAM1),
