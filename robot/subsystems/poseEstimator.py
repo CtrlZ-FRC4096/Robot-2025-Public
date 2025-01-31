@@ -178,9 +178,9 @@ class PoseEstimator(Subsystem):
 
         self.cams = [
             WrapperedPhotonCamera("Camera1", ROBOT_TO_CAM1),
-            WrapperedPhotonCamera("Camera2", ROBOT_TO_CAM2),
-            WrapperedPhotonCamera("Camera3", ROBOT_TO_CAM3),
-            WrapperedPhotonCamera("Camera4", ROBOT_TO_CAM4),
+            #WrapperedPhotonCamera("Camera2", ROBOT_TO_CAM2),
+            #WrapperedPhotonCamera("Camera3", ROBOT_TO_CAM3),
+            #WrapperedPhotonCamera("Camera4", ROBOT_TO_CAM4),
         ]
 
         self.poseConverge = True
