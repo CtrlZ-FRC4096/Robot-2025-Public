@@ -11,6 +11,7 @@ import const
 from wpilib import DriverStation, SmartDashboard, Timer, Field2d
 
 from robotpy_apriltag import AprilTagField, AprilTagFieldLayout
+from field_const import FieldConstants
 
 
 ## Code from 1736
@@ -127,7 +128,7 @@ class WrapperedPhotonCamera:
         #             self.tagPositions.append(tagFieldPose)
 
         ## MultiTag code
-        tag_map = AprilTagFieldLayout([], const.FIELD_LENGTH_METERS, const.FIELD_WIDTH_METERS)
+        tag_map = AprilTagField.k2025Reefscape
         photon_pose_estimator = photonPoseEstimator.PhotonPoseEstimator(
             tag_map,
             photonPoseEstimator.PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
@@ -146,7 +147,9 @@ class WrapperedPhotonCamera:
                 tgtID = target.getFiducialId()
 
                 tagFieldPose = AprilTagFieldLayout(
-                    [], const.FIELD_LENGTH_METERS, const.FIELD_WIDTH_METERS
+                    AprilTagField.k2025Reefscape,
+                    FieldConstants.fieldLength,
+                    FieldConstants.fieldWidth,
                 ).getTagPose(tgtID)
                 self.tagAmbiguity.append(target.getPoseAmbiguity())
                 self.tagPositions.append(tagFieldPose)

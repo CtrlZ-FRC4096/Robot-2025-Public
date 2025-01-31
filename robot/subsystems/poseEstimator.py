@@ -136,9 +136,9 @@ class PoseEstimator(Subsystem):
 
         # self.poseEst.setVisionMeasurementStdDevs((0.0001, 0.0001, 0.5))
         self.xystd = 0.1  # .1
-        self.thetastd = 0.15  # .15
+        self.thetastd = 10.0  # .15
 
-        #test position of camera 1 on front right module
+        # test position of camera 1 on front right module
         ROBOT_TO_CAM1 = Transform3d(
             Translation3d(0.2868, -0.2973, 0.2144),  # X  # Y  # Z
             Rotation3d(
@@ -178,9 +178,9 @@ class PoseEstimator(Subsystem):
 
         self.cams = [
             WrapperedPhotonCamera("Camera1", ROBOT_TO_CAM1),
-            #WrapperedPhotonCamera("Camera2", ROBOT_TO_CAM2),
-            #WrapperedPhotonCamera("Camera3", ROBOT_TO_CAM3),
-            #WrapperedPhotonCamera("Camera4", ROBOT_TO_CAM4),
+            # WrapperedPhotonCamera("Camera2", ROBOT_TO_CAM2),
+            # WrapperedPhotonCamera("Camera3", ROBOT_TO_CAM3),
+            # WrapperedPhotonCamera("Camera4", ROBOT_TO_CAM4),
         ]
 
         self.poseConverge = True
@@ -223,11 +223,6 @@ class PoseEstimator(Subsystem):
         allianceColor = DriverStation.getAlliance()
 
         for idx, cam in enumerate(self.cams):
-            if (
-                cam.cam.getName() == "Camera1"
-            ):  # Change this to name of camera facing april tag on reef
-                pass
-
             cam.update(self.curEstPose, allianceColor=allianceColor)
 
             observations = cam.getPoseEstimates()
@@ -242,7 +237,7 @@ class PoseEstimator(Subsystem):
             for ambig in cam.getTagAmbiguity():
                 if ambig < min_ambiguity:
                     min_ambiguity = ambig
-            
+
             for tag in tags:
                 tag2D = tag.toPose2d()
                 tag_dist += (self.curEstPose - tag2D).translation().norm()
@@ -339,4 +334,3 @@ class PoseEstimator(Subsystem):
 
     def log(self):
         pass
-
