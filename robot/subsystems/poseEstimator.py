@@ -242,7 +242,7 @@ class PoseEstimator(Subsystem):
             for ambig in cam.getTagAmbiguity():
                 if ambig < min_ambiguity:
                     min_ambiguity = ambig
-
+            
             for tag in tags:
                 tag2D = tag.toPose2d()
                 tag_dist += (self.curEstPose - tag2D).translation().norm()
