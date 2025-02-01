@@ -130,14 +130,14 @@ class PoseEstimator(Subsystem):
             const.SWERVE_KINEMATICS, self.getYaw(), self.get_module_positions()  # type: ignore
         )
 
-        self.curEstPose = Pose2d()
+        self.curEstPose = Pose2d(0, 0, self.getYaw())
 
         self.poseEst = SwerveDrive4PoseEstimator(
             const.SWERVE_KINEMATICS, self.getYaw(), self.get_module_positions(), self.curEstPose  # type: ignore
         )
 
         # self.poseEst.setVisionMeasurementStdDevs((0.0001, 0.0001, 0.5))
-        self.xystd = 0.3  # .1
+        self.xystd = 0.3
         self.thetastd = 10.0  # .15
 
         # test position of camera 1 on front right module
@@ -227,14 +227,8 @@ class PoseEstimator(Subsystem):
             tags = cam.getTagPositions()
 
             tag_dist = 0.0
-            min_ambiguity = 10.0
             theta_modifier = 1.0
             xy_modifier = 1.0
-            auto_modifier = 1.0
-
-            for ambig in cam.getTagAmbiguity():
-                if ambig < min_ambiguity:
-                    min_ambiguity = ambig
 
             for tag in tags:
                 tag2D = tag.toPose2d()
@@ -243,10 +237,6 @@ class PoseEstimator(Subsystem):
                 tag_dist /= len(tags)
             if len(tags) == 1:
                 theta_modifier = 1000.0
-                if min_ambiguity > 0.1:
-                    xy_modifier = 3.0
-            if self.robot.in_autonomous_mode:
-                auto_modifier = 3.0
             if tag_dist > 4:  # if the robot is more than 4 meters away from the target
                 xy_modifier = 3.0
                 theta_modifier = 3.0
@@ -259,16 +249,13 @@ class PoseEstimator(Subsystem):
                     (
                         self.xystd
                         * (tag_dist**2)
-                        * xy_modifier
-                        * auto_modifier,  # * (min_ambiguity / 0.4),
+                        * xy_modifier,  # * (min_ambiguity / 0.4),
                         self.xystd
                         * (tag_dist**2)
-                        * xy_modifier
-                        * auto_modifier,  # * (min_ambiguity / 0.4),
+                        * xy_modifier,  # * (min_ambiguity / 0.4),
                         self.thetastd
                         * (tag_dist**2)
-                        * theta_modifier
-                        * auto_modifier,  # * (min_ambiguity / 0.4),
+                        * theta_modifier,  # * (min_ambiguity / 0.4),
                     ),
                 )
                 if (
