@@ -78,6 +78,10 @@ class PoseEstimator(Subsystem):
 
         self.field = Field2d()
 
+        # bl, fl, br, fr
+
+        # fl, fr, bl, br
+
         self.modules = (
             SwerveModule(
                 "front_left",
@@ -128,35 +132,29 @@ class PoseEstimator(Subsystem):
 
         self.curEstPose = Pose2d()
 
-        self.speaker_angle = 0
-
         self.poseEst = SwerveDrive4PoseEstimator(
             const.SWERVE_KINEMATICS, self.getYaw(), self.get_module_positions(), self.curEstPose  # type: ignore
         )
 
         # self.poseEst.setVisionMeasurementStdDevs((0.0001, 0.0001, 0.5))
-        self.xystd = 0.1  # .1
+        self.xystd = 0.3  # .1
         self.thetastd = 10.0  # .15
 
         # test position of camera 1 on front right module
         ROBOT_TO_CAM1 = Transform3d(
-            Translation3d(0.2868, -0.2973, 0.2144),  # X  # Y  # Z
+            Translation3d(-0.290, -0.295, 0.1699),  # X  # Y  # Z
             Rotation3d(
-                0.0, -10 * (math.pi / 180), 0 * (math.pi / 180)
+                0.0, -10.0 * (math.pi / 180), 20.0 * (math.pi / 180)
             ),  # Roll  # Pitch  # Yaw
         )
 
         # Update with positionon robot
-        # ROBOT_TO_CAM2 = Transform3d(
-        #     Translation3d(
-        #         0.06, 0.286, 0.423
-        #     ),  # X  # Y  # Z # .0692 for super structure
-        #     Rotation3d(
-        #         0 * (math.pi / 180),
-        #         -10.0 * (math.pi / 180),
-        #         24.62 * (math.pi / 180),
-        #     ),  # Roll  # Pitch  # Yaw
-        # )
+        ROBOT_TO_CAM2 = Transform3d(
+            Translation3d(0.290, -0.295, 0.1699),  # X  # Y  # Z
+            Rotation3d(
+                0.0, -10.0 * (math.pi / 180), -20.0 * (math.pi / 180)
+            ),  # Roll  # Pitch  # Yaw
+        )
 
         # # Update with positionon robot
         # ROBOT_TO_CAM3 = Transform3d(
@@ -177,8 +175,8 @@ class PoseEstimator(Subsystem):
         # )
 
         self.cams = [
-            WrapperedPhotonCamera("Camera1", ROBOT_TO_CAM1),
-            # WrapperedPhotonCamera("Camera2", ROBOT_TO_CAM2),
+            WrapperedPhotonCamera("camera_1", ROBOT_TO_CAM1),
+            WrapperedPhotonCamera("camera_2", ROBOT_TO_CAM2),
             # WrapperedPhotonCamera("Camera3", ROBOT_TO_CAM3),
             # WrapperedPhotonCamera("Camera4", ROBOT_TO_CAM4),
         ]
