@@ -1,10 +1,6 @@
 
-"""
-These are field constants and positions from the blue alliance side.
-(0,0): When standing at the blue driver stations, (0,0) is to the right and back (is the extension of Driver Station wall and processor wall)
-Y-axis: across the width of field
-X-axis: down the length
-"""
+
+from typing import TYPE_CHECKING
 
 import math
 from enum import Enum
@@ -16,6 +12,12 @@ from wpimath.units import inchesToMeters, degreesToRadians
 from wpilib import DriverStation
 
 class FieldConstants():
+    """
+    These are field constants and positions from the blue alliance side.
+    (0,0): When standing at the blue driver stations, (0,0) is to the right and back (is the extension of Driver Station wall and processor wall)
+    Y-axis: across the width of field
+    X-axis: down the length
+    """
     fieldLength = inchesToMeters(690.876)
     fieldWidth = inchesToMeters(317)
     startingLineX = inchesToMeters(299.438) #Measured from the inside of starting line
