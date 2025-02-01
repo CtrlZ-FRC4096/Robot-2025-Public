@@ -128,7 +128,7 @@ class WrapperedPhotonCamera:
         #             self.tagPositions.append(tagFieldPose)
 
         ## MultiTag code
-        tag_map = AprilTagField.k2025Reefscape
+        tag_map = AprilTagFieldLayout("/Users/ezraakresh/Robot-2025/robot/util/2025-reefscape.json")
         photon_pose_estimator = photonPoseEstimator.PhotonPoseEstimator(
             tag_map,
             photonPoseEstimator.PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
@@ -146,11 +146,7 @@ class WrapperedPhotonCamera:
             for target in res.getTargets():
                 tgtID = target.getFiducialId()
 
-                tagFieldPose = AprilTagFieldLayout(
-                    AprilTagField.k2025Reefscape,
-                    FieldConstants.fieldLength,
-                    FieldConstants.fieldWidth,
-                ).getTagPose(tgtID)
+                tagFieldPose = tag_map.getTagPose(tgtID)
                 self.tagAmbiguity.append(target.getPoseAmbiguity())
                 self.tagPositions.append(tagFieldPose)
 
