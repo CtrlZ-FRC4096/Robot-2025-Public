@@ -1,5 +1,6 @@
 import time
 import math
+import numpy as np
 
 from collections import deque
 
@@ -147,7 +148,7 @@ class PoseEstimator(Subsystem):
         ROBOT_TO_CAM1 = Transform3d(
             Translation3d(-0.290, -0.295, 0.1699),  # X  # Y  # Z
             Rotation3d(
-                0.0, -10.0 * (math.pi / 180), 20.0 * (math.pi / 180)
+                0.0, np.deg2rad(-10.0), np.deg2rad(20.0)
             ),  # Roll  # Pitch  # Yaw
         )
 
@@ -155,7 +156,7 @@ class PoseEstimator(Subsystem):
         ROBOT_TO_CAM2 = Transform3d(
             Translation3d(0.290, -0.295, 0.1699),  # X  # Y  # Z
             Rotation3d(
-                0.0, -10.0 * (math.pi / 180), -20.0 * (math.pi / 180)
+                0.0, np.deg2rad(-10.0), np.deg2rad(-20.0)
             ),  # Roll  # Pitch  # Yaw
         )
 
@@ -247,35 +248,33 @@ class PoseEstimator(Subsystem):
 
         return self.max_trans_speed / self.min_trans_speed
     
-    def have_collided(self):
+    def get_jerk_val(self):
             cur_accel_x = self.gyro.get_acceleration_x().value
             cur_accel_y = self.gyro.get_acceleration_y().value
 
-            cur_abs_jerk_x = abs(cur_accel_x - self.last_periodic_accel_x)
-            cur_abs_jerk_y = abs(cur_accel_y - self.last_periodic_accel_y)
+            cur_jerk_x = abs(cur_accel_x - self.last_periodic_accel_x)
+            cur_jerk_y = abs(cur_accel_y - self.last_periodic_accel_y)
             
             self.last_period_accel_x = cur_accel_x
             self.last_period_accel_y = cur_accel_x
 
-            return True if (cur_abs_jerk_x > const.COLLISION_JERK_MAX or\
-                 cur_abs_jerk_y > const.COLLISION_JERK_MAX) else False
+            return np.sqrt(cur_jerk_x ** 2 + cur_jerk_y ** 2)
 
-    def poseIsOnField(self, pose: Pose2d):
+    def poseIsOffField(self, pose: Pose2d):
         trans = pose.translation()
         x = trans.X()
         y = trans.Y()
         inY = -0.5 < y < FieldConstants.fieldWidth + 0.5
         inX = -0.5 < x < FieldConstants.fieldLength + 0.5
-        return inX and inY
+        return not(inX and inY)
 
 
-    def is_candidate_pose_OK(self, candidate_pose : Pose2d):
-        if not(self.poseIsOnField(candidate_pose)):  # Check if the robot is on the field
+    def candidate_pose_OK(self, candidate_pose : Pose2d):
+        if self.poseIsOffField(candidate_pose):  # Check if the robot is on the field
             return False
-        elif self.is_moving():
-            if self.get_skidding_ratio() >= 1.3: #TODO: Tune this in shop
-                return False
-        elif self.have_collided():
+        elif self.is_moving() and self.get_skidding_ratio() > const.SKIDDING_RATIO_MAX: #TODO: Tune this in shop
+            return False
+        elif self.get_jerk_val() > const.COLLISION_JERK_MAX:
             return False
         #add more elifs as conditions
         else:
@@ -339,7 +338,7 @@ class PoseEstimator(Subsystem):
         self.lastPeriodicEstPose = self.curEstPose
         possible_pose = self.poseEst.getEstimatedPosition()
 
-        if self.is_candidate_pose_OK(possible_pose):
+        if self.candidate_pose_OK(possible_pose):
             self.curEstPose = self.poseEst.getEstimatedPosition()
 
         # add one for huge jumps or dips in acceleration/jerk or for skidding
