@@ -31,6 +31,7 @@ from wpimath.kinematics import (
     SwerveDrive4Kinematics,
     SwerveDrive4Odometry,
     SwerveModulePosition,
+    SwerveModuleState
 )
 from phoenix6 import configs
 
@@ -220,6 +221,36 @@ class PoseEstimator(Subsystem):
         for module in self.modules:
             module.reset_to_absolute()
 
+    def swerve_state_to_vel_vector(self, swerve_module_state : SwerveModuleState):
+        return Translation2d(swerve_module_state.speed, swerve_module_state.angle)
+
+    def get_skidding_ratio(self, swerve_module_states : tuple[SwerveModuleState, SwerveModuleState, SwerveModuleState, SwerveModuleState], swerve_kinematics : SwerveDrive4Kinematics):
+        self.angular_velocity = swerve_kinematics.toChassisSpeeds(swerve_module_states).omega
+        self.swerve_state_rotations = swerve_kinematics.toSwerveModuleStates(ChassisSpeeds(0, 0, self.angular_velocity))
+        self.swerve_states_translation_magnitudes = []
+        
+
+        for idx in range(len(swerve_module_states)):
+            swerve_state_vector = self.swerve_state_to_vel_vector(swerve_module_states[idx])
+            swerve_state_rotation_vector = self.swerve_state_to_vel_vector(self.swerve_state_rotations[idx])
+            self.swerve_states_translation_magnitudes.append(
+                (swerve_state_vector - swerve_state_rotation_vector).norm()
+            )
+        self.max_trans_speed = max(self.swerve_states_translation_magnitudes)
+        self.min_trans_speed = min(self.swerve_states_translation_magnitudes)
+
+        return self.max_trans_speed / self.min_trans_speed
+
+    def is_candidate_pose_OK(self, candidate_pose):
+        if not(WrapperedPhotonCamera._poseIsOnField(candidate_pose)):  # Check if the robot is on the field
+            return False
+        elif self.get_skidding_ratio(self.get_module_states(), const.SWERVE_KINEMATICS) >= 1.3: #TODO: Tune this in shop
+            return False
+        #add more elifs as conditions
+
+        else:
+            return True
+
     def periodic(self):
         allianceColor = DriverStation.getAlliance()
 
@@ -270,23 +301,17 @@ class PoseEstimator(Subsystem):
                     self.poseConverge = False
                 self.camTargetsVisible = True
             # self.telemetry.addVisionObservations(observations) #Might need later https://github.com/RobotCasserole1736/RobotCasserole2024/blob/fa033322e6f4efe87e8b1af938d8a3f69599f29b/drivetrain/poseEstimation/drivetrainPoseTelemetry.py#L15
+        
         if self.isFirstTick:
             self.isFirstTick = False
 
         self.poseEst.update(self.getYaw(), self.get_module_positions())
-        # self.curEstPose = self.poseEst.getEstimatedPosition()
-        candidate_pose = self.poseEst.getEstimatedPosition()
         self.lastPeriodicEstPose = self.curEstPose
-        candidatePoseOK = True
-        
-        #filters for candidate pose
-        if not(WrapperedPhotonCamera._poseIsOnField(candidate_pose)):  # Check if the robot is on the field
-            candidatePoseOK = False
-        # add one for huge jumps or dips in acceleration/jerk or for skiding
-        
-        if candidatePoseOK:
-            self.curEstPose = candidate_pose
 
+        if self.is_candidate_pose_OK(self.poseEst.getEstimatedPosition()):
+            self.curEstPose = self.poseEst.getEstimatedPosition
+
+        # add one for huge jumps or dips in acceleration/jerk or for skidding
 
         if (self.robot.leds.mode == self.robot.leds.MODE_LOST_ODOMETRY) or (
             self.robot.leds.mode == self.robot.leds.MODE_ODOMETRY
