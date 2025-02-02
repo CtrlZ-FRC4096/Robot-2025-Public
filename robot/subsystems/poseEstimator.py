@@ -132,6 +132,7 @@ class PoseEstimator(Subsystem):
         )
 
         self.curEstPose = Pose2d(0, 0, self.getYaw())
+        self.lastPeriodicEstPose = self.curEstPose
 
         self.poseEst = SwerveDrive4PoseEstimator(
             const.SWERVE_KINEMATICS, self.getYaw(), self.get_module_positions(), self.curEstPose  # type: ignore
@@ -183,6 +184,7 @@ class PoseEstimator(Subsystem):
         ]
 
         self.poseConverge = True
+        self.isFirstTick = True
 
     def stop(self):
         print("sike this aint stoppin")
@@ -222,7 +224,8 @@ class PoseEstimator(Subsystem):
         allianceColor = DriverStation.getAlliance()
 
         for idx, cam in enumerate(self.cams):
-            cam.update(self.curEstPose, allianceColor=allianceColor)
+            if self.isFirstTick or self.lastPeriodicEstPose != self.curEstPose:
+                cam.update(self.curEstPose, allianceColor=allianceColor)            
 
             observations = cam.getPoseEstimates()
             tags = cam.getTagPositions()
@@ -267,13 +270,23 @@ class PoseEstimator(Subsystem):
                     self.poseConverge = False
                 self.camTargetsVisible = True
             # self.telemetry.addVisionObservations(observations) #Might need later https://github.com/RobotCasserole1736/RobotCasserole2024/blob/fa033322e6f4efe87e8b1af938d8a3f69599f29b/drivetrain/poseEstimation/drivetrainPoseTelemetry.py#L15
+        if self.isFirstTick:
+            self.isFirstTick = False
 
         self.poseEst.update(self.getYaw(), self.get_module_positions())
         # self.curEstPose = self.poseEst.getEstimatedPosition()
         candidate_pose = self.poseEst.getEstimatedPosition()
-
-        if WrapperedPhotonCamera._poseIsOnField(candidate_pose):  # Check if the robot is on the field
+        self.lastPeriodicEstPose = self.curEstPose
+        candidatePoseOK = True
+        
+        #filters for candidate pose
+        if not(WrapperedPhotonCamera._poseIsOnField(candidate_pose)):  # Check if the robot is on the field
+            candidatePoseOK = False
+        # add one for huge jumps or dips in acceleration/jerk or for skiding
+        
+        if candidatePoseOK:
             self.curEstPose = candidate_pose
+
 
         if (self.robot.leds.mode == self.robot.leds.MODE_LOST_ODOMETRY) or (
             self.robot.leds.mode == self.robot.leds.MODE_ODOMETRY
