@@ -232,6 +232,8 @@ class PoseEstimator(Subsystem):
         return swerve_chassis.vx > 0.01 or swerve_chassis.vy > 0.01
 
     def get_skidding_ratio(self):
+        if not(self.is_moving()):
+            return 1 #is this ok?
         swerve_module_states = self.get_module_states()
         self.angular_velocity = const.SWERVE_KINEMATICS.toChassisSpeeds(swerve_module_states).omega
         self.swerve_state_rotations = const.SWERVE_KINEMATICS.toSwerveModuleStates(ChassisSpeeds(0, 0, self.angular_velocity))
@@ -272,7 +274,7 @@ class PoseEstimator(Subsystem):
     def candidate_pose_OK(self, candidate_pose : Pose2d):
         if self.poseIsOffField(candidate_pose):  # Check if the robot is on the field
             return False
-        elif self.is_moving() and self.get_skidding_ratio() > const.SKIDDING_RATIO_MAX: #TODO: Tune this in shop
+        elif self.get_skidding_ratio() > const.SKIDDING_RATIO_MAX: #TODO: Tune this in shop
             return False
         elif self.get_jerk_val() > const.COLLISION_JERK_MAX:
             return False
