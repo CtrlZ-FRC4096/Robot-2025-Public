@@ -268,7 +268,7 @@ class PoseEstimator(Subsystem):
             # self.telemetry.addVisionObservations(observations) #Might need later https://github.com/RobotCasserole1736/RobotCasserole2024/blob/fa033322e6f4efe87e8b1af938d8a3f69599f29b/drivetrain/poseEstimation/drivetrainPoseTelemetry.py#L15
 
         self.poseEst.update(self.getYaw(), self.get_module_positions())
-        self.curEstPose = self.poseEst.getEstimatedPosition()
+        # self.curEstPose = self.poseEst.getEstimatedPosition()
         candidate_pose = self.poseEst.getEstimatedPosition()
 
         if (
