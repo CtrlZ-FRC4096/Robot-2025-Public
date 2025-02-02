@@ -186,6 +186,8 @@ class PoseEstimator(Subsystem):
 
         self.poseConverge = True
         self.isFirstTick = True
+        self.last_periodic_accel_x = 0
+        self.last_periodic_accel_y = 0
 
     def stop(self):
         print("sike this aint stoppin")
@@ -223,12 +225,16 @@ class PoseEstimator(Subsystem):
 
     def swerve_state_to_vel_vector(self, swerve_module_state : SwerveModuleState):
         return Translation2d(swerve_module_state.speed, swerve_module_state.angle)
+    
+    def is_moving(self):
+        swerve_chassis = const.SWERVE_KINEMATICS.toChassisSpeeds(self.get_module_states())
+        return swerve_chassis.vx > 0.01 or swerve_chassis.vy > 0.01
 
-    def get_skidding_ratio(self, swerve_module_states : tuple[SwerveModuleState, SwerveModuleState, SwerveModuleState, SwerveModuleState], swerve_kinematics : SwerveDrive4Kinematics):
-        self.angular_velocity = swerve_kinematics.toChassisSpeeds(swerve_module_states).omega
-        self.swerve_state_rotations = swerve_kinematics.toSwerveModuleStates(ChassisSpeeds(0, 0, self.angular_velocity))
+    def get_skidding_ratio(self):
+        swerve_module_states = self.get_module_states()
+        self.angular_velocity = const.SWERVE_KINEMATICS.toChassisSpeeds(swerve_module_states).omega
+        self.swerve_state_rotations = const.SWERVE_KINEMATICS.toSwerveModuleStates(ChassisSpeeds(0, 0, self.angular_velocity))
         self.swerve_states_translation_magnitudes = []
-        
 
         for idx in range(len(swerve_module_states)):
             swerve_state_vector = self.swerve_state_to_vel_vector(swerve_module_states[idx])
@@ -240,14 +246,38 @@ class PoseEstimator(Subsystem):
         self.min_trans_speed = min(self.swerve_states_translation_magnitudes)
 
         return self.max_trans_speed / self.min_trans_speed
+    
+    def have_collided(self):
+            cur_accel_x = self.gyro.get_acceleration_x().value
+            cur_accel_y = self.gyro.get_acceleration_y().value
 
-    def is_candidate_pose_OK(self, candidate_pose):
-        if not(WrapperedPhotonCamera._poseIsOnField(candidate_pose)):  # Check if the robot is on the field
+            cur_abs_jerk_x = abs(cur_accel_x - self.last_periodic_accel_x)
+            cur_abs_jerk_y = abs(cur_accel_y - self.last_periodic_accel_y)
+            
+            self.last_period_accel_x = cur_accel_x
+            self.last_period_accel_y = cur_accel_x
+
+            return True if (cur_abs_jerk_x > const.COLLISION_JERK_MAX or\
+                 cur_abs_jerk_y > const.COLLISION_JERK_MAX) else False
+
+    def poseIsOnField(self, pose: Pose2d):
+        trans = pose.translation()
+        x = trans.X()
+        y = trans.Y()
+        inY = -0.5 < y < FieldConstants.fieldWidth + 0.5
+        inX = -0.5 < x < FieldConstants.fieldLength + 0.5
+        return inX and inY
+
+
+    def is_candidate_pose_OK(self, candidate_pose : Pose2d):
+        if not(self.poseIsOnField(candidate_pose)):  # Check if the robot is on the field
             return False
-        elif self.get_skidding_ratio(self.get_module_states(), const.SWERVE_KINEMATICS) >= 1.3: #TODO: Tune this in shop
+        elif self.is_moving():
+            if self.get_skidding_ratio() >= 1.3: #TODO: Tune this in shop
+                return False
+        elif self.have_collided():
             return False
         #add more elifs as conditions
-
         else:
             return True
 
@@ -307,9 +337,10 @@ class PoseEstimator(Subsystem):
 
         self.poseEst.update(self.getYaw(), self.get_module_positions())
         self.lastPeriodicEstPose = self.curEstPose
+        possible_pose = self.poseEst.getEstimatedPosition()
 
-        if self.is_candidate_pose_OK(self.poseEst.getEstimatedPosition()):
-            self.curEstPose = self.poseEst.getEstimatedPosition
+        if self.is_candidate_pose_OK(possible_pose):
+            self.curEstPose = self.poseEst.getEstimatedPosition()
 
         # add one for huge jumps or dips in acceleration/jerk or for skidding
 

@@ -162,22 +162,22 @@ class FieldConstants():
 # print(FieldConstants.Reef.branchPositions)
 #print(FieldConstants.Reef.branchPositions)
 
-for idx in range(len(FieldConstants.Reef.branchPositions)):
-    for level in range(4):
-        reefHeightLevels = {
-             FieldConstants.ReefHeight.L4 : "4",
-             FieldConstants.ReefHeight.L3 : "3",
-             FieldConstants.ReefHeight.L2 : "2",
-             FieldConstants.ReefHeight.L1 : "1"
-        }
-        for reef_height, lvl in reefHeightLevels.items():
-             if math.isclose(FieldConstants.Reef.branchPositions[idx][level*2][0], reef_height.height, abs_tol=1e-6):
-                branch_level = lvl
+# for idx in range(len(FieldConstants.Reef.branchPositions)):
+#     for level in range(4):
+#         reefHeightLevels = {
+#              FieldConstants.ReefHeight.L4 : "4",
+#              FieldConstants.ReefHeight.L3 : "3",
+#              FieldConstants.ReefHeight.L2 : "2",
+#              FieldConstants.ReefHeight.L1 : "1"
+#         }
+#         for reef_height, lvl in reefHeightLevels.items():
+#              if math.isclose(FieldConstants.Reef.branchPositions[idx][level*2][0], reef_height.height, abs_tol=1e-6):
+#                 branch_level = lvl
              
-        print("Face", ((idx // 2) + 1),
-            ", right-branch" if idx % 2 else ", left-branch",
-            ", L" + branch_level,
-            "Pitch:", FieldConstants.Reef.branchPositions[idx][level * 2][1],
-            "\n Pose3d: \n", FieldConstants.Reef.branchPositions[idx][(level*2) + 1],
-            end="\n\n"
-            )
+#         print("Face", ((idx // 2) + 1),
+#             ", right-branch" if idx % 2 else ", left-branch",
+#             ", L" + branch_level,
+#             "Pitch:", FieldConstants.Reef.branchPositions[idx][level * 2][1],
+#             "\n Pose3d: \n", FieldConstants.Reef.branchPositions[idx][(level*2) + 1],
+#             end="\n\n"
+#             )
