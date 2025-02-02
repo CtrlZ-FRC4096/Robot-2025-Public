@@ -38,6 +38,7 @@ from phoenix6 import configs
 
 
 import const
+from field_const import FieldConstants
 
 # from leds import LEDs
 # from shooter import Shooter
@@ -271,12 +272,7 @@ class PoseEstimator(Subsystem):
         # self.curEstPose = self.poseEst.getEstimatedPosition()
         candidate_pose = self.poseEst.getEstimatedPosition()
 
-        if (
-            (candidate_pose.x > -0.5)
-            and (candidate_pose.x < self.robot.fieldConstants.fieldLength + 0.5)
-            and (candidate_pose.y > -0.5)
-            and (candidate_pose.y < self.robot.fieldConstants.fieldWidth + 0.5)
-        ):  # Check if the robot is on the field
+        if WrapperedPhotonCamera._poseIsOnField(candidate_pose):  # Check if the robot is on the field
             self.curEstPose = candidate_pose
 
         if (self.robot.leds.mode == self.robot.leds.MODE_LOST_ODOMETRY) or (

@@ -167,10 +167,11 @@ class WrapperedPhotonCamera:
         return camPose.transformBy(self.robotToCam.inverse()).toPose2d()
 
     # Returns true of a pose is on the field, false if it's outside of the field perimieter
+    @staticmethod
     def _poseIsOnField(self, pose: Pose2d):
         trans = pose.translation()
         x = trans.X()
         y = trans.Y()
-        inY = 0.0 <= y <= feetToMeters(27.0)
-        inX = 0.0 <= x <= feetToMeters(54.0)
+        inY = -0.5 < y < FieldConstants.fieldWidth + 0.5
+        inX = -0.5 < x < FieldConstants.fieldLength + 0.5
         return inX and inY
