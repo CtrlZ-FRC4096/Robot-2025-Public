@@ -49,7 +49,7 @@ class SwerveModule:
         )
         
         swerve_can_coder_config.magnet_sensor.absolute_sensor_range = signals.AbsoluteSensorRangeValue.SIGNED_PLUS_MINUS_HALF
-        # swerve_can_coder_config.magnet_sensor.magnet_offset = 0.4 ##Not sure what this should be, maybe the zero position?
+        swerve_can_coder_config.magnet_sensor.magnet_offset = angle_offset
 
         self.angle_encoder.configurator.apply(
             swerve_can_coder_config  # type: ignore
@@ -253,7 +253,8 @@ class SwerveModule:
         absolute_position = (
             (cancoder_angle - angle_offset) / 360 * const.SWERVE_ANGLE_GEAR_RATIO
         )
-        self.angle_motor.set_position(absolute_position)
+        # self.angle_motor.set_position(absolute_position) # This was used before fusing the cancoder
+        self.angle_motor.set_position(cancoder_angle) # This is the new way to set the position
 
     # def reset_to_absolute(self):
     # cancoder_angle: float = typing.cast(float, self.get_angle_CANcoder().degrees())
