@@ -5,7 +5,7 @@ from photonlibpy.photonCamera import (
     setVersionCheckEnabled,
 )  # VisionLEDMode
 from photonlibpy import photonPoseEstimator
-from wpimath.geometry import Pose2d, Translation3d, Rotation2d, Translation2d
+from wpimath.geometry import Pose2d, Pose3d, Translation2d, Translation3d, Rotation2d, Rotation3d
 
 import const
 from wpilib import DriverStation, SmartDashboard, Timer, Field2d
@@ -132,16 +132,17 @@ class WrapperedPhotonCamera:
                 distance = target.getBestCameraToTarget().translation().norm() # distance from camera to target in meters
                 
                 # Calculate the position of the target to the camera  in the camera coordinate system (meters)
-                z_dist = distance * math.cos(target_y_angle)
-                y_dist = distance * math.sin(target_x_angle)
-                x_dist = y_dist / math.tan(target_x_angle)
+                # Use spherical coordinates to calculate the x, y, and z distances
+                z_dist = distance * math.cos((math.pi/2) - target_y_angle)
+                y_dist = distance * math.sin(target_x_angle) * math.sin((math.pi/2) - target_y_angle)
+                x_dist = distance * math.cos(target_x_angle) * math.sin((math.pi/2) - target_y_angle)
                 
-                camToTarget_translation = Translation3d(x_dist, y_dist, z_dist)
+                camToTarget = Pose3d(Translation3d(x_dist, y_dist, z_dist), Rotation3d()) #Create a Pose3d object with the calculated x, y, and z distances, and no rotation
                 
-                # Calculate the position of the target to the field in the field coordinate system (meters)
-                fieldPose = self._toFieldTranslation(tagFieldPose, camToTarget_translation)
+                # Calculate the position of the robot on the field in the field coordinate system (meters) from the tag pose and the camera to target transform
+                fieldPose = self._toFieldPose(tagFieldPose, camToTarget)
                 
-                self.poseSingleTag.append(Pose2d(Translation2d(fieldPose.X(), fieldPose.Y()), Rotation2d()))
+                self.poseSingleTag.append(fieldPose)
                 self.singleTagIDs.append(tgtID)            
                 
                 
@@ -168,12 +169,6 @@ class WrapperedPhotonCamera:
     def _toFieldPose(self, tgtPose, camToTarget):
         camPose = tgtPose.transformBy(camToTarget.inverse())
         return camPose.transformBy(self.robotToCam.inverse()).toPose2d()
-    
-    def _toFieldTranslation(self, tgtPose, camToTarget_translation):
-        tgtPose = tgtPose.translation()
-        camPose = tgtPose - camToTarget_translation
-        robotToCam_translation = self.robotToCam.translation()
-        return camPose - robotToCam_translation
 
     # Returns true of a pose is on the field, false if it's outside of the field perimieter
     def _poseIsOnField(self, pose: Pose2d):
