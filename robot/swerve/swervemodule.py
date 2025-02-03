@@ -169,6 +169,10 @@ class SwerveModule:
             desired_state, self.get_state().angle
         )
         self.set_angle(desired_state)
+        
+        ## Add cosine compensation, wheels don't spin as fast when they are at the wrong angle
+        desired_state.speed *= (desired_state.angle - self.get_state().angle).cos() 
+        
         self.set_speed(desired_state, is_open_loop)
 
     def set_speed(self, desired_state: SwerveModuleState, is_open_loop):
