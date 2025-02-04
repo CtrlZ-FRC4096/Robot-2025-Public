@@ -293,11 +293,15 @@ class PoseEstimator(Subsystem):
         else:
             return True
         
-    def calculate_closest_reef_tag(relevant_tags):
+    def calculate_closest_reef_tag(self, relevant_tags):
         min_distance_to_tag = math.inf
+        closest_reef_tag = None
         for tag in relevant_tags:
             distance = math.sqrt((self.curEstPose.X()-tag.X())**2 + (self.curEstPose.Y() - tag.Y())**2)
-        return True
+            if distance < min_distance_to_tag:
+                min_distance_to_tag = distance
+                closest_reef_tag = tag
+        return closest_reef_tag
 
     def periodic(self):
         allianceColor = DriverStation.getAlliance()
