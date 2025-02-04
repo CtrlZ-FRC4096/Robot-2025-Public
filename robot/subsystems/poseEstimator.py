@@ -134,7 +134,7 @@ class PoseEstimator(Subsystem):
         )
 
         self.curEstPose = Pose2d(0, 0, self.getYaw())
-        self.lastPeriodicEstPose = self.curEstPose
+        # self.lastPeriodicEstPose = self.curEstPose
 
         self.poseEst = SwerveDrive4PoseEstimator(
             const.SWERVE_KINEMATICS, self.getYaw(), self.get_module_positions(), self.curEstPose  # type: ignore
@@ -148,7 +148,7 @@ class PoseEstimator(Subsystem):
         ROBOT_TO_CAM1 = Transform3d(
             Translation3d(-0.290, -0.295, 0.1699),  # X  # Y  # Z
             Rotation3d(
-                0.0, np.deg2rad(-10.0), np.deg2rad(20.0)
+                0.0, np.deg2rad(-10.0), np.deg2rad(20.0 - 90)
             ),  # Roll  # Pitch  # Yaw
         )
 
@@ -156,7 +156,7 @@ class PoseEstimator(Subsystem):
         ROBOT_TO_CAM2 = Transform3d(
             Translation3d(0.290, -0.295, 0.1699),  # X  # Y  # Z
             Rotation3d(
-                0.0, np.deg2rad(-10.0), np.deg2rad(-20.0)
+                0.0, np.deg2rad(-10.0), np.deg2rad(-20.0 - 90)
             ),  # Roll  # Pitch  # Yaw
         )
 
@@ -297,7 +297,6 @@ class PoseEstimator(Subsystem):
         allianceColor = DriverStation.getAlliance()
 
         for idx, cam in enumerate(self.cams):
-            # if self.isFirstTick or self.lastPeriodicEstPose != self.curEstPose:
             cam.update(self.curEstPose, allianceColor=allianceColor)
 
             observations = cam.getPoseEstimates()
@@ -348,17 +347,17 @@ class PoseEstimator(Subsystem):
         #     self.isFirstTick = False
 
         self.poseEst.update(self.getYaw(), self.get_module_positions())
-        self.lastPeriodicEstPose = self.curEstPose
-        self.curEstPose = self.poseEst.getEstimatedPosition()
+        # self.lastPeriodicEstPose = self.curEstPose
+
         SmartDashboard.putNumber("skidding ratio", self.get_skidding_ratio())
         SmartDashboard.putNumber("jerk val", self.get_jerk_val())
 
-        # possible_pose = self.poseEst.getEstimatedPosition()
+        possible_pose = self.poseEst.getEstimatedPosition()
 
-        # if self.candidate_pose_OK(possible_pose):
-        #     self.curEstPose = self.poseEst.getEstimatedPosition()
+        SmartDashboard.putBoolean("pose 4 u :3", self.candidate_pose_OK(possible_pose))
 
-        # add one for huge jumps or dips in acceleration/jerk or for skidding
+        if self.candidate_pose_OK(possible_pose):
+            self.curEstPose = self.poseEst.getEstimatedPosition()
 
         if (self.robot.leds.mode == self.robot.leds.MODE_LOST_ODOMETRY) or (
             self.robot.leds.mode == self.robot.leds.MODE_ODOMETRY
