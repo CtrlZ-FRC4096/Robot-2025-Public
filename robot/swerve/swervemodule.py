@@ -10,6 +10,7 @@ from wpimath.kinematics import SwerveModulePosition, SwerveModuleState
 
 import const
 from swerve import conversions, ctre_module_state
+import math
 
 
 class SwerveModule:
@@ -98,10 +99,16 @@ class SwerveModule:
         swerve_angle_motor_config.current_limits.stator_current_limit = 100
 
         ## Add fused cancoder
-        # swerve_angle_motor_config.feedback.feedback_remote_sensor_id = self.angle_encoder.device_id
-        # swerve_angle_motor_config.feedback.feedback_sensor_source = signals.FeedbackSensorSourceValue.FUSED_CANCODER
+        # swerve_angle_motor_config.feedback.feedback_remote_sensor_id = (
+        #     self.angle_encoder.device_id
+        # )
+        # swerve_angle_motor_config.feedback.feedback_sensor_source = (
+        #     signals.FeedbackSensorSourceValue.FUSED_CANCODER
+        # )
         # swerve_angle_motor_config.feedback.sensor_to_mechanism_ratio = 1.0
-        # swerve_angle_motor_config.feedback.rotor_to_sensor_ration = const.SWERVE_ANGLE_GEAR_RATIO
+        # swerve_angle_motor_config.feedback.rotor_to_sensor_ration = (
+        #     const.SWERVE_ANGLE_GEAR_RATIO
+        # )
 
         self.angle_motor.configurator.apply(
             swerve_angle_motor_config  # type: ignore
@@ -169,6 +176,10 @@ class SwerveModule:
             desired_state, self.get_state().angle
         )
         self.set_angle(desired_state)
+
+        ## Add cosine compensation, wheels don't spin as fast when they are at the wrong angle
+        desired_state.speed *= (desired_state.angle - self.get_state().angle).cos()
+
         self.set_speed(desired_state, is_open_loop)
 
     def set_speed(self, desired_state: SwerveModuleState, is_open_loop):
@@ -246,7 +257,7 @@ class SwerveModule:
         absolute_position = (
             (cancoder_angle - angle_offset) / 360 * const.SWERVE_ANGLE_GEAR_RATIO
         )
-        self.angle_motor.set_position(absolute_position)
+        self.angle_motor.set_position(absolute_position) # This was used before fusing the cancoder
 
     # def reset_to_absolute(self):
     # cancoder_angle: float = typing.cast(float, self.get_angle_CANcoder().degrees())

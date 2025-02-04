@@ -10,7 +10,7 @@ robotpy_version = "2025.2.1.0"
 
 # Which extra RobotPy components should be installed
 # -> equivalent to `pip install robotpy[extra1, ...]
-robotpy_extras = ["apriltag", "commands2", "pathplannerlib", "phoenix6", "phoenix5"]
+robotpy_extras = ["apriltag", "commands2", "pathplannerlib", "phoenix6", "phoenix5", "numpy"]
     # "all"
     #"apriltag"
     #"commands2"
