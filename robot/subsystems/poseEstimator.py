@@ -67,7 +67,7 @@ from pathplannerlib.path import PathPlannerPath, PathConstraints
 from wpimath.estimator import SwerveDrive4PoseEstimator
 from photoncamera import WrapperedPhotonCamera
 from wpimath.units import degreesToRadians
-
+from robotpy_apriltag import AprilTagField, AprilTagFieldLayout
 
 class PoseEstimator(Subsystem):
     def __init__(self, robot: "Robot"):
@@ -296,8 +296,10 @@ class PoseEstimator(Subsystem):
     def calculate_closest_reef_tag(self, relevant_tags):
         min_distance_to_tag = math.inf
         closest_reef_tag = None
+        tag_layout = AprilTagFieldLayout.loadField(AprilTagField.k2025Reefscape)
         for tag in relevant_tags:
-            distance = math.sqrt((self.curEstPose.X()-tag.X())**2 + (self.curEstPose.Y() - tag.Y())**2)
+            tag_pose = tag_layout.getTagPose(tag)
+            distance = math.sqrt((self.curEstPose.X()-tag_pose.X())**2 + (self.curEstPose.Y() - tag_pose.Y())**2)
             if distance < min_distance_to_tag:
                 min_distance_to_tag = distance
                 closest_reef_tag = tag
