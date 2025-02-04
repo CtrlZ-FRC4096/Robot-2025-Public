@@ -296,7 +296,7 @@ class PoseEstimator(Subsystem):
     def calculate_closest_reef_tag(relevant_tags):
         min_distance_to_tag = math.inf
         for tag in relevant_tags:
-            pass
+            distance = math.sqrt((self.curEstPose.X()-tag.X())**2 + (self.curEstPose.Y() - tag.Y())**2)
         return True
 
     def periodic(self):
