@@ -1,5 +1,6 @@
 import time
 import math
+import numpy as np
 
 from collections import deque
 
@@ -31,6 +32,7 @@ from wpimath.kinematics import (
     SwerveDrive4Kinematics,
     SwerveDrive4Odometry,
     SwerveModulePosition,
+    SwerveModuleState
 )
 from phoenix6 import configs
 
@@ -132,6 +134,7 @@ class PoseEstimator(Subsystem):
         )
 
         self.curEstPose = Pose2d(0, 0, self.getYaw())
+        self.lastPeriodicEstPose = self.curEstPose
 
         self.poseEst = SwerveDrive4PoseEstimator(
             const.SWERVE_KINEMATICS, self.getYaw(), self.get_module_positions(), self.curEstPose  # type: ignore
@@ -145,7 +148,7 @@ class PoseEstimator(Subsystem):
         ROBOT_TO_CAM1 = Transform3d(
             Translation3d(-0.290, -0.295, 0.1699),  # X  # Y  # Z
             Rotation3d(
-                0.0, -10.0 * (math.pi / 180), 20.0 * (math.pi / 180)
+                0.0, np.deg2rad(-10.0), np.deg2rad(20.0)
             ),  # Roll  # Pitch  # Yaw
         )
 
@@ -153,7 +156,7 @@ class PoseEstimator(Subsystem):
         ROBOT_TO_CAM2 = Transform3d(
             Translation3d(0.290, -0.295, 0.1699),  # X  # Y  # Z
             Rotation3d(
-                0.0, -10.0 * (math.pi / 180), -20.0 * (math.pi / 180)
+                0.0, np.deg2rad(-10.0), np.deg2rad(-20.0)
             ),  # Roll  # Pitch  # Yaw
         )
 
@@ -183,6 +186,9 @@ class PoseEstimator(Subsystem):
         ]
 
         self.poseConverge = True
+        self.isFirstTick = True
+        self.last_periodic_accel_x = 0
+        self.last_periodic_accel_y = 0
 
     def stop(self):
         print("sike this aint stoppin")
@@ -218,11 +224,70 @@ class PoseEstimator(Subsystem):
         for module in self.modules:
             module.reset_to_absolute()
 
+    def swerve_state_to_vel_vector(self, swerve_module_state : SwerveModuleState):
+        return Translation2d(swerve_module_state.speed, swerve_module_state.angle)
+    
+    def is_moving(self):
+        swerve_chassis = const.SWERVE_KINEMATICS.toChassisSpeeds(self.get_module_states())
+        return swerve_chassis.vx > 0.01 or swerve_chassis.vy > 0.01
+
+    def get_skidding_ratio(self):
+        if not(self.is_moving()):
+            return 1 #is this ok?
+        swerve_module_states = self.get_module_states()
+        self.angular_velocity = const.SWERVE_KINEMATICS.toChassisSpeeds(swerve_module_states).omega
+        self.swerve_state_rotations = const.SWERVE_KINEMATICS.toSwerveModuleStates(ChassisSpeeds(0, 0, self.angular_velocity))
+        self.swerve_states_translation_magnitudes = []
+
+        for idx in range(len(swerve_module_states)):
+            swerve_state_vector = self.swerve_state_to_vel_vector(swerve_module_states[idx])
+            swerve_state_rotation_vector = self.swerve_state_to_vel_vector(self.swerve_state_rotations[idx])
+            self.swerve_states_translation_magnitudes.append(
+                (swerve_state_vector - swerve_state_rotation_vector).norm()
+            )
+        self.max_trans_speed = max(self.swerve_states_translation_magnitudes)
+        self.min_trans_speed = min(self.swerve_states_translation_magnitudes)
+
+        return self.max_trans_speed / self.min_trans_speed
+    
+    def get_jerk_val(self):
+            cur_accel_x = self.gyro.get_acceleration_x().value
+            cur_accel_y = self.gyro.get_acceleration_y().value
+
+            cur_jerk_x = abs(cur_accel_x - self.last_periodic_accel_x) / 0.05
+            cur_jerk_y = abs(cur_accel_y - self.last_periodic_accel_y) / 0.05
+            
+            self.last_period_accel_x = cur_accel_x
+            self.last_period_accel_y = cur_accel_x
+
+            return np.sqrt(cur_jerk_x ** 2 + cur_jerk_y ** 2)
+
+    def poseIsOffField(self, pose: Pose2d):
+        trans = pose.translation()
+        x = trans.X()
+        y = trans.Y()
+        inY = -0.5 < y < FieldConstants.fieldWidth + 0.5
+        inX = -0.5 < x < FieldConstants.fieldLength + 0.5
+        return not(inX and inY)
+
+
+    def candidate_pose_OK(self, candidate_pose : Pose2d):
+        if self.poseIsOffField(candidate_pose):  # Check if the robot is on the field
+            return False
+        elif self.get_skidding_ratio() > const.SKIDDING_RATIO_MAX: #TODO: Tune this in shop
+            return False
+        elif self.get_jerk_val() > const.COLLISION_JERK_MAX:
+            return False
+        #add more elifs as conditions
+        else:
+            return True
+
     def periodic(self):
         allianceColor = DriverStation.getAlliance()
 
         for idx, cam in enumerate(self.cams):
-            cam.update(self.curEstPose, allianceColor=allianceColor)
+            if self.isFirstTick or self.lastPeriodicEstPose != self.curEstPose:
+                cam.update(self.curEstPose, allianceColor=allianceColor)            
 
             observations = cam.getPoseEstimates()
             tags = cam.getTagPositions()
@@ -267,13 +332,18 @@ class PoseEstimator(Subsystem):
                     self.poseConverge = False
                 self.camTargetsVisible = True
             # self.telemetry.addVisionObservations(observations) #Might need later https://github.com/RobotCasserole1736/RobotCasserole2024/blob/fa033322e6f4efe87e8b1af938d8a3f69599f29b/drivetrain/poseEstimation/drivetrainPoseTelemetry.py#L15
+        
+        if self.isFirstTick:
+            self.isFirstTick = False
 
         self.poseEst.update(self.getYaw(), self.get_module_positions())
-        # self.curEstPose = self.poseEst.getEstimatedPosition()
-        candidate_pose = self.poseEst.getEstimatedPosition()
+        self.lastPeriodicEstPose = self.curEstPose
+        possible_pose = self.poseEst.getEstimatedPosition()
 
-        if WrapperedPhotonCamera._poseIsOnField(candidate_pose):  # Check if the robot is on the field
-            self.curEstPose = candidate_pose
+        if self.candidate_pose_OK(possible_pose):
+            self.curEstPose = self.poseEst.getEstimatedPosition()
+
+        # add one for huge jumps or dips in acceleration/jerk or for skidding
 
         if (self.robot.leds.mode == self.robot.leds.MODE_LOST_ODOMETRY) or (
             self.robot.leds.mode == self.robot.leds.MODE_ODOMETRY
