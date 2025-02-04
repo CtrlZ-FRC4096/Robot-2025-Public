@@ -5,13 +5,23 @@ from photonlibpy.photonCamera import (
     setVersionCheckEnabled,
 )  # VisionLEDMode
 from photonlibpy import photonPoseEstimator
-from wpimath.geometry import Pose2d
+from wpimath.geometry import (
+    Pose2d,
+    Pose3d,
+    Translation2d,
+    Translation3d,
+    Rotation2d,
+    Rotation3d,
+)
 
 import const
 from wpilib import DriverStation, SmartDashboard, Timer, Field2d
 
 from robotpy_apriltag import AprilTagField, AprilTagFieldLayout
 from field_const import FieldConstants
+
+import numpy as np
+import math
 
 
 ## Code from 1736
@@ -44,6 +54,8 @@ class WrapperedPhotonCamera:
         self.poseEstimates = []
         self.tagPositions = []
         self.tagAmbiguity = []
+        self.poseSingleTag = []
+        self.singleTagIDs = []
         # if (self.counter % 20 == 0):
         #     if not self.cam.isConnected():
         #         # Faulted - no estimates, just return.
@@ -61,71 +73,6 @@ class WrapperedPhotonCamera:
         # obsTime = wpilib.Timer.getFPGATimestamp() - latency
 
         obsTime = res.getTimestampSeconds()
-
-        # Update our disconnected fault since we have something from the camera
-
-        # Process each target.
-        # Each target has multiple solutions for where you could have been at on the field
-        # when you observed it
-        # (https://docs.wpilib.org/en/stable/docs/software/vision-processing/
-        # apriltag/apriltag-intro.html#d-to-3d-ambiguity)
-        # We want to select the best possible pose per target
-        # We should also filter out targets that are too far away, and poses which
-        # don't make sense.
-
-        ## Previous 1 target code
-        # for target in res.getTargets():
-
-        #     # Transform both poses to on-field poses
-        #     tgtID = target.getFiducialId()
-        #     # if tgtID in [
-        #     #     3,
-        #     #     4,
-        #     #     7,
-        #     #     8,
-        #     # ]:  # Only use speaker IDs, everything else is not great
-        #         # Only handle valid ID's
-        #     tagFieldPose = loadAprilTagLayoutField(
-        #         AprilTagField.k2024Crescendo
-        #     ).getTagPose(tgtID)
-
-        #     if tagFieldPose is not None:
-        #         # Only handle known tags
-        #         poseCandidates: list[Pose2d] = []
-        #         poseCandidates.append(
-        #             self._toFieldPose(tagFieldPose, target.getBestCameraToTarget())
-        #         )
-        #         poseCandidates.append(
-        #             self._toFieldPose(
-        #                 tagFieldPose, target.getAlternateCameraToTarget()
-        #             )
-        #         )
-
-        #         # Filter candidates in this frame to only the valid ones
-        #         filteredCandidates: list[Pose2d] = []
-        #         for candidate in poseCandidates:
-        #             onField = self._poseIsOnField(candidate)
-        #             # Add other filter conditions here
-        #             if onField:
-        #                 filteredCandidates.append(candidate)
-
-        #         # Pick the candidate closest to the last estimate
-        #         bestCandidate: Pose2d | None = None
-        #         bestCandidateDist = 99999999.0
-        #         for candidate in filteredCandidates:
-        #             delta = (candidate - prevEstPose).translation().norm()
-        #             if delta < bestCandidateDist:
-        #                 # This candidate is better, use it
-        #                 bestCandidate = candidate
-        #                 bestCandidateDist = delta
-
-        #         # Finally, add our best candidate the list of pose observations
-        #         if bestCandidate is not None:
-        #             self.poseEstimates.append(
-        #                 CameraPoseObservation(obsTime, bestCandidate)
-        #             )
-        #             self.tagAmbiguity.append(target.getPoseAmbiguity())
-        #             self.tagPositions.append(tagFieldPose)
 
         ## MultiTag code
         tag_map = AprilTagFieldLayout.loadField(AprilTagField.k2025Reefscape)
@@ -150,6 +97,90 @@ class WrapperedPhotonCamera:
                 self.tagAmbiguity.append(target.getPoseAmbiguity())
                 self.tagPositions.append(tagFieldPose)
 
+        ## Single Tag Code
+        # Process each target.
+        # Each target has multiple solutions for where you could have been at on the field
+        # when you observed it
+        # (https://docs.wpilib.org/en/stable/docs/software/vision-processing/
+        # apriltag/apriltag-intro.html#d-to-3d-ambiguity)
+        # We want to select the best possible pose per target
+        # We should also filter out targets that are too far away, and poses which
+        # don't make sense.
+
+        tag_map = AprilTagFieldLayout.loadField(AprilTagField.k2025Reefscape)
+
+        for target in res.getTargets():
+
+            # Transform both poses to on-field poses
+            tgtID = target.getFiducialId()
+            if tgtID in [
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                17,
+                18,
+                19,
+                20,
+                21,
+                22,
+            ]:  # Only use reef IDs, everything else is not great
+
+                tagFieldPose = tag_map.getTagPose(tgtID)
+
+                corners = np.array(
+                    target.getDetectedCorners()
+                )  # Return list of n corners, for fiducials this is counter clockwise starting from the top left corner of the tag.
+                # corners_undistorted = cv2.undistortPoints(  # Unsure if these corners have already been undistorted
+                #     corners,
+                #     self.cam.getCameraMatrix(),
+                #     self.cam.getDistortionCoefficients(),
+                # )  # Return list of n corners, for fiducials this is counter clockwise starting from the top left corner of the tag.
+
+                corners = np.zeros((4, 2))
+                for index, corner in enumerate(
+                    corners
+                ):  # calculate the angle of each corner relative to the camera center in the x and y directions (radians)
+                    vec = np.linalg.inv(self.cam.getCameraMatrix()).dot(
+                        np.array([corner[0][0], corner[0][1], 1]).T
+                    )
+                    corners[index][0] = math.atan(vec[0])
+                    corners[index][1] = math.atan(vec[1])
+
+                # Calculate the center of the target in x and y angles (radians)
+                target_x_angle = np.mean(corners[:, 0])
+                target_y_angle = np.mean(corners[:, 1])
+
+                distance = (
+                    target.getBestCameraToTarget().translation().norm()
+                )  # distance from camera to target in meters
+
+                # Calculate the position of the target to the camera  in the camera coordinate system (meters)
+                # Use spherical coordinates to calculate the x, y, and z distances
+                z_dist = distance * math.cos((math.pi / 2) - target_y_angle)
+                y_dist = (
+                    distance
+                    * math.sin(target_x_angle)
+                    * math.sin((math.pi / 2) - target_y_angle)
+                )
+                x_dist = (
+                    distance
+                    * math.cos(target_x_angle)
+                    * math.sin((math.pi / 2) - target_y_angle)
+                )
+
+                camToTarget = Pose3d(
+                    Translation3d(x_dist, y_dist, z_dist), Rotation3d()
+                )  # Create a Pose3d object with the calculated x, y, and z distances, and no rotation
+
+                # Calculate the position of the robot on the field in the field coordinate system (meters) from the tag pose and the camera to target transform
+                fieldPose = self._toFieldPose(tagFieldPose, camToTarget)
+
+                self.poseSingleTag.append(fieldPose)
+                self.singleTagIDs.append(tgtID)
+
     def getTagIds(self):
         return self.tag_ids
 
@@ -161,6 +192,12 @@ class WrapperedPhotonCamera:
 
     def getTagAmbiguity(self):
         return self.tagAmbiguity
+
+    def getPoseSingleTag(self):
+        return self.poseSingleTag
+
+    def getSingleTagIDs(self):
+        return self.singleTagIDs
 
     def _toFieldPose(self, tgtPose, camToTarget):
         camPose = tgtPose.transformBy(camToTarget.inverse())
