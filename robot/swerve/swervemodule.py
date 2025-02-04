@@ -49,8 +49,6 @@ class SwerveModule:
             const.SWERVE_INVERT_CANCODERS
         )
 
-        swerve_can_coder_config.magnet_sensor.absolute_sensor_range = signals.AbsoluteSensorRangeValue.SIGNED_PLUS_MINUS_HALF
-        swerve_can_coder_config.magnet_sensor.magnet_offset = angle_offset
 
         self.angle_encoder.configurator.apply(
             swerve_can_coder_config  # type: ignore
