@@ -378,7 +378,7 @@ class PoseEstimator(Subsystem):
 
         SmartDashboard.putData("Field", self.field)
         #self.field.setRobotPose(self.poseEst.getEstimatedPosition())
-        self.field.setRobotPose(single_tag_poses[0])
+        self.field.setRobotPose(Pose2d(single_tag_poses[0].translation(), self.gyro.get_yaw()))
 
         SmartDashboard.putNumber("Camera/Odometry X", self.curEstPose.x)
         SmartDashboard.putNumber("Camera/Odometry Y", self.curEstPose.y)
