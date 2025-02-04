@@ -295,12 +295,19 @@ class PoseEstimator(Subsystem):
 
     def periodic(self):
         allianceColor = DriverStation.getAlliance()
+        single_tag_IDs = []
+        single_tag_poses = []
 
         for idx, cam in enumerate(self.cams):
             cam.update(self.curEstPose, allianceColor=allianceColor)
 
             observations = cam.getPoseEstimates()
             tags = cam.getTagPositions()
+            single_tag_poses.append(cam.getPoseSingleTag())
+            single_tag_IDs.append(cam.getSingleTagIDs())
+            #filter by closest based on global pose
+
+
 
             tag_dist = 0.0
             theta_modifier = 1.0
@@ -343,6 +350,8 @@ class PoseEstimator(Subsystem):
                 self.camTargetsVisible = True
             # self.telemetry.addVisionObservations(observations) #Might need later https://github.com/RobotCasserole1736/RobotCasserole2024/blob/fa033322e6f4efe87e8b1af938d8a3f69599f29b/drivetrain/poseEstimation/drivetrainPoseTelemetry.py#L15
 
+        
+
         # if self.isFirstTick:
         #     self.isFirstTick = False
 
@@ -368,7 +377,8 @@ class PoseEstimator(Subsystem):
                 self.robot.leds.set_mode(self.robot.leds.MODE_ODOMETRY)
 
         SmartDashboard.putData("Field", self.field)
-        self.field.setRobotPose(self.poseEst.getEstimatedPosition())
+        #self.field.setRobotPose(self.poseEst.getEstimatedPosition())
+        self.field.setRobotPose(single_tag_poses[0])
 
         SmartDashboard.putNumber("Camera/Odometry X", self.curEstPose.x)
         SmartDashboard.putNumber("Camera/Odometry Y", self.curEstPose.y)

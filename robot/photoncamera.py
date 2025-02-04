@@ -44,6 +44,8 @@ class WrapperedPhotonCamera:
 
         self.cam = PhotonCamera(camName)
         # TODO is this really the name of the camera or is this just as a reminder? Camera1,2,3,or 4??
+        self.cameraDistortVector = const.CAM_DICT[camName][0]
+        self.cameraIntrinsMatrix = const.CAM_DICT[camName][1]
 
         self.timeoutSec = 1.0
         self.poseEstimates = []
@@ -134,17 +136,17 @@ class WrapperedPhotonCamera:
                 corners = np.array(
                     target.getDetectedCorners()
                 )  # Return list of n corners, for fiducials this is counter clockwise starting from the top left corner of the tag.
-                # corners_undistorted = cv2.undistortPoints(  # Unsure if these corners have already been undistorted
-                #     corners,
-                #     self.cam.getCameraMatrix(),
-                #     self.cam.getDistortionCoefficients(),
-                # )  # Return list of n corners, for fiducials this is counter clockwise starting from the top left corner of the tag.
+                corners_undistorted = cv2.undistortPoints(  # Unsure if these corners have already been undistorted
+                    corners,
+                    self.cameraIntrinsMatrix,
+                    self.cameraDistortVector,
+                )  # Return list of n corners, for fiducials this is counter clockwise starting from the top left corner of the tag.
 
                 corners = np.zeros((4, 2))
                 for index, corner in enumerate(
                     corners
                 ):  # calculate the angle of each corner relative to the camera center in the x and y directions (radians)
-                    vec = np.linalg.inv(self.cam.getCameraMatrix()).dot(
+                    vec = np.linalg.inv(self.cameraIntrinsMatrix).dot(
                         np.array([corner[0][0], corner[0][1], 1]).T
                     )
                     corners[index][0] = math.atan(vec[0])

@@ -27,6 +27,7 @@ from wpimath.geometry import Rotation2d, Translation2d, Pose2d
 from wpimath.kinematics import SwerveDrive4Kinematics
 
 from phoenix6 import signals
+import numpy as np
 
 
 ### CONSTANTS ###
@@ -178,5 +179,16 @@ INTAKE_MOTOR_CAN_ID = 15
 COLLISION_JERK_MAX = 50
 SKIDDING_RATIO_MAX = 10
 
+CAM_DICT = {"camera_1":(np.array([0.05, -0.07, 0, -0.001, 0.002, -0.002, 0.005, 0]),
+             np.array(
+                [909.0, 0, 678.48],
+                [0, 908.51, 428.25],
+                [0, 0, 1]
+            )),
+            "camera_2": (np.array([0.048, -0.073, 0.001, 0, 0.008, -0.002, 0.003, 0]),
+            np.array(
+                [911.76, 0, 629.69],
+                [0, 912.0, 407.29],
+                [0, 0, 1]))}
 
 JENNY = 8675_309999999
