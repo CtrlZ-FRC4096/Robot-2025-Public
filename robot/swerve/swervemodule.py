@@ -49,7 +49,6 @@ class SwerveModule:
             const.SWERVE_INVERT_CANCODERS
         )
 
-
         self.angle_encoder.configurator.apply(
             swerve_can_coder_config  # type: ignore
         )  # Apply settings to angle encoder
@@ -120,7 +119,7 @@ class SwerveModule:
         swerve_drive_motor_config = configs.TalonFXConfiguration()
         # self.drive_motor.configurator.apply(swerve_drive_motor_config)  # type: ignore
         swerve_drive_motor_config.slot0.k_p = 2.2  # 2.2
-        swerve_drive_motor_config.slot0.k_s = 4
+        swerve_drive_motor_config.slot0.k_s = 3.5
         swerve_drive_motor_config.slot0.k_v = 0.24  # 0.24
         ## Feed Forward
         # swerve_drive_motor_config.slot0.k_v = const.SWERVE_DRIVE_KV
