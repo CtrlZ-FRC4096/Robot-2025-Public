@@ -49,6 +49,9 @@ class SwerveModule:
             const.SWERVE_INVERT_CANCODERS
         )
 
+        swerve_can_coder_config.magnet_sensor.absolute_sensor_range = signals.AbsoluteSensorRangeValue.SIGNED_PLUS_MINUS_HALF
+        swerve_can_coder_config.magnet_sensor.magnet_offset = angle_offset
+
         self.angle_encoder.configurator.apply(
             swerve_can_coder_config  # type: ignore
         )  # Apply settings to angle encoder
@@ -99,16 +102,10 @@ class SwerveModule:
         swerve_angle_motor_config.current_limits.stator_current_limit = 100
 
         ## Add fused cancoder
-        # swerve_angle_motor_config.feedback.feedback_remote_sensor_id = (
-        #     self.angle_encoder.device_id
-        # )
-        # swerve_angle_motor_config.feedback.feedback_sensor_source = (
-        #     signals.FeedbackSensorSourceValue.FUSED_CANCODER
-        # )
+        # swerve_angle_motor_config.feedback.feedback_remote_sensor_id = self.angle_encoder.device_id
+        # swerve_angle_motor_config.feedback.feedback_sensor_source = signals.FeedbackSensorSourceValue.FUSED_CANCODER
         # swerve_angle_motor_config.feedback.sensor_to_mechanism_ratio = 1.0
-        # swerve_angle_motor_config.feedback.rotor_to_sensor_ration = (
-        #     const.SWERVE_ANGLE_GEAR_RATIO
-        # )
+        # swerve_angle_motor_config.feedback.rotor_to_sensor_ration = const.SWERVE_ANGLE_GEAR_RATIO
 
         self.angle_motor.configurator.apply(
             swerve_angle_motor_config  # type: ignore
@@ -257,7 +254,7 @@ class SwerveModule:
         absolute_position = (
             (cancoder_angle - angle_offset) / 360 * const.SWERVE_ANGLE_GEAR_RATIO
         )
-        self.angle_motor.set_position(absolute_position) # This was used before fusing the cancoder
+        self.angle_motor.set_position(absolute_position)
 
     # def reset_to_absolute(self):
     # cancoder_angle: float = typing.cast(float, self.get_angle_CANcoder().degrees())
