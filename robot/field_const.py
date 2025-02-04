@@ -1,10 +1,6 @@
 
-"""
-These are field constants and positions from the blue alliance side.
-(0,0): When standing at the blue driver stations, (0,0) is to the right and back (is the extension of Driver Station wall and processor wall)
-Y-axis: across the width of field
-X-axis: down the length
-"""
+
+from typing import TYPE_CHECKING
 
 import math
 from enum import Enum
@@ -16,6 +12,12 @@ from wpimath.units import inchesToMeters, degreesToRadians
 from wpilib import DriverStation
 
 class FieldConstants():
+    """
+    These are field constants and positions from the blue alliance side.
+    (0,0): When standing at the blue driver stations, (0,0) is to the right and back (is the extension of Driver Station wall and processor wall)
+    Y-axis: across the width of field
+    X-axis: down the length
+    """
     fieldLength = inchesToMeters(690.876)
     fieldWidth = inchesToMeters(317)
     startingLineX = inchesToMeters(299.438) #Measured from the inside of starting line
@@ -160,22 +162,22 @@ class FieldConstants():
 # print(FieldConstants.Reef.branchPositions)
 #print(FieldConstants.Reef.branchPositions)
 
-for idx in range(len(FieldConstants.Reef.branchPositions)):
-    for level in range(4):
-        reefHeightLevels = {
-             FieldConstants.ReefHeight.L4 : "4",
-             FieldConstants.ReefHeight.L3 : "3",
-             FieldConstants.ReefHeight.L2 : "2",
-             FieldConstants.ReefHeight.L1 : "1"
-        }
-        for reef_height, lvl in reefHeightLevels.items():
-             if math.isclose(FieldConstants.Reef.branchPositions[idx][level*2][0], reef_height.height, abs_tol=1e-6):
-                branch_level = lvl
+# for idx in range(len(FieldConstants.Reef.branchPositions)):
+#     for level in range(4):
+#         reefHeightLevels = {
+#              FieldConstants.ReefHeight.L4 : "4",
+#              FieldConstants.ReefHeight.L3 : "3",
+#              FieldConstants.ReefHeight.L2 : "2",
+#              FieldConstants.ReefHeight.L1 : "1"
+#         }
+#         for reef_height, lvl in reefHeightLevels.items():
+#              if math.isclose(FieldConstants.Reef.branchPositions[idx][level*2][0], reef_height.height, abs_tol=1e-6):
+#                 branch_level = lvl
              
-        print("Face", ((idx // 2) + 1),
-            ", right-branch" if idx % 2 else ", left-branch",
-            ", L" + branch_level,
-            "Pitch:", FieldConstants.Reef.branchPositions[idx][level * 2][1],
-            "\n Pose3d: \n", FieldConstants.Reef.branchPositions[idx][(level*2) + 1],
-            end="\n\n"
-            )
+#         print("Face", ((idx // 2) + 1),
+#             ", right-branch" if idx % 2 else ", left-branch",
+#             ", L" + branch_level,
+#             "Pitch:", FieldConstants.Reef.branchPositions[idx][level * 2][1],
+#             "\n Pose3d: \n", FieldConstants.Reef.branchPositions[idx][(level*2) + 1],
+#             end="\n\n"
+#             )

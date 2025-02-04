@@ -84,7 +84,6 @@ class Robot(CoroutineRobot):
         # Match Stuff
         self.match_time = -1
         const.IS_SIMULATION = self.isSimulation()
-        self.fieldConstants = FieldConstants()
 
         self.has_note = False
 
@@ -198,7 +197,7 @@ class Robot(CoroutineRobot):
 
     ### MISC ###
 
-    def stop_all_subsystems(self): # Update as we add more subsystems
+    def stop_all_subsystems(self):  # Update as we add more subsystems
         self.funnel_intake.is_running = False
 
     def log(self):

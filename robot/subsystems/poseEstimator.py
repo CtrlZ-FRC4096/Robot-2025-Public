@@ -1,5 +1,6 @@
 import time
 import math
+import numpy as np
 
 from collections import deque
 
@@ -31,6 +32,7 @@ from wpimath.kinematics import (
     SwerveDrive4Kinematics,
     SwerveDrive4Odometry,
     SwerveModulePosition,
+    SwerveModuleState,
 )
 from phoenix6 import configs
 
@@ -38,6 +40,7 @@ from phoenix6 import configs
 
 
 import const
+from field_const import FieldConstants
 
 # from leds import LEDs
 # from shooter import Shooter
@@ -77,6 +80,10 @@ class PoseEstimator(Subsystem):
         self.gyro.set_yaw(self.gyro_offset)
 
         self.field = Field2d()
+
+        # bl, fl, br, fr
+
+        # fl, fr, bl, br
 
         self.modules = (
             SwerveModule(
@@ -126,64 +133,62 @@ class PoseEstimator(Subsystem):
             const.SWERVE_KINEMATICS, self.getYaw(), self.get_module_positions()  # type: ignore
         )
 
-        self.curEstPose = Pose2d()
-
-        self.speaker_angle = 0
+        self.curEstPose = Pose2d(0, 0, self.getYaw())
+        # self.lastPeriodicEstPose = self.curEstPose
 
         self.poseEst = SwerveDrive4PoseEstimator(
             const.SWERVE_KINEMATICS, self.getYaw(), self.get_module_positions(), self.curEstPose  # type: ignore
         )
 
         # self.poseEst.setVisionMeasurementStdDevs((0.0001, 0.0001, 0.5))
-        self.xystd = 0.1  # .1
-        self.thetastd = 0.15  # .15
+        self.xystd = 0.3
+        self.thetastd = 10.0  # .15
 
-        # Update with position on robot
+        # test position of camera 1 on front right module
         ROBOT_TO_CAM1 = Transform3d(
-            Translation3d(-0.1570, -0.2819, 0.2023),  # X  # Y  # Z
+            Translation3d(-0.290, -0.295, 0.1699),  # X  # Y  # Z
             Rotation3d(
-                0.0, 30.0 * (math.pi / 180), 180.0 * (math.pi / 180)
+                0.0, np.deg2rad(-10.0), np.deg2rad(20.0 - 90)
             ),  # Roll  # Pitch  # Yaw
         )
 
         # Update with positionon robot
         ROBOT_TO_CAM2 = Transform3d(
-            Translation3d(
-                0.06, 0.286, 0.423
-            ),  # X  # Y  # Z # .0692 for super structure
+            Translation3d(0.290, -0.295, 0.1699),  # X  # Y  # Z
             Rotation3d(
-                0 * (math.pi / 180),
-                -10.0 * (math.pi / 180),
-                24.62 * (math.pi / 180),
+                0.0, np.deg2rad(-10.0), np.deg2rad(-20.0 - 90)
             ),  # Roll  # Pitch  # Yaw
         )
 
-        # Update with positionon robot
-        ROBOT_TO_CAM3 = Transform3d(
-            Translation3d(-0.2764, 0.2805, 0.2949),  # X  # Y  # Z
-            Rotation3d(
-                0.0, 31.32 * (math.pi / 180), 180.0 * (math.pi / 180)
-            ),  # Roll  # Pitch  # Yaw
-        )
+        # # Update with positionon robot
+        # ROBOT_TO_CAM3 = Transform3d(
+        #     Translation3d(-0.2764, 0.2805, 0.2949),  # X  # Y  # Z
+        #     Rotation3d(
+        #         0.0, 31.32 * (math.pi / 180), 180.0 * (math.pi / 180)
+        #     ),  # Roll  # Pitch  # Yaw
+        # )
 
-        # Update with positionon robot
-        ROBOT_TO_CAM4 = Transform3d(
-            Translation3d(0.045, -0.286, 0.588),  # X  # Y  # Z
-            Rotation3d(
-                0 * (math.pi / 180),
-                -10.0 * (math.pi / 180),
-                -24.62 * (math.pi / 180),
-            ),  # Roll  # Pitch  # Yaw
-        )
+        # # Update with positionon robot
+        # ROBOT_TO_CAM4 = Transform3d(
+        #     Translation3d(0.045, -0.286, 0.588),  # X  # Y  # Z
+        #     Rotation3d(
+        #         0 * (math.pi / 180),
+        #         -10.0 * (math.pi / 180),
+        #         -24.62 * (math.pi / 180),
+        #     ),  # Roll  # Pitch  # Yaw
+        # )
 
         self.cams = [
-            WrapperedPhotonCamera("Camera1", ROBOT_TO_CAM1),
-            WrapperedPhotonCamera("Camera2", ROBOT_TO_CAM2),
-            WrapperedPhotonCamera("Camera3", ROBOT_TO_CAM3),
-            WrapperedPhotonCamera("Camera4", ROBOT_TO_CAM4),
+            WrapperedPhotonCamera("camera_1", ROBOT_TO_CAM1),
+            WrapperedPhotonCamera("camera_2", ROBOT_TO_CAM2),
+            # WrapperedPhotonCamera("Camera3", ROBOT_TO_CAM3),
+            # WrapperedPhotonCamera("Camera4", ROBOT_TO_CAM4),
         ]
 
         self.poseConverge = True
+        self.isFirstTick = True
+        self.last_periodic_accel_x = 0
+        self.last_periodic_accel_y = 0
 
     def stop(self):
         print("sike this aint stoppin")
@@ -219,30 +224,88 @@ class PoseEstimator(Subsystem):
         for module in self.modules:
             module.reset_to_absolute()
 
+    def swerve_state_to_vel_vector(self, swerve_module_state: SwerveModuleState):
+        return Translation2d(swerve_module_state.speed, swerve_module_state.angle)
+
+    def is_moving(self):
+        swerve_chassis = const.SWERVE_KINEMATICS.toChassisSpeeds(
+            self.get_module_states()
+        )
+        return swerve_chassis.vx > 0.01 or swerve_chassis.vy > 0.01
+
+    def get_skidding_ratio(self):
+        if not (self.is_moving()):
+            return 1  # is this ok?
+        swerve_module_states = self.get_module_states()
+        self.angular_velocity = const.SWERVE_KINEMATICS.toChassisSpeeds(
+            swerve_module_states
+        ).omega
+        self.swerve_state_rotations = const.SWERVE_KINEMATICS.toSwerveModuleStates(
+            ChassisSpeeds(0, 0, self.angular_velocity)
+        )
+        self.swerve_states_translation_magnitudes = []
+
+        for idx in range(len(swerve_module_states)):
+            swerve_state_vector = self.swerve_state_to_vel_vector(
+                swerve_module_states[idx]
+            )
+            swerve_state_rotation_vector = self.swerve_state_to_vel_vector(
+                self.swerve_state_rotations[idx]
+            )
+            self.swerve_states_translation_magnitudes.append(
+                (swerve_state_vector - swerve_state_rotation_vector).norm()
+            )
+        self.max_trans_speed = max(self.swerve_states_translation_magnitudes)
+        self.min_trans_speed = min(self.swerve_states_translation_magnitudes)
+
+        return self.max_trans_speed / self.min_trans_speed
+
+    def get_jerk_val(self):
+        cur_accel_x = self.gyro.get_acceleration_x().value
+        cur_accel_y = self.gyro.get_acceleration_y().value
+
+        cur_jerk_x = abs(cur_accel_x - self.last_periodic_accel_x) / 0.05
+        cur_jerk_y = abs(cur_accel_y - self.last_periodic_accel_y) / 0.05
+
+        self.last_period_accel_x = cur_accel_x
+        self.last_period_accel_y = cur_accel_x
+
+        return np.sqrt(cur_jerk_x**2 + cur_jerk_y**2)
+
+    def poseIsOffField(self, pose: Pose2d):
+        trans = pose.translation()
+        x = trans.X()
+        y = trans.Y()
+        inY = -0.5 < y < FieldConstants.fieldWidth + 0.5
+        inX = -0.5 < x < FieldConstants.fieldLength + 0.5
+        return not (inX and inY)
+
+    def candidate_pose_OK(self, candidate_pose: Pose2d):
+        if self.poseIsOffField(candidate_pose):  # Check if the robot is on the field
+            return False
+        elif (
+            self.get_skidding_ratio() > const.SKIDDING_RATIO_MAX
+        ):  # TODO: Tune this in shop
+            return False
+        elif self.get_jerk_val() > const.COLLISION_JERK_MAX:
+            return False
+        # add more elifs as conditions
+        else:
+            return True
+
     def periodic(self):
         allianceColor = DriverStation.getAlliance()
 
         for idx, cam in enumerate(self.cams):
-            if (
-                cam.cam.getName() == "Camera1"
-            ):  # Change this to name of camera facing april tag on reef
-                pass
-
             cam.update(self.curEstPose, allianceColor=allianceColor)
 
             observations = cam.getPoseEstimates()
             tags = cam.getTagPositions()
 
             tag_dist = 0.0
-            min_ambiguity = 10.0
             theta_modifier = 1.0
             xy_modifier = 1.0
-            auto_modifier = 1.0
 
-            for ambig in cam.getTagAmbiguity():
-                if ambig < min_ambiguity:
-                    min_ambiguity = ambig
-            
             for tag in tags:
                 tag2D = tag.toPose2d()
                 tag_dist += (self.curEstPose - tag2D).translation().norm()
@@ -250,10 +313,6 @@ class PoseEstimator(Subsystem):
                 tag_dist /= len(tags)
             if len(tags) == 1:
                 theta_modifier = 1000.0
-                if min_ambiguity > 0.1:
-                    xy_modifier = 3.0
-            if self.robot.in_autonomous_mode:
-                auto_modifier = 3.0
             if tag_dist > 4:  # if the robot is more than 4 meters away from the target
                 xy_modifier = 3.0
                 theta_modifier = 3.0
@@ -266,16 +325,13 @@ class PoseEstimator(Subsystem):
                     (
                         self.xystd
                         * (tag_dist**2)
-                        * xy_modifier
-                        * auto_modifier,  # * (min_ambiguity / 0.4),
+                        * xy_modifier,  # * (min_ambiguity / 0.4),
                         self.xystd
                         * (tag_dist**2)
-                        * xy_modifier
-                        * auto_modifier,  # * (min_ambiguity / 0.4),
+                        * xy_modifier,  # * (min_ambiguity / 0.4),
                         self.thetastd
                         * (tag_dist**2)
-                        * theta_modifier
-                        * auto_modifier,  # * (min_ambiguity / 0.4),
+                        * theta_modifier,  # * (min_ambiguity / 0.4),
                     ),
                 )
                 if (
@@ -287,17 +343,21 @@ class PoseEstimator(Subsystem):
                 self.camTargetsVisible = True
             # self.telemetry.addVisionObservations(observations) #Might need later https://github.com/RobotCasserole1736/RobotCasserole2024/blob/fa033322e6f4efe87e8b1af938d8a3f69599f29b/drivetrain/poseEstimation/drivetrainPoseTelemetry.py#L15
 
-        self.poseEst.update(self.getYaw(), self.get_module_positions())
-        self.curEstPose = self.poseEst.getEstimatedPosition()
-        candidate_pose = self.poseEst.getEstimatedPosition()
+        # if self.isFirstTick:
+        #     self.isFirstTick = False
 
-        if (
-            (candidate_pose.x > -0.5)
-            and (candidate_pose.x < self.robot.fieldConstants.fieldLength + 0.5)
-            and (candidate_pose.y > -0.5)
-            and (candidate_pose.y < self.robot.fieldConstants.fieldWidth + 0.5)
-        ):  # Check if the robot is on the field
-            self.curEstPose = candidate_pose
+        self.poseEst.update(self.getYaw(), self.get_module_positions())
+        # self.lastPeriodicEstPose = self.curEstPose
+
+        SmartDashboard.putNumber("skidding ratio", self.get_skidding_ratio())
+        SmartDashboard.putNumber("jerk val", self.get_jerk_val())
+
+        possible_pose = self.poseEst.getEstimatedPosition()
+
+        SmartDashboard.putBoolean("pose 4 u :3", self.candidate_pose_OK(possible_pose))
+
+        if self.candidate_pose_OK(possible_pose):
+            self.curEstPose = self.poseEst.getEstimatedPosition()
 
         if (self.robot.leds.mode == self.robot.leds.MODE_LOST_ODOMETRY) or (
             self.robot.leds.mode == self.robot.leds.MODE_ODOMETRY
@@ -339,4 +399,3 @@ class PoseEstimator(Subsystem):
 
     def log(self):
         pass
-
