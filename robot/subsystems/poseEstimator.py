@@ -316,7 +316,7 @@ class PoseEstimator(Subsystem):
             observations = cam.getPoseEstimates()
             tags = cam.getTagPositions()
             single_tag_poses.append(cam.getPoseSingleTag())
-            single_tag_IDs.add(cam.getSingleTagIDs())
+            single_tag_IDs.update(cam.getSingleTagIDs())
             #filter by closest based on global pose
             relevant_tags = single_tag_IDs.intersection(FieldConstants.reef_tags)
             closest_reef_tag = self.calculate_closest_reef_tag(relevant_tags)
