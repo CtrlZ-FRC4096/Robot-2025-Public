@@ -292,6 +292,12 @@ class PoseEstimator(Subsystem):
         # add more elifs as conditions
         else:
             return True
+        
+    def calculate_closest_reef_tag(relevant_tags):
+        min_distance_to_tag = math.inf
+        for tag in relevant_tags:
+            pass
+        return True
 
     def periodic(self):
         allianceColor = DriverStation.getAlliance()
@@ -307,6 +313,7 @@ class PoseEstimator(Subsystem):
             single_tag_IDs.add(cam.getSingleTagIDs())
             #filter by closest based on global pose
             relevant_tags = single_tag_IDs.intersection(FieldConstants.reef_tags)
+            closest_reef_tag = self.calculate_closest_reef_tag(relevant_tags)
 
 
             tag_dist = 0.0
