@@ -23,6 +23,7 @@ class FieldConstants():
     startingLineX = inchesToMeters(299.438) #Measured from the inside of starting line
     algaeDiameter = inchesToMeters(16)
     shouldFlip = DriverStation.getAlliance == DriverStation.Alliance.kRed
+    reef_tags = set(6, 7, 8, 9, 10, 11) if shouldFlip else set(17, 18, 19, 20, 21, 22)
 
     @staticmethod
     def flip_X_coord(x):

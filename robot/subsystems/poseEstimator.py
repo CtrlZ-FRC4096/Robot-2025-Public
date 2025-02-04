@@ -295,7 +295,7 @@ class PoseEstimator(Subsystem):
 
     def periodic(self):
         allianceColor = DriverStation.getAlliance()
-        single_tag_IDs = []
+        single_tag_IDs = set()
         single_tag_poses = []
 
         for idx, cam in enumerate(self.cams):
@@ -304,9 +304,9 @@ class PoseEstimator(Subsystem):
             observations = cam.getPoseEstimates()
             tags = cam.getTagPositions()
             single_tag_poses.append(cam.getPoseSingleTag())
-            single_tag_IDs.append(cam.getSingleTagIDs())
+            single_tag_IDs.add(cam.getSingleTagIDs())
             #filter by closest based on global pose
-
+            relevant_tags = single_tag_IDs.intersection(FieldConstants.reef_tags)
 
 
             tag_dist = 0.0
