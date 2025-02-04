@@ -5,16 +5,23 @@ from photonlibpy.photonCamera import (
     setVersionCheckEnabled,
 )  # VisionLEDMode
 from photonlibpy import photonPoseEstimator
-from wpimath.geometry import Pose2d, Pose3d, Translation2d, Translation3d, Rotation2d, Rotation3d
+from wpimath.geometry import (
+    Pose2d,
+    Pose3d,
+    Translation2d,
+    Translation3d,
+    Rotation2d,
+    Rotation3d,
+)
 
 import const
 from wpilib import DriverStation, SmartDashboard, Timer, Field2d
 
 from robotpy_apriltag import AprilTagField, AprilTagFieldLayout
 
-import cv2
 import numpy as np
 import math
+
 
 ## Code from 1736
 # Describes one on-field pose estimate from the a camera at a specific time.
@@ -105,20 +112,36 @@ class WrapperedPhotonCamera:
 
             # Transform both poses to on-field poses
             tgtID = target.getFiducialId()
-            if tgtID in [6, 7, 8, 9, 10, 11,
-                        17, 18, 19, 20, 21, 22]:  # Only use reef IDs, everything else is not great
+            if tgtID in [
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                17,
+                18,
+                19,
+                20,
+                21,
+                22,
+            ]:  # Only use reef IDs, everything else is not great
 
                 tagFieldPose = tag_map.getTagPose(tgtID)
 
-                corners = np.array(target.getDetectedCorners()) #Return list of n corners, for fiducials this is counter clockwise starting from the top left corner of the tag.
-                corners_undistorted = cv2.undistortPoints( #Unsure if these corners have already been undistorted
-                    corners,
-                    self.cam.getCameraMatrix(),
-                    self.cam.getDistortionCoefficients(),
-                    ) #Return list of n corners, for fiducials this is counter clockwise starting from the top left corner of the tag.
+                corners = np.array(
+                    target.getDetectedCorners()
+                )  # Return list of n corners, for fiducials this is counter clockwise starting from the top left corner of the tag.
+                # corners_undistorted = cv2.undistortPoints(  # Unsure if these corners have already been undistorted
+                #     corners,
+                #     self.cam.getCameraMatrix(),
+                #     self.cam.getDistortionCoefficients(),
+                # )  # Return list of n corners, for fiducials this is counter clockwise starting from the top left corner of the tag.
 
                 corners = np.zeros((4, 2))
-                for index, corner in enumerate(corners_undistorted): # calculate the angle of each corner relative to the camera center in the x and y directions (radians)
+                for index, corner in enumerate(
+                    corners
+                ):  # calculate the angle of each corner relative to the camera center in the x and y directions (radians)
                     vec = np.linalg.inv(self.cam.getCameraMatrix()).dot(
                         np.array([corner[0][0], corner[0][1], 1]).T
                     )
@@ -129,24 +152,33 @@ class WrapperedPhotonCamera:
                 target_x_angle = np.mean(corners[:, 0])
                 target_y_angle = np.mean(corners[:, 1])
 
-                distance = target.getBestCameraToTarget().translation().norm() # distance from camera to target in meters
+                distance = (
+                    target.getBestCameraToTarget().translation().norm()
+                )  # distance from camera to target in meters
 
                 # Calculate the position of the target to the camera  in the camera coordinate system (meters)
                 # Use spherical coordinates to calculate the x, y, and z distances
-                z_dist = distance * math.cos((math.pi/2) - target_y_angle)
-                y_dist = distance * math.sin(target_x_angle) * math.sin((math.pi/2) - target_y_angle)
-                x_dist = distance * math.cos(target_x_angle) * math.sin((math.pi/2) - target_y_angle)
+                z_dist = distance * math.cos((math.pi / 2) - target_y_angle)
+                y_dist = (
+                    distance
+                    * math.sin(target_x_angle)
+                    * math.sin((math.pi / 2) - target_y_angle)
+                )
+                x_dist = (
+                    distance
+                    * math.cos(target_x_angle)
+                    * math.sin((math.pi / 2) - target_y_angle)
+                )
 
-                camToTarget = Pose3d(Translation3d(x_dist, y_dist, z_dist), Rotation3d()) #Create a Pose3d object with the calculated x, y, and z distances, and no rotation
+                camToTarget = Pose3d(
+                    Translation3d(x_dist, y_dist, z_dist), Rotation3d()
+                )  # Create a Pose3d object with the calculated x, y, and z distances, and no rotation
 
                 # Calculate the position of the robot on the field in the field coordinate system (meters) from the tag pose and the camera to target transform
                 fieldPose = self._toFieldPose(tagFieldPose, camToTarget)
 
                 self.poseSingleTag.append(fieldPose)
                 self.singleTagIDs.append(tgtID)
-
-
-
 
     def getTagIds(self):
         return self.tag_ids
