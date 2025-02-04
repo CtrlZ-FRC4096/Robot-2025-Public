@@ -254,8 +254,8 @@ class PoseEstimator(Subsystem):
             cur_accel_x = self.gyro.get_acceleration_x().value
             cur_accel_y = self.gyro.get_acceleration_y().value
 
-            cur_jerk_x = abs(cur_accel_x - self.last_periodic_accel_x)
-            cur_jerk_y = abs(cur_accel_y - self.last_periodic_accel_y)
+            cur_jerk_x = abs(cur_accel_x - self.last_periodic_accel_x) / 0.05
+            cur_jerk_y = abs(cur_accel_y - self.last_periodic_accel_y) / 0.05
             
             self.last_period_accel_x = cur_accel_x
             self.last_period_accel_y = cur_accel_x
