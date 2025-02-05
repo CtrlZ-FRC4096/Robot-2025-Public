@@ -24,6 +24,7 @@ class FieldConstants():
     algaeDiameter = inchesToMeters(16)
     shouldFlip = DriverStation.getAlliance == DriverStation.Alliance.kRed
     reef_tags = {6, 7, 8, 9, 10, 11} if shouldFlip else {17, 18, 19, 20, 21, 22}
+    face_to_tag = {1:7, 2:6, 3:11, 4:10, 5:9, 6:8} if shouldFlip else {1:18, 2:19, 3:20, 4:21, 5:22, 6:17}
 
     @staticmethod
     def flip_X_coord(x):
@@ -103,6 +104,7 @@ class FieldConstants():
                     Pose2d(inchesToMeters(160.375),inchesToMeters(130.144),Rotation2d.fromDegrees(-120))
                     ]# Starting facing the driver station in clockwise order
         branchPositions = []
+
         
         for face in range(6):
             #Right and left determined from standing outside of the reef looking at the face (not from looking from the inside of reef).
@@ -162,23 +164,24 @@ class FieldConstants():
 # print(len(FieldConstants.Reef.branchPositions))
 # print(FieldConstants.Reef.branchPositions)
 #print(FieldConstants.Reef.branchPositions)
+print(FieldConstants.Reef.centerFaces)
 
-# for idx in range(len(FieldConstants.Reef.branchPositions)):
-#     for level in range(4):
-#         reefHeightLevels = {
-#              FieldConstants.ReefHeight.L4 : "4",
-#              FieldConstants.ReefHeight.L3 : "3",
-#              FieldConstants.ReefHeight.L2 : "2",
-#              FieldConstants.ReefHeight.L1 : "1"
-#         }
-#         for reef_height, lvl in reefHeightLevels.items():
-#              if math.isclose(FieldConstants.Reef.branchPositions[idx][level*2][0], reef_height.height, abs_tol=1e-6):
-#                 branch_level = lvl
+for idx in range(len(FieldConstants.Reef.branchPositions)):
+    for level in range(4):
+        reefHeightLevels = {
+             FieldConstants.ReefHeight.L4 : "4",
+             FieldConstants.ReefHeight.L3 : "3",
+             FieldConstants.ReefHeight.L2 : "2",
+             FieldConstants.ReefHeight.L1 : "1"
+        }
+        for reef_height, lvl in reefHeightLevels.items():
+             if math.isclose(FieldConstants.Reef.branchPositions[idx][level*2][0], reef_height.height, abs_tol=1e-6):
+                branch_level = lvl
              
-#         print("Face", ((idx // 2) + 1),
-#             ", right-branch" if idx % 2 else ", left-branch",
-#             ", L" + branch_level,
-#             "Pitch:", FieldConstants.Reef.branchPositions[idx][level * 2][1],
-#             "\n Pose3d: \n", FieldConstants.Reef.branchPositions[idx][(level*2) + 1],
-#             end="\n\n"
-#             )
+        print("Face", ((idx // 2) + 1),
+            ", right-branch" if idx % 2 else ", left-branch",
+            ", L" + branch_level,
+            "Pitch:", FieldConstants.Reef.branchPositions[idx][level * 2][1],
+            "\n Pose3d: \n", FieldConstants.Reef.branchPositions[idx][(level*2) + 1],
+            end="\n\n"
+            )

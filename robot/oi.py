@@ -33,9 +33,16 @@ from wpimath.estimator import SwerveDrive4PoseEstimator
 import const
 
 
+from pathplannerlib.auto import AutoBuilder, PathPlannerAuto, NamedCommands, PathConstraints
+
+from robotpy_apriltag import AprilTagField, AprilTagFieldLayout
+
+
 # Controls
 from wpilibextra.customcontroller import XboxCommandController
 
+from field_const import FieldConstants
+from wpimath.units import degreesToRadians
 ###  IMPORTS ###
 
 
@@ -78,6 +85,11 @@ class OI:
 
         self.find_heading = True
         self.tick_count = 0
+
+        self.face = 0
+        self.right_branch = None
+        self.dist_offset = 0.5
+        self.tag_to_pathfind = 0
 
         @self.rumble_button.whenPressed
         def _():
@@ -191,6 +203,45 @@ class OI:
         @self.driver2.POV.UP.whenPressed  # Run funnel intake
         def _():
             self.robot.funnel_intake.is_running = True
+
+        @self.driver1.LEFT_TRIGGER_AS_BUTTON.whenHeld #Pathfind to score
+        def _():
+            if self.face != 0 and self.right_branch != None:
+                angle_face = FieldConstants.Reef.centerFaces[self.face].rotation()
+                center_face_pose = FieldConstants.Reef.centerFaces[self.face].translation()
+                center_face_x = center_face_pose.X()
+                center_face_y = center_face_pose.Y()
+                x_offset = math.cos(angle_face.radians()) * self.dist_offset
+                y_offset = math.sin(angle_face.radians()) * self.dist_offset
+                target_pose_face = Pose2d(center_face_x + x_offset, center_face_y + y_offset, angle_face)
+                constraints = PathConstraints(4.0, 4.0, 3.0 * math.pi, 3.0 * math.pi)
+                self.tag_to_pathfind = FieldConstants.face_to_tag[self.face]
+
+                #add geometry for right and left branch transforms
+
+
+                self.pathfind = AutoBuilder.pathfindToPose(target_pose, constraints, 0)
+                self.robot.scheduler.schedule(self.pathfind.schedule())
+                self.driver1.setRumble(0.5)
+            
+
+        
+        @self.driver1.LEFT_TRIGGER_AS_BUTTON.whenReleased #stop pathfinnd
+        def _():
+            self.robot.scheduler.cancel(self.pathfind.schedule())
+            self.driver1.setRumble(0)
+
+
+        @self.driver2.RIGHT_TRIGGER_AS_BUTTON.whenPressed #right face
+        def _():
+            self.right_branch = True
+        @self.driver2.LEFT_TRIGGER_AS_BUTTON.whenPressed #left face
+        def _():
+            self.right_branch = False
+        @self.driver2.A.whenPressed # face 6
+        def _():
+            self.face = 6
+
 
         @self.driver2.POV.RIGHT.whenPressed  # STOP ALL SUBSYSTEMS
         def _():
