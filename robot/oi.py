@@ -158,13 +158,13 @@ class OI:
             self.cardinal = 90
             self.robot_oriented_angle = 90
 
-        @self.driver1.A.whenReleased  # Turn 180 degrees aways
+        @self.driver1.Y.whenReleased  # Turn 180 degrees aways
         def _():
             self.cardinal_directing = True
             self.cardinal = 0
             self.robot_oriented_angle = 0
 
-        @self.driver1.Y.whenPressed  # Turn 180 degrees towards
+        @self.driver1.A.whenPressed  # Turn 180 degrees towards
         def _():
             self.cardinal_directing = True
             self.cardinal = 180
