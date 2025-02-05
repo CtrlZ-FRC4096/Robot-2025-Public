@@ -30,6 +30,7 @@ from phoenix6 import signals
 import numpy as np
 
 
+
 ### CONSTANTS ###
 
 # Is running simulator. Value is set in robot.py, robotInit
@@ -181,12 +182,16 @@ SKIDDING_RATIO_MAX = 10
 
 CAM_DICT = {
     "camera_1": (
-        np.array([0.05, -0.07, 0, -0.001, 0.002, -0.002, 0.005, 0]),
-        np.array([[909.0, 0, 678.48], [0, 908.51, 428.25], [0, 0, 1]]).astype(float),
+        np.array([0.05, -0.07, 0.0, -0.001, 0.002, -0.002, 0.005, 0.0], dtype=np.float64),
+        np.array([[909.0, 0.0, 678.48],
+			[0.0, 908.51, 428.25],
+			[0.0, 0.0, 1.0]], dtype=np.float64)
     ),
     "camera_2": (
-        np.array([0.048, -0.073, 0.001, 0, 0.008, -0.002, 0.003, 0]),
-        np.array([[911.76, 0, 629.69], [0, 912.0, 407.29], [0, 0, 1]]).astype(float),
+        np.array([0.048, -0.073, 0.001, 0.0, 0.008, -0.002, 0.003, 0.0], dtype=np.float64),
+        np.array([[911.76, 0.0, 629.69],
+			[0.0, 912.0, 407.29],
+			[0.0, 0.0, 1.0]], dtype=np.float64),
     ),
 }
 

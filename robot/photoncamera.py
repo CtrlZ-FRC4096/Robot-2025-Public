@@ -12,6 +12,7 @@ from wpimath.geometry import (
     Translation3d,
     Rotation2d,
     Rotation3d,
+    Transform3d,
 )
 
 import const
@@ -51,6 +52,10 @@ class WrapperedPhotonCamera:
         self.poseEstimates = []
         self.robotToCam = robotToCam
         self.counter = 0
+
+    @staticmethod
+    def tgt_corner_to_list(target):
+        return [target.x, target.y]
 
     def update(self, prevEstPose: Pose2d, allianceColor: str):
         # self.counter += 1
@@ -133,18 +138,28 @@ class WrapperedPhotonCamera:
 
                 tagFieldPose = tag_map.getTagPose(tgtID)
 
+                # corners = np.ndarray(
+                #     [[[corner.x, corner.y] for corner in target.getDetectedCorners()]]
+                # )
                 corners = np.array(
-                    target.getDetectedCorners()
-                )  # Return list of n corners, for fiducials this is counter clockwise starting from the top left corner of the tag.
+                    [
+                        WrapperedPhotonCamera.tgt_corner_to_list(corner)
+                        for corner in target.getDetectedCorners()
+                    ]
+                ).astype(np.float32)
+
+                # Return list of n corners, for fiducials this is counter clockwise starting from the top left corner of the tag.
                 corners_undistorted = cv2.undistortPoints(  # Unsure if these corners have already been undistorted
                     corners,
+                    # self.cam.getCameraMatrix(),
+                    # self.cam.getDistortionCoefficients(),
                     self.cameraIntrinsMatrix,
                     self.cameraDistortVector,
                 )  # Return list of n corners, for fiducials this is counter clockwise starting from the top left corner of the tag.
-
+                # print(corners_undistorted)
                 corners = np.zeros((4, 2))
                 for index, corner in enumerate(
-                    corners
+                    corners_undistorted
                 ):  # calculate the angle of each corner relative to the camera center in the x and y directions (radians)
                     vec = np.linalg.inv(self.cameraIntrinsMatrix).dot(
                         np.array([corner[0][0], corner[0][1], 1]).T
@@ -174,7 +189,7 @@ class WrapperedPhotonCamera:
                     * math.sin((math.pi / 2) - target_y_angle)
                 )
 
-                camToTarget = Pose3d(
+                camToTarget = Transform3d(
                     Translation3d(x_dist, y_dist, z_dist), Rotation3d()
                 )  # Create a Pose3d object with the calculated x, y, and z distances, and no rotation
 

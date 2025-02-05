@@ -69,6 +69,7 @@ from photoncamera import WrapperedPhotonCamera
 from wpimath.units import degreesToRadians
 from robotpy_apriltag import AprilTagField, AprilTagFieldLayout
 
+
 class PoseEstimator(Subsystem):
     def __init__(self, robot: "Robot"):
         super().__init__()
@@ -293,7 +294,7 @@ class PoseEstimator(Subsystem):
         # add more elifs as conditions
         else:
             return True
-        
+
     def calculate_closest_reef_tag(self, relevant_tags):
         min_distance_to_tag = math.inf
         closest_reef_tag = None
@@ -305,9 +306,12 @@ class PoseEstimator(Subsystem):
                 min_distance_to_tag = distance
                 closest_reef_tag = tag
         return closest_reef_tag
-    
+
     def get_pose_from_single_tag(self, poses, relevant_tags):
-        avg_pose = Pose2d()
+        if len(poses) == 0:
+            return self.curEstPose
+        avg_pose_x = 0.0
+        avg_pose_y = 0.0
         closest_tag = self.calculate_closest_reef_tag(relevant_tags)
         poses_from_closest_tag = []
         for cam in poses:
@@ -315,15 +319,18 @@ class PoseEstimator(Subsystem):
                 if pose[1] == closest_tag:
                     poses_from_closest_tag.append(pose[0])
         for pose in poses_from_closest_tag:
-            avg_pose += pose
-        return avg_pose / len(poses_from_closest_tag)
-
+            avg_pose_x += pose.X()
+            avg_pose_y += pose.Y()
+        avg_pose_x /= len(poses_from_closest_tag)
+        avg_pose_y /= len(poses_from_closest_tag)
+        avg_pose = Pose2d(avg_pose_x, avg_pose_y, self.getYaw())
+        return avg_pose
 
     def periodic(self):
         allianceColor = DriverStation.getAlliance()
         single_tag_IDs = set()
         single_tag_poses = []
-        #closest_reef_tags = None
+        # closest_reef_tags = None
 
         for idx, cam in enumerate(self.cams):
             cam.update(self.curEstPose, allianceColor=allianceColor)
@@ -332,8 +339,7 @@ class PoseEstimator(Subsystem):
             tags = cam.getTagPositions()
             single_tag_poses.append(cam.getPoseSingleTag())
             single_tag_IDs.update(cam.getSingleTagIDs())
-            #filter by closest based on global pose
-
+            # filter by closest based on global pose
 
             tag_dist = 0.0
             theta_modifier = 1.0
@@ -376,8 +382,6 @@ class PoseEstimator(Subsystem):
                 self.camTargetsVisible = True
             # self.telemetry.addVisionObservations(observations) #Might need later https://github.com/RobotCasserole1736/RobotCasserole2024/blob/fa033322e6f4efe87e8b1af938d8a3f69599f29b/drivetrain/poseEstimation/drivetrainPoseTelemetry.py#L15
 
-        
-
         # if self.isFirstTick:
         #     self.isFirstTick = False
 
@@ -405,12 +409,11 @@ class PoseEstimator(Subsystem):
         relevant_tags = single_tag_IDs.intersection(FieldConstants.reef_tags)
         single_tag_pose = self.get_pose_from_single_tag(single_tag_poses, relevant_tags)
 
-
         SmartDashboard.putData("Field", self.field)
         self.field.setRobotPose(self.poseEst.getEstimatedPosition())
         SmartDashboard.putData("Field w/ Single Tag", self.field_for_single_tag)
         self.field_for_single_tag.setRobotPose(single_tag_pose)
-        
+
         # robot_pose = Pose2d(single_tag_poses[0].translation(), self.gyro.get_yaw()) if len(single_tag_poses) > 0 else self.curEstPose.translation()
         # self.field.setRobotPose(Pose2d(robot_pose, self.gyro.get_yaw()))
 
