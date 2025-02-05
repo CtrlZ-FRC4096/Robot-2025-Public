@@ -80,6 +80,7 @@ class PoseEstimator(Subsystem):
         self.gyro.set_yaw(self.gyro_offset)
 
         self.field = Field2d()
+        self.field_for_single_tag = Field2d()
 
         # bl, fl, br, fr
 
@@ -298,17 +299,31 @@ class PoseEstimator(Subsystem):
         closest_reef_tag = None
         tag_layout = AprilTagFieldLayout.loadField(AprilTagField.k2025Reefscape)
         for tag in relevant_tags:
-            tag_pose = tag_layout.getTagPose(tag)
-            distance = math.sqrt((self.curEstPose.X()-tag_pose.X())**2 + (self.curEstPose.Y() - tag_pose.Y())**2)
+            tag_pose = tag_layout.getTagPose(tag).toPose2d()
+            distance = (self.curEstPose - tag_pose).translation().norm()
             if distance < min_distance_to_tag:
                 min_distance_to_tag = distance
                 closest_reef_tag = tag
         return closest_reef_tag
+    
+    def get_pose_from_single_tag(self, poses, relevant_tags):
+        avg_pose = Pose2d()
+        closest_tag = self.calculate_closest_reef_tag(relevant_tags)
+        poses_from_closest_tag = []
+        for cam in poses:
+            for pose in cam:
+                if pose[1] == closest_tag:
+                    poses_from_closest_tag.append(pose[0])
+        for pose in poses_from_closest_tag:
+            avg_pose += pose
+        return avg_pose / len(poses_from_closest_tag)
+
 
     def periodic(self):
         allianceColor = DriverStation.getAlliance()
         single_tag_IDs = set()
         single_tag_poses = []
+        #closest_reef_tags = None
 
         for idx, cam in enumerate(self.cams):
             cam.update(self.curEstPose, allianceColor=allianceColor)
@@ -318,8 +333,6 @@ class PoseEstimator(Subsystem):
             single_tag_poses.append(cam.getPoseSingleTag())
             single_tag_IDs.update(cam.getSingleTagIDs())
             #filter by closest based on global pose
-            relevant_tags = single_tag_IDs.intersection(FieldConstants.reef_tags)
-            closest_reef_tag = self.calculate_closest_reef_tag(relevant_tags)
 
 
             tag_dist = 0.0
@@ -389,10 +402,17 @@ class PoseEstimator(Subsystem):
             elif self.poseConverge:
                 self.robot.leds.set_mode(self.robot.leds.MODE_ODOMETRY)
 
+        relevant_tags = single_tag_IDs.intersection(FieldConstants.reef_tags)
+        single_tag_pose = self.get_pose_from_single_tag(single_tag_poses, relevant_tags)
+
+
         SmartDashboard.putData("Field", self.field)
-        #self.field.setRobotPose(self.poseEst.getEstimatedPosition())
-        # robot_pose = Pose2d(single_tag_poses[0].translation(), self.gyro.get_yaw()) if len(single_tag_poses) > 0 else self.curEstPose
-        # self.field.setRobotPose(robot_pose)
+        self.field.setRobotPose(self.poseEst.getEstimatedPosition())
+        SmartDashboard.putData("Field w/ Single Tag", self.field_for_single_tag)
+        self.field_for_single_tag.setRobotPose(single_tag_pose)
+        
+        # robot_pose = Pose2d(single_tag_poses[0].translation(), self.gyro.get_yaw()) if len(single_tag_poses) > 0 else self.curEstPose.translation()
+        # self.field.setRobotPose(Pose2d(robot_pose, self.gyro.get_yaw()))
 
         SmartDashboard.putNumber("Camera/Odometry X", self.curEstPose.x)
         SmartDashboard.putNumber("Camera/Odometry Y", self.curEstPose.y)

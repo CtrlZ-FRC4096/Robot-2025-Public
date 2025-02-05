@@ -181,7 +181,7 @@ class WrapperedPhotonCamera:
                 # Calculate the position of the robot on the field in the field coordinate system (meters) from the tag pose and the camera to target transform
                 fieldPose = self._toFieldPose(tagFieldPose, camToTarget)
 
-                self.poseSingleTag.append(fieldPose)
+                self.poseSingleTag.append([fieldPose, tgtID])
                 self.singleTagIDs.append(tgtID)
 
     def getTagIds(self):

@@ -3,6 +3,7 @@
     "types": {
       "/FMSInfo": "FMSInfo",
       "/SmartDashboard/Field": "Field2d",
+      "/SmartDashboard/Field w/ Single Tag": "Field2d",
       "/SmartDashboard/PID Controller (Drivetrain)": "PIDController"
     }
   },
