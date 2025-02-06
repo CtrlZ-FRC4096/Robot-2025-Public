@@ -33,7 +33,12 @@ from wpimath.estimator import SwerveDrive4PoseEstimator
 import const
 
 
-from pathplannerlib.auto import AutoBuilder, PathPlannerAuto, NamedCommands, PathConstraints
+from pathplannerlib.auto import (
+    AutoBuilder,
+    PathPlannerAuto,
+    NamedCommands,
+    PathConstraints,
+)
 
 from robotpy_apriltag import AprilTagField, AprilTagFieldLayout
 
@@ -43,6 +48,7 @@ from wpilibextra.customcontroller import XboxCommandController
 
 from field_const import FieldConstants
 from wpimath.units import inchesToMeters, degreesToRadians
+
 ###  IMPORTS ###
 
 
@@ -204,38 +210,43 @@ class OI:
         def _():
             self.robot.funnel_intake.is_running = True
 
-        @self.driver1.LEFT_TRIGGER_AS_BUTTON.whenHeld #Pathfind to score
+        @self.driver1.LEFT_TRIGGER_AS_BUTTON.whenHeld  # Pathfind to score
         def _():
             constraints = PathConstraints(4.0, 4.0, 3.0 * math.pi, 3.0 * math.pi)
-            target_pose = self.robot.poseEstimator.get_path_to_reef(self.face, self.right_branch)
-            #self.robot.poseEstimator.tag_to_pathfind_reef = FieldConstants.face_to_tag[self.face]
+            if len(self.robot.poseEstimator.relevant_tags) == 0:
+                return
+            target_pose = self.robot.poseEstimator.get_path_to_reef(
+                FieldConstants.tag_to_face[
+                    self.robot.poseEstimator.calculate_closest_reef_tag(
+                        self.robot.poseEstimator.relevant_tags
+                    )
+                ],
+                self.right_branch,
+            )
+            # self.robot.poseEstimator.tag_to_pathfind_reef = FieldConstants.face_to_tag[self.face]
             self.robot.poseEstimator.is_using_single_tag = True
 
-            self.pathfind_to_reef = AutoBuilder.pathfindToPose(target_pose, constraints, 0)
+            self.pathfind_to_reef = AutoBuilder.pathfindToPose(
+                target_pose, constraints, 0.0
+            )
             self.robot.scheduler.schedule(self.pathfind_to_reef.schedule())
-            self.driver1.setRumble(0.5)
 
-        
-        @self.driver1.LEFT_TRIGGER_AS_BUTTON.whenReleased #stop pathfinnd
+        @self.driver1.LEFT_TRIGGER_AS_BUTTON.whenReleased  # stop pathfinnd
         def _():
-            self.robot.scheduler.cancel(self.pathfind_to_reef.schedule())
-            self.driver1.setRumble(0)
-            self.driver2.setLeftRumble(0)
-            self.driver2.setRightRumble(0)
+            self.robot.scheduler.cancelAll()
             self.robot.poseEstimator.is_using_single_tag = False
 
-        @self.driver2.RIGHT_TRIGGER_AS_BUTTON.whenPressed #right face
+        @self.driver2.RIGHT_TRIGGER_AS_BUTTON.whenPressed  # right face
         def _():
             self.right_branch = True
-            self.driver2.setRightRumble(0.5)
-        @self.driver2.LEFT_TRIGGER_AS_BUTTON.whenPressed #left face
+
+        @self.driver2.LEFT_TRIGGER_AS_BUTTON.whenPressed  # left face
         def _():
             self.right_branch = False
-            self.driver2.setLeftRumble(0.5)
-        @self.driver2.A.whenPressed # face 6
-        def _():
-            self.face = 6
 
+        # @self.driver2.A.whenPressed # face 6
+        # def _():
+        #     self.face = 6
 
         @self.driver2.POV.RIGHT.whenPressed  # STOP ALL SUBSYSTEMS
         def _():

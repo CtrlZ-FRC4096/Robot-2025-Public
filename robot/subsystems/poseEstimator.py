@@ -150,7 +150,7 @@ class PoseEstimator(Subsystem):
         ROBOT_TO_CAM1 = Transform3d(
             Translation3d(-0.290, -0.295, 0.1699),  # X  # Y  # Z
             Rotation3d(
-                0.0, np.deg2rad(-10.0), np.deg2rad(20.0 - 90)
+                0.0, np.deg2rad(-10.0), np.deg2rad(20.0 - 90.0)
             ),  # Roll  # Pitch  # Yaw
         )
 
@@ -182,7 +182,7 @@ class PoseEstimator(Subsystem):
 
         self.cams = [
             WrapperedPhotonCamera("camera_1", ROBOT_TO_CAM1),
-            WrapperedPhotonCamera("camera_2", ROBOT_TO_CAM2),
+            # WrapperedPhotonCamera("camera_2", ROBOT_TO_CAM2),
             # WrapperedPhotonCamera("Camera3", ROBOT_TO_CAM3),
             # WrapperedPhotonCamera("Camera4", ROBOT_TO_CAM4),
         ]
@@ -193,7 +193,6 @@ class PoseEstimator(Subsystem):
         self.last_periodic_accel_y = 0
 
         self.is_using_single_tag = False
-
 
     def stop(self):
         print("sike this aint stoppin")
@@ -328,27 +327,38 @@ class PoseEstimator(Subsystem):
         avg_pose_y /= len(poses_from_tag_used)
         avg_pose = Pose2d(avg_pose_x, avg_pose_y, self.getYaw())
         return avg_pose
-    
+
     @staticmethod
-    def get_path_to_reef(face : int, right_branch : bool):
-        side_offset = inchesToMeters(6.47) # distance b/w center of face to branch
-        dist_offset = inchesToMeters(29.5) + inchesToMeters(7.25) + inchesToMeters(12) #robot size + bumper addition + error protection
-        
+    def get_path_to_reef(face: int, right_branch: bool):
+        side_offset = inchesToMeters(6.47)  # distance b/w center of face to branch
+        dist_offset = (
+            inchesToMeters(29.5) + inchesToMeters(7.25) + inchesToMeters(12)
+        )  # robot size + bumper addition + error protection
+
         angle_face = FieldConstants.Reef.centerFaces[face].rotation()
         center_face_pose = FieldConstants.Reef.centerFaces[face].translation()
         center_face_x = center_face_pose.X()
         center_face_y = center_face_pose.Y()
         x_offset = math.cos(angle_face.radians()) * dist_offset
         y_offset = math.sin(angle_face.radians()) * dist_offset
-        target_pose_face = Pose2d(center_face_x + x_offset, center_face_y + y_offset, angle_face)
+        target_pose_face = Pose2d(
+            center_face_x + x_offset, center_face_y + y_offset, angle_face
+        )
 
-        angle_to_branch = (angle_face.degrees() + 90) % 360 if right_branch else (angle_face.degrees() - 90) % 360
+        angle_to_branch = (
+            (angle_face.degrees() + 90) % 360
+            if right_branch
+            else (angle_face.degrees() - 90) % 360
+        )
 
-            
         x_offset_branch = math.sin(degreesToRadians(angle_to_branch)) * side_offset
         y_offset_branch = math.cos(degreesToRadians(angle_to_branch)) * side_offset
 
-        target_pose = Pose2d(target_pose_face.X() + x_offset_branch, target_pose_face.Y() + y_offset_branch, angle_face + 90)
+        target_pose = Pose2d(
+            target_pose_face.X() + x_offset_branch,
+            target_pose_face.Y() + y_offset_branch,
+            angle_face + 90,
+        )
         return target_pose
 
     def periodic(self):
@@ -360,7 +370,7 @@ class PoseEstimator(Subsystem):
         for idx, cam in enumerate(self.cams):
             cam.update(self.curEstPose, allianceColor=allianceColor)
 
-            #observations = cam.getPoseEstimates()
+            # observations = cam.getPoseEstimates()
             tags = cam.getTagPositions()
             single_tag_poses.append(cam.getPoseSingleTag())
             self.single_tag_IDs.update(cam.getSingleTagIDs())
@@ -377,7 +387,9 @@ class PoseEstimator(Subsystem):
                 self.tag_dist /= len(tags)
             if len(tags) == 1:
                 self.theta_modifier = 1000.0
-            if self.tag_dist > 4:  # if the robot is more than 4 meters away from the target
+            if (
+                self.tag_dist > 4
+            ):  # if the robot is more than 4 meters away from the target
                 self.xy_modifier = 3.0
                 self.theta_modifier = 3.0
 
@@ -398,11 +410,14 @@ class PoseEstimator(Subsystem):
                             self.thetastd
                             * (self.tag_dist**2)
                             * self.theta_modifier,  # * (min_ambiguity / 0.4),
-                        )
+                        ),
                     )
-                    if not((
-                        observation.estFieldPose - self.poseEst.getEstimatedPosition()
-                    ).translation().norm() <= 0.5):
+                    if not (
+                        (observation.estFieldPose - self.poseEst.getEstimatedPosition())
+                        .translation()
+                        .norm()
+                        <= 0.5
+                    ):
                         self.poseConverge = False
                     self.camTargetsVisible = True
             else:
@@ -423,9 +438,12 @@ class PoseEstimator(Subsystem):
                             * self.theta_modifier,  # * (min_ambiguity / 0.4),
                         ),
                     )
-                    if not((
-                        observation.estFieldPose - self.poseEst.getEstimatedPosition()
-                    ).translation().norm() <= 0.5):
+                    if not (
+                        (observation.estFieldPose - self.poseEst.getEstimatedPosition())
+                        .translation()
+                        .norm()
+                        <= 0.5
+                    ):
                         self.poseConverge = False
                     self.camTargetsVisible = True
             # self.telemetry.addVisionObservations(observations) #Might need later https://github.com/RobotCasserole1736/RobotCasserole2024/blob/fa033322e6f4efe87e8b1af938d8a3f69599f29b/drivetrain/poseEstimation/drivetrainPoseTelemetry.py#L15
@@ -452,13 +470,21 @@ class PoseEstimator(Subsystem):
                 self.robot.leds.set_mode(self.robot.leds.MODE_ODOMETRY)
         self.poseConverge = True
 
-        relevant_tags = self.single_tag_IDs.intersection(FieldConstants.reef_tags)
-        self.single_tag_pose = self.get_pose_from_single_tag(single_tag_poses, relevant_tags)
+        self.relevant_tags = self.single_tag_IDs.intersection(FieldConstants.reef_tags)
+
+        self.single_tag_pose = self.get_pose_from_single_tag(
+            single_tag_poses, self.relevant_tags
+        )
 
         SmartDashboard.putData("Field", self.field)
         self.field.setRobotPose(self.poseEst.getEstimatedPosition())
         SmartDashboard.putData("Field w/ Single Tag", self.field_for_single_tag)
         self.field_for_single_tag.setRobotPose(self.single_tag_pose)
+
+        if self.calculate_closest_reef_tag(self.relevant_tags):
+            SmartDashboard.putNumber(
+                "closest reef tag", self.calculate_closest_reef_tag(self.relevant_tags)
+            )
 
         # robot_pose = Pose2d(single_tag_poses[0].translation(), self.gyro.get_yaw()) if len(single_tag_poses) > 0 else self.curEstPose.translation()
         # self.field.setRobotPose(Pose2d(robot_pose, self.gyro.get_yaw()))

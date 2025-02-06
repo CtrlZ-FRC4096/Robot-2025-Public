@@ -155,8 +155,9 @@ class WrapperedPhotonCamera:
                     # self.cam.getDistortionCoefficients(),
                     self.cameraIntrinsMatrix,
                     self.cameraDistortVector,
+                    None,
+                    self.cameraIntrinsMatrix,
                 )  # Return list of n corners, for fiducials this is counter clockwise starting from the top left corner of the tag.
-                # print(corners_undistorted)
                 corners = np.zeros((4, 2))
                 for index, corner in enumerate(
                     corners_undistorted
@@ -183,11 +184,14 @@ class WrapperedPhotonCamera:
                     * math.sin(target_x_angle)
                     * math.sin((math.pi / 2) - target_y_angle)
                 )
-                x_dist = (
+                x_dist = -1 * (
                     distance
                     * math.cos(target_x_angle)
                     * math.sin((math.pi / 2) - target_y_angle)
                 )
+                print("x dist: ", x_dist)
+                print("y dist: ", y_dist)
+                print("z dist: ", z_dist)
 
                 camToTarget = Transform3d(
                     Translation3d(x_dist, y_dist, z_dist), Rotation3d()
@@ -195,6 +199,7 @@ class WrapperedPhotonCamera:
 
                 # Calculate the position of the robot on the field in the field coordinate system (meters) from the tag pose and the camera to target transform
                 fieldPose = self._toFieldPose(tagFieldPose, camToTarget)
+                # print(fieldPose)
 
                 self.poseSingleTag.append([fieldPose, tgtID])
                 self.singleTagIDs.append(tgtID)
