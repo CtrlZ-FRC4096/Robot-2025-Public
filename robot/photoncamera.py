@@ -175,16 +175,16 @@ class WrapperedPhotonCamera:
                 distance = (
                     target.getBestCameraToTarget().translation().norm()
                 )  # distance from camera to target in meters
-
+                print("distance: ", distance)
                 # Calculate the position of the target to the camera  in the camera coordinate system (meters)
                 # Use spherical coordinates to calculate the x, y, and z distances
-                z_dist = distance * math.cos((math.pi / 2) - target_y_angle)
-                y_dist = (
+                z_dist = -1 * distance * math.cos((math.pi / 2) - target_y_angle)
+                y_dist = -1 * (
                     distance
                     * math.sin(target_x_angle)
                     * math.sin((math.pi / 2) - target_y_angle)
                 )
-                x_dist = -1 * (
+                x_dist = (
                     distance
                     * math.cos(target_x_angle)
                     * math.sin((math.pi / 2) - target_y_angle)
