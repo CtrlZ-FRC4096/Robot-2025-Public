@@ -375,9 +375,8 @@ class PoseEstimator(Subsystem):
                 self.tag_dist += (self.curEstPose - tag2D).translation().norm()
             if len(tags) > 0:
                 self.tag_dist /= len(tags)
-            if not(self.is_using_single_tag):
-                if len(tags) == 1:
-                    self.theta_modifier = 1000.0
+            if len(tags) == 1:
+                self.theta_modifier = 1000.0
             if self.tag_dist > 4:  # if the robot is more than 4 meters away from the target
                 self.xy_modifier = 3.0
                 self.theta_modifier = 3.0
@@ -401,9 +400,9 @@ class PoseEstimator(Subsystem):
                             * self.theta_modifier,  # * (min_ambiguity / 0.4),
                         )
                     )
-                    if not(
+                    if not((
                         observation.estFieldPose - self.poseEst.getEstimatedPosition()
-                    ).translation().norm() <= 0.5:
+                    ).translation().norm() <= 0.5):
                         self.poseConverge = False
                     self.camTargetsVisible = True
             else:
@@ -424,9 +423,9 @@ class PoseEstimator(Subsystem):
                             * self.theta_modifier,  # * (min_ambiguity / 0.4),
                         ),
                     )
-                    if not(
+                    if not((
                         observation.estFieldPose - self.poseEst.getEstimatedPosition()
-                    ).translation().norm() <= 0.5:
+                    ).translation().norm() <= 0.5):
                         self.poseConverge = False
                     self.camTargetsVisible = True
             # self.telemetry.addVisionObservations(observations) #Might need later https://github.com/RobotCasserole1736/RobotCasserole2024/blob/fa033322e6f4efe87e8b1af938d8a3f69599f29b/drivetrain/poseEstimation/drivetrainPoseTelemetry.py#L15
