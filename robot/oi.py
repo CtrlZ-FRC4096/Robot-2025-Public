@@ -42,7 +42,7 @@ from robotpy_apriltag import AprilTagField, AprilTagFieldLayout
 from wpilibextra.customcontroller import XboxCommandController
 
 from field_const import FieldConstants
-from wpimath.units import degreesToRadians
+from wpimath.units import inchesToMeters, degreesToRadians
 ###  IMPORTS ###
 
 
@@ -86,10 +86,10 @@ class OI:
         self.find_heading = True
         self.tick_count = 0
 
-        self.face = 0
-        self.right_branch = None
-        self.dist_offset = 0.5
+        self.face = 1
+        self.right_branch = True
         self.tag_to_pathfind = 0
+        self.pathfind_to_reef = None
 
         @self.rumble_button.whenPressed
         def _():
@@ -206,38 +206,32 @@ class OI:
 
         @self.driver1.LEFT_TRIGGER_AS_BUTTON.whenHeld #Pathfind to score
         def _():
-            if self.face != 0 and self.right_branch != None:
-                angle_face = FieldConstants.Reef.centerFaces[self.face].rotation()
-                center_face_pose = FieldConstants.Reef.centerFaces[self.face].translation()
-                center_face_x = center_face_pose.X()
-                center_face_y = center_face_pose.Y()
-                x_offset = math.cos(angle_face.radians()) * self.dist_offset
-                y_offset = math.sin(angle_face.radians()) * self.dist_offset
-                target_pose_face = Pose2d(center_face_x + x_offset, center_face_y + y_offset, angle_face)
-                constraints = PathConstraints(4.0, 4.0, 3.0 * math.pi, 3.0 * math.pi)
-                self.tag_to_pathfind = FieldConstants.face_to_tag[self.face]
+            constraints = PathConstraints(4.0, 4.0, 3.0 * math.pi, 3.0 * math.pi)
+            target_pose = self.robot.poseEstimator.get_path_to_reef(self.face, self.right_branch)
+            self.tag_to_pathfind = FieldConstants.face_to_tag[self.face]
+            self.robot.poseEstimator.is_using_single_tag = True
 
-                #add geometry for right and left branch transforms
-
-
-                self.pathfind = AutoBuilder.pathfindToPose(target_pose, constraints, 0)
-                self.robot.scheduler.schedule(self.pathfind.schedule())
-                self.driver1.setRumble(0.5)
-            
+            self.pathfind_to_reef = AutoBuilder.pathfindToPose(target_pose, constraints, 0)
+            self.robot.scheduler.schedule(self.pathfind_to_reef.schedule())
+            self.driver1.setRumble(0.5)
 
         
         @self.driver1.LEFT_TRIGGER_AS_BUTTON.whenReleased #stop pathfinnd
         def _():
-            self.robot.scheduler.cancel(self.pathfind.schedule())
+            self.robot.scheduler.cancel(self.pathfind_to_reef.schedule())
             self.driver1.setRumble(0)
-
+            self.driver2.setLeftRumble(0)
+            self.driver2.setRightRumble(0)
+            self.robot.poseEstimator.is_using_single_tag = False
 
         @self.driver2.RIGHT_TRIGGER_AS_BUTTON.whenPressed #right face
         def _():
             self.right_branch = True
+            self.driver2.setRightRumble(0.5)
         @self.driver2.LEFT_TRIGGER_AS_BUTTON.whenPressed #left face
         def _():
             self.right_branch = False
+            self.driver2.setLeftRumble(0.5)
         @self.driver2.A.whenPressed # face 6
         def _():
             self.face = 6

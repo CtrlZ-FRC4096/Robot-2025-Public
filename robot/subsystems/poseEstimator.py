@@ -66,7 +66,7 @@ from pathplannerlib.path import PathPlannerTrajectory
 from pathplannerlib.path import PathPlannerPath, PathConstraints
 from wpimath.estimator import SwerveDrive4PoseEstimator
 from photoncamera import WrapperedPhotonCamera
-from wpimath.units import degreesToRadians
+from wpimath.units import degreesToRadians, inchesToMeters
 from robotpy_apriltag import AprilTagField, AprilTagFieldLayout
 
 
@@ -188,9 +188,11 @@ class PoseEstimator(Subsystem):
         ]
 
         self.poseConverge = True
-        self.isFirstTick = True
+
         self.last_periodic_accel_x = 0
         self.last_periodic_accel_y = 0
+
+        self.is_using_single_tag = False
 
     def stop(self):
         print("sike this aint stoppin")
@@ -308,8 +310,6 @@ class PoseEstimator(Subsystem):
         return closest_reef_tag
 
     def get_pose_from_single_tag(self, poses, relevant_tags):
-        if len(poses) == 0:
-            return self.curEstPose
         avg_pose_x = 0.0
         avg_pose_y = 0.0
         closest_tag = self.calculate_closest_reef_tag(relevant_tags)
@@ -318,6 +318,8 @@ class PoseEstimator(Subsystem):
             for pose in cam:
                 if pose[1] == closest_tag:
                     poses_from_closest_tag.append(pose[0])
+        if len(poses_from_closest_tag) == 0:
+            return self.curEstPose
         for pose in poses_from_closest_tag:
             avg_pose_x += pose.X()
             avg_pose_y += pose.Y()
@@ -325,6 +327,28 @@ class PoseEstimator(Subsystem):
         avg_pose_y /= len(poses_from_closest_tag)
         avg_pose = Pose2d(avg_pose_x, avg_pose_y, self.getYaw())
         return avg_pose
+    
+    @staticmethod
+    def get_path_to_reef(face : int, right_branch : bool):
+        side_offset = inchesToMeters(6.47) # distance b/w center of face to branch
+        dist_offset = inchesToMeters(29.5) + inchesToMeters(7.25) + inchesToMeters(12) #robot size + bumper addition + error protection
+        
+        angle_face = FieldConstants.Reef.centerFaces[face].rotation()
+        center_face_pose = FieldConstants.Reef.centerFaces[face].translation()
+        center_face_x = center_face_pose.X()
+        center_face_y = center_face_pose.Y()
+        x_offset = math.cos(angle_face.radians()) * dist_offset
+        y_offset = math.sin(angle_face.radians()) * dist_offset
+        target_pose_face = Pose2d(center_face_x + x_offset, center_face_y + y_offset, angle_face)
+
+        angle_to_branch = (angle_face.degrees() + 90) % 360 if right_branch else (angle_face.degrees() - 90) % 360
+
+            
+        x_offset_branch = math.sin(degreesToRadians(angle_to_branch)) * side_offset
+        y_offset_branch = math.cos(degreesToRadians(angle_to_branch)) * side_offset
+
+        target_pose = Pose2d(target_pose_face.X() + x_offset_branch, target_pose_face.Y() + y_offset_branch, angle_face + 90)
+        return target_pose
 
     def periodic(self):
         allianceColor = DriverStation.getAlliance()
@@ -382,9 +406,6 @@ class PoseEstimator(Subsystem):
                 self.camTargetsVisible = True
             # self.telemetry.addVisionObservations(observations) #Might need later https://github.com/RobotCasserole1736/RobotCasserole2024/blob/fa033322e6f4efe87e8b1af938d8a3f69599f29b/drivetrain/poseEstimation/drivetrainPoseTelemetry.py#L15
 
-        # if self.isFirstTick:
-        #     self.isFirstTick = False
-
         self.poseEst.update(self.getYaw(), self.get_module_positions())
         # self.lastPeriodicEstPose = self.curEstPose
 
@@ -407,12 +428,12 @@ class PoseEstimator(Subsystem):
                 self.robot.leds.set_mode(self.robot.leds.MODE_ODOMETRY)
 
         relevant_tags = single_tag_IDs.intersection(FieldConstants.reef_tags)
-        single_tag_pose = self.get_pose_from_single_tag(single_tag_poses, relevant_tags)
+        self.single_tag_pose = self.get_pose_from_single_tag(single_tag_poses, relevant_tags)
 
         SmartDashboard.putData("Field", self.field)
         self.field.setRobotPose(self.poseEst.getEstimatedPosition())
         SmartDashboard.putData("Field w/ Single Tag", self.field_for_single_tag)
-        self.field_for_single_tag.setRobotPose(single_tag_pose)
+        self.field_for_single_tag.setRobotPose(self.single_tag_pose)
 
         # robot_pose = Pose2d(single_tag_poses[0].translation(), self.gyro.get_yaw()) if len(single_tag_poses) > 0 else self.curEstPose.translation()
         # self.field.setRobotPose(Pose2d(robot_pose, self.gyro.get_yaw()))
