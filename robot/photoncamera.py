@@ -80,7 +80,7 @@ class WrapperedPhotonCamera:
         # latency = res.getLatencyMillis()
         # obsTime = wpilib.Timer.getFPGATimestamp() - latency
 
-        obsTime = res.getTimestampSeconds()
+        self.obsTime = res.getTimestampSeconds()
 
         ## MultiTag code
         tag_map = AprilTagFieldLayout.loadField(AprilTagField.k2025Reefscape)
@@ -97,7 +97,7 @@ class WrapperedPhotonCamera:
             robot_pose = vision_est.estimatedPose.toPose2d()
 
             # if ((robot_pose.x > -0.5) and (robot_pose.x < const.FIELD_LENGTH_METERS + 0.5) and (robot_pose.y > -0.5) and (robot_pose.y < const.FIELD_WIDTH_METERS + 0.5)): # Check if the robot is on the field
-            self.poseEstimates.append(CameraPoseObservation(obsTime, robot_pose))
+            self.poseEstimates.append(CameraPoseObservation(self.obsTime, robot_pose))
             for target in res.getTargets():
                 tgtID = target.getFiducialId()
 
@@ -198,6 +198,9 @@ class WrapperedPhotonCamera:
 
                 self.poseSingleTag.append([fieldPose, tgtID])
                 self.singleTagIDs.append(tgtID)
+
+    def getObsTime(self):
+        return self.obsTime
 
     def getTagIds(self):
         return self.tag_ids

@@ -208,7 +208,7 @@ class OI:
         def _():
             constraints = PathConstraints(4.0, 4.0, 3.0 * math.pi, 3.0 * math.pi)
             target_pose = self.robot.poseEstimator.get_path_to_reef(self.face, self.right_branch)
-            self.tag_to_pathfind = FieldConstants.face_to_tag[self.face]
+            #self.robot.poseEstimator.tag_to_pathfind_reef = FieldConstants.face_to_tag[self.face]
             self.robot.poseEstimator.is_using_single_tag = True
 
             self.pathfind_to_reef = AutoBuilder.pathfindToPose(target_pose, constraints, 0)

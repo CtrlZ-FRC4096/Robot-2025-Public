@@ -194,6 +194,7 @@ class PoseEstimator(Subsystem):
 
         self.is_using_single_tag = False
 
+
     def stop(self):
         print("sike this aint stoppin")
 
@@ -312,19 +313,19 @@ class PoseEstimator(Subsystem):
     def get_pose_from_single_tag(self, poses, relevant_tags):
         avg_pose_x = 0.0
         avg_pose_y = 0.0
-        closest_tag = self.calculate_closest_reef_tag(relevant_tags)
-        poses_from_closest_tag = []
+        tag_in_use = self.calculate_closest_reef_tag(relevant_tags)
+        poses_from_tag_used = []
         for cam in poses:
             for pose in cam:
-                if pose[1] == closest_tag:
-                    poses_from_closest_tag.append(pose[0])
-        if len(poses_from_closest_tag) == 0:
+                if pose[1] == tag_in_use:
+                    poses_from_tag_used.append(pose[0])
+        if len(poses_from_tag_used) == 0:
             return self.curEstPose
-        for pose in poses_from_closest_tag:
+        for pose in poses_from_tag_used:
             avg_pose_x += pose.X()
             avg_pose_y += pose.Y()
-        avg_pose_x /= len(poses_from_closest_tag)
-        avg_pose_y /= len(poses_from_closest_tag)
+        avg_pose_x /= len(poses_from_tag_used)
+        avg_pose_y /= len(poses_from_tag_used)
         avg_pose = Pose2d(avg_pose_x, avg_pose_y, self.getYaw())
         return avg_pose
     
@@ -352,58 +353,82 @@ class PoseEstimator(Subsystem):
 
     def periodic(self):
         allianceColor = DriverStation.getAlliance()
-        single_tag_IDs = set()
+        self.single_tag_IDs = set()
         single_tag_poses = []
         # closest_reef_tags = None
 
         for idx, cam in enumerate(self.cams):
             cam.update(self.curEstPose, allianceColor=allianceColor)
 
-            observations = cam.getPoseEstimates()
+            #observations = cam.getPoseEstimates()
             tags = cam.getTagPositions()
             single_tag_poses.append(cam.getPoseSingleTag())
-            single_tag_IDs.update(cam.getSingleTagIDs())
+            self.single_tag_IDs.update(cam.getSingleTagIDs())
             # filter by closest based on global pose
 
-            tag_dist = 0.0
-            theta_modifier = 1.0
-            xy_modifier = 1.0
+            self.tag_dist = 0.0
+            self.theta_modifier = 1.0
+            self.xy_modifier = 1.0
 
             for tag in tags:
                 tag2D = tag.toPose2d()
-                tag_dist += (self.curEstPose - tag2D).translation().norm()
+                self.tag_dist += (self.curEstPose - tag2D).translation().norm()
             if len(tags) > 0:
-                tag_dist /= len(tags)
-            if len(tags) == 1:
-                theta_modifier = 1000.0
-            if tag_dist > 4:  # if the robot is more than 4 meters away from the target
-                xy_modifier = 3.0
-                theta_modifier = 3.0
+                self.tag_dist /= len(tags)
+            if not(self.is_using_single_tag):
+                if len(tags) == 1:
+                    self.theta_modifier = 1000.0
+            if self.tag_dist > 4:  # if the robot is more than 4 meters away from the target
+                self.xy_modifier = 3.0
+                self.theta_modifier = 3.0
 
             # print(tag_dist)
-            for observation in observations:
-                self.poseEst.addVisionMeasurement(
-                    observation.estFieldPose,
-                    observation.time,
-                    (
-                        self.xystd
-                        * (tag_dist**2)
-                        * xy_modifier,  # * (min_ambiguity / 0.4),
-                        self.xystd
-                        * (tag_dist**2)
-                        * xy_modifier,  # * (min_ambiguity / 0.4),
-                        self.thetastd
-                        * (tag_dist**2)
-                        * theta_modifier,  # * (min_ambiguity / 0.4),
-                    ),
-                )
-                if (
-                    observation.estFieldPose - self.poseEst.getEstimatedPosition()
-                ).translation().norm() <= 0.5:
-                    self.poseConverge = True
-                else:
-                    self.poseConverge = False
-                self.camTargetsVisible = True
+        for idx, cam in enumerate(self.cams):
+            if self.is_using_single_tag:
+                for pose in single_tag_poses[idx]:
+                    self.poseEst.addVisionMeasurement(
+                        pose,
+                        cam.getObsTime,
+                        (
+                            self.xystd
+                            * (self.tag_dist**2)
+                            * self.xy_modifier,  # * (min_ambiguity / 0.4),
+                            self.xystd
+                            * (self.tag_dist**2)
+                            * self.xy_modifier,  # * (min_ambiguity / 0.4),
+                            self.thetastd
+                            * (self.tag_dist**2)
+                            * self.theta_modifier,  # * (min_ambiguity / 0.4),
+                        )
+                    )
+                    if not(
+                        observation.estFieldPose - self.poseEst.getEstimatedPosition()
+                    ).translation().norm() <= 0.5:
+                        self.poseConverge = False
+                    self.camTargetsVisible = True
+            else:
+                observations = cam.getPoseEstimates()
+                for observation in observations:
+                    self.poseEst.addVisionMeasurement(
+                        observation.estFieldPose,
+                        observation.time,
+                        (
+                            self.xystd
+                            * (self.tag_dist**2)
+                            * self.xy_modifier,  # * (min_ambiguity / 0.4),
+                            self.xystd
+                            * (self.tag_dist**2)
+                            * self.xy_modifier,  # * (min_ambiguity / 0.4),
+                            self.thetastd
+                            * (self.tag_dist**2)
+                            * self.theta_modifier,  # * (min_ambiguity / 0.4),
+                        ),
+                    )
+                    if not(
+                        observation.estFieldPose - self.poseEst.getEstimatedPosition()
+                    ).translation().norm() <= 0.5:
+                        self.poseConverge = False
+                    self.camTargetsVisible = True
             # self.telemetry.addVisionObservations(observations) #Might need later https://github.com/RobotCasserole1736/RobotCasserole2024/blob/fa033322e6f4efe87e8b1af938d8a3f69599f29b/drivetrain/poseEstimation/drivetrainPoseTelemetry.py#L15
 
         self.poseEst.update(self.getYaw(), self.get_module_positions())
@@ -426,8 +451,9 @@ class PoseEstimator(Subsystem):
                 self.robot.leds.set_mode(self.robot.leds.MODE_LOST_ODOMETRY)
             elif self.poseConverge:
                 self.robot.leds.set_mode(self.robot.leds.MODE_ODOMETRY)
+        self.poseConverge = True
 
-        relevant_tags = single_tag_IDs.intersection(FieldConstants.reef_tags)
+        relevant_tags = self.single_tag_IDs.intersection(FieldConstants.reef_tags)
         self.single_tag_pose = self.get_pose_from_single_tag(single_tag_poses, relevant_tags)
 
         SmartDashboard.putData("Field", self.field)
