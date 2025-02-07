@@ -142,9 +142,14 @@ class PoseEstimator(Subsystem):
             const.SWERVE_KINEMATICS, self.getYaw(), self.get_module_positions(), self.curEstPose  # type: ignore
         )
 
+        self.poseEstSingleTag = SwerveDrive4PoseEstimator(const.SWERVE_KINEMATICS, self.getYaw(), self.get_module_positions(), self.curEstPose)
+
         # self.poseEst.setVisionMeasurementStdDevs((0.0001, 0.0001, 0.5))
         self.xystd = 0.3
         self.thetastd = 10.0  # .15
+
+        self.xystd_single_tag = 0.5
+        self.thetastd_single_tag = 6000.0
 
         # test position of camera 1 on front right module
         ROBOT_TO_CAM1 = Transform3d(
@@ -182,7 +187,7 @@ class PoseEstimator(Subsystem):
 
         self.cams = [
             WrapperedPhotonCamera("camera_1", ROBOT_TO_CAM1),
-            # WrapperedPhotonCamera("camera_2", ROBOT_TO_CAM2),
+            #WrapperedPhotonCamera("camera_2", ROBOT_TO_CAM2),
             # WrapperedPhotonCamera("Camera3", ROBOT_TO_CAM3),
             # WrapperedPhotonCamera("Camera4", ROBOT_TO_CAM4),
         ]
@@ -365,20 +370,24 @@ class PoseEstimator(Subsystem):
         allianceColor = DriverStation.getAlliance()
         self.single_tag_IDs = set()
         single_tag_poses = []
-        # closest_reef_tags = None
+  
 
         for idx, cam in enumerate(self.cams):
-            cam.update(self.curEstPose, allianceColor=allianceColor)
+            cam.update(self.curEstPose, allianceColor=allianceColor, yaw=self.getYaw())
 
             # observations = cam.getPoseEstimates()
             tags = cam.getTagPositions()
             single_tag_poses.append(cam.getPoseSingleTag())
             self.single_tag_IDs.update(cam.getSingleTagIDs())
+            observations = cam.getPoseEstimates()
             # filter by closest based on global pose
 
             self.tag_dist = 0.0
             self.theta_modifier = 1.0
             self.xy_modifier = 1.0
+
+            self.theta_modifier_single_tag = 1.0
+            self.xy_modifier_single_tag = 1.0
 
             for tag in tags:
                 tag2D = tag.toPose2d()
@@ -393,35 +402,29 @@ class PoseEstimator(Subsystem):
                 self.xy_modifier = 3.0
                 self.theta_modifier = 3.0
 
-            # print(tag_dist)
-        for idx, cam in enumerate(self.cams):
-            if self.is_using_single_tag:
-                for pose in single_tag_poses[idx]:
-                    self.poseEst.addVisionMeasurement(
-                        pose,
-                        cam.getObsTime,
-                        (
-                            self.xystd
-                            * (self.tag_dist**2)
-                            * self.xy_modifier,  # * (min_ambiguity / 0.4),
-                            self.xystd
-                            * (self.tag_dist**2)
-                            * self.xy_modifier,  # * (min_ambiguity / 0.4),
-                            self.thetastd
-                            * (self.tag_dist**2)
-                            * self.theta_modifier,  # * (min_ambiguity / 0.4),
-                        ),
-                    )
-                    if not (
-                        (observation.estFieldPose - self.poseEst.getEstimatedPosition())
-                        .translation()
-                        .norm()
-                        <= 0.5
-                    ):
-                        self.poseConverge = False
-                    self.camTargetsVisible = True
-            else:
-                observations = cam.getPoseEstimates()
+            for pose in single_tag_poses[idx]:
+                self.poseEstSingleTag.addVisionMeasurement(
+                    pose[0],
+                    cam.getObsTime(),
+                    (
+                        self.xystd_single_tag
+                        * self.xy_modifier_single_tag,  # * (min_ambiguity / 0.4),
+                        self.xystd_single_tag
+                        * self.xy_modifier_single_tag,  # * (min_ambiguity / 0.4),
+                        self.thetastd_single_tag
+                        * self.theta_modifier_single_tag,  # * (min_ambiguity / 0.4),
+                    ),
+                )
+                # if not (
+                #     (observation.estFieldPose - self.poseEst.getEstimatedPosition())
+                #     .translation()
+                #     .norm()
+                #     <= 0.5
+                # ):
+                #     self.poseConverge = False
+                # self.camTargetsVisible = True
+
+
                 for observation in observations:
                     self.poseEst.addVisionMeasurement(
                         observation.estFieldPose,
@@ -449,17 +452,22 @@ class PoseEstimator(Subsystem):
             # self.telemetry.addVisionObservations(observations) #Might need later https://github.com/RobotCasserole1736/RobotCasserole2024/blob/fa033322e6f4efe87e8b1af938d8a3f69599f29b/drivetrain/poseEstimation/drivetrainPoseTelemetry.py#L15
 
         self.poseEst.update(self.getYaw(), self.get_module_positions())
+        self.poseEstSingleTag.update(self.getYaw(), self.get_module_positions())
         # self.lastPeriodicEstPose = self.curEstPose
 
         SmartDashboard.putNumber("skidding ratio", self.get_skidding_ratio())
         SmartDashboard.putNumber("jerk val", self.get_jerk_val())
 
-        possible_pose = self.poseEst.getEstimatedPosition()
+        possible_pose_global = self.poseEst.getEstimatedPosition()
 
-        SmartDashboard.putBoolean("pose 4 u :3", self.candidate_pose_OK(possible_pose))
+        possible_pose_single_tag = self.poseEstSingleTag.getEstimatedPosition()
 
-        if self.candidate_pose_OK(possible_pose):
+        SmartDashboard.putBoolean("pose 4 u :3", self.candidate_pose_OK(possible_pose_global))
+
+        if self.candidate_pose_OK(possible_pose_global):
             self.curEstPose = self.poseEst.getEstimatedPosition()
+        if self.candidate_pose_OK(possible_pose_single_tag):
+            self.curEstPoseSingleTag = self.poseEstSingleTag.getEstimatedPosition()
 
         if (self.robot.leds.mode == self.robot.leds.MODE_LOST_ODOMETRY) or (
             self.robot.leds.mode == self.robot.leds.MODE_ODOMETRY

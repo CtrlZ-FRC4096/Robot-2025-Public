@@ -1,5 +1,5 @@
 import wpilib
-from wpimath.units import feetToMeters
+from wpimath.units import feetToMeters, inchesToMeters
 from photonlibpy.photonCamera import (
     PhotonCamera,
     setVersionCheckEnabled,
@@ -13,6 +13,7 @@ from wpimath.geometry import (
     Rotation2d,
     Rotation3d,
     Transform3d,
+    Transform2d
 )
 
 import const
@@ -50,14 +51,14 @@ class WrapperedPhotonCamera:
 
         self.timeoutSec = 1.0
         self.poseEstimates = []
-        self.robotToCam = robotToCam
+        self.robotToCam : Transform3d = robotToCam
         self.counter = 0
 
     @staticmethod
     def tgt_corner_to_list(target):
         return [target.x, target.y]
 
-    def update(self, prevEstPose: Pose2d, allianceColor: str):
+    def update(self, prevEstPose: Pose2d, allianceColor: str, yaw : Rotation2d):
         # self.counter += 1
         self.poseEstimates = []
         self.tagPositions = []
@@ -136,6 +137,7 @@ class WrapperedPhotonCamera:
                 22,
             ]:  # Only use reef IDs, everything else is not great
 
+
                 tagFieldPose = tag_map.getTagPose(tgtID)
 
                 # corners = np.ndarray(
@@ -172,36 +174,61 @@ class WrapperedPhotonCamera:
                 target_x_angle = np.mean(corners[:, 0])
                 target_y_angle = np.mean(corners[:, 1])
 
-                distance = (
-                    target.getBestCameraToTarget().translation().norm()
-                )  # distance from camera to target in meters
-                print("distance: ", distance)
-                # Calculate the position of the target to the camera  in the camera coordinate system (meters)
-                # Use spherical coordinates to calculate the x, y, and z distances
-                z_dist = -1 * distance * math.cos((math.pi / 2) - target_y_angle)
-                y_dist = -1 * (
-                    distance
-                    * math.sin(target_x_angle)
-                    * math.sin((math.pi / 2) - target_y_angle)
-                )
-                x_dist = (
-                    distance
-                    * math.cos(target_x_angle)
-                    * math.sin((math.pi / 2) - target_y_angle)
-                )
-                print("x dist: ", x_dist)
-                print("y dist: ", y_dist)
-                print("z dist: ", z_dist)
+                print("targ x: ", target_x_angle)
+                print("target y: ", target_y_angle)
 
-                camToTarget = Transform3d(
-                    Translation3d(x_dist, y_dist, z_dist), Rotation3d()
-                )  # Create a Pose3d object with the calculated x, y, and z distances, and no rotation
+                # z_dist = tag_map.getTagPose(tgtID).Z() - inchesToMeters(4.87)
 
-                # Calculate the position of the robot on the field in the field coordinate system (meters) from the tag pose and the camera to target transform
-                fieldPose = self._toFieldPose(tagFieldPose, camToTarget)
-                # print(fieldPose)
+                distance = target.getBestCameraToTarget().translation().norm()
 
-                self.poseSingleTag.append([fieldPose, tgtID])
+                distance_2d_to_tag = distance * math.cos((-1 * self.robotToCam.rotation().Y()) - target_y_angle)
+                cam_to_target_rotation = tagFieldPose.rotation().Z() + self.robotToCam.rotation().Z() + target_x_angle
+                transform_to_target = Transform2d(Translation2d(distance_2d_to_tag, 0 ), Rotation2d(cam_to_target_rotation))
+                field_to_camera = tagFieldPose.toPose2d().transformBy(transform_to_target)
+                robot_pose = field_to_camera.transformBy(Transform2d(self.robotToCam.X(), self.robotToCam.Y(), self.robotToCam.rotation().Z()))
+                print(robot_pose)
+                #z_dist / (math.tan(self.robotToCam.rotation().Y() + target_y_angle))
+
+                # absolute_angle = yaw.radians() + target_x_angle
+
+                # x_dist = distance_2d * math.cos(absolute_angle)
+                # y_dist = distance_2d * math.sin(absolute_angle)
+
+
+                
+
+
+
+                # distance = (
+                #     target.getBestCameraToTarget().translation().norm()
+                # )  # distance from camera to target in meters
+                # print("distance: ", distance)
+                # # Calculate the position of the target to the camera  in the camera coordinate system (meters)
+                # # Use spherical coordinates to calculate the x, y, and z distances
+                # z_dist = -1 * distance * math.cos((math.pi / 2) - target_y_angle)
+                # y_dist = -1 * (
+                #     distance
+                #     * math.sin(target_x_angle)
+                #     * math.sin((math.pi / 2) - target_y_angle)
+                # )
+                # x_dist = (
+                #     distance
+                #     * math.cos(target_x_angle)
+                #     * math.sin((math.pi / 2) - target_y_angle)
+                # )
+                # print("x dist: ", x_dist)
+                # print("y dist: ", y_dist)
+                # print("z dist: ", z_dist)
+
+                # camToTarget = Transform3d(
+                #     Translation3d(x_dist, y_dist, z_dist), Rotation3d()
+                # )  # Create a Pose3d object with the calculated x, y, and z distances, and no rotation
+
+                # # Calculate the position of the robot on the field in the field coordinate system (meters) from the tag pose and the camera to target transform
+                # fieldPose = self._toFieldPose(tagFieldPose, camToTarget)
+                # # print(fieldPose)
+
+                self.poseSingleTag.append([robot_pose, tgtID])
                 self.singleTagIDs.append(tgtID)
 
     def getObsTime(self):
@@ -225,7 +252,7 @@ class WrapperedPhotonCamera:
     def getSingleTagIDs(self):
         return self.singleTagIDs
 
-    def _toFieldPose(self, tgtPose, camToTarget):
+    def _toFieldPose(self, tgtPose : Pose3d, camToTarget : Transform3d):
         camPose = tgtPose.transformBy(camToTarget.inverse())
         return camPose.transformBy(self.robotToCam.inverse()).toPose2d()
 
