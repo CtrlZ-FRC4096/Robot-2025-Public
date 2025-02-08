@@ -182,10 +182,17 @@ class WrapperedPhotonCamera:
                 distance_3d = target.getBestCameraToTarget().translation().norm()
 
                 distance_2d_to_tag = distance_3d * math.cos((-1 * self.robotToCam.rotation().Y()) - target_y_angle) #cosine is even so we don't need to negate both
-                cam_to_tag_rotation = tagFieldPose.rotation().Z() + self.robotToCam.rotation().Z() - target_x_angle
-                tag_to_camera = Transform2d(Translation2d(distance_2d_to_tag, 0), Rotation2d(cam_to_tag_rotation + math.pi))
-                camera_pose = tagFieldPose.toPose2d().transformBy(tag_to_camera)
-                robot_pose = camera_pose.transformBy(Transform2d(self.robotToCam.X(), self.robotToCam.Y(), self.robotToCam.rotation().Z()))
+                
+                # Calculate the rotation of the camera to the tag. The rotation of the robot + rotation of the camera - the angle of the target
+                cam_to_tag_rotation = Rotation2d(prevEstPose.rotation().radians() + self.robotToCam.rotation().Z() - target_x_angle)
+                
+                # Calculate the translation of the camera to the tag. We take the position of the tag, transform by the distance to the tag, in the direction of the camera
+                field_to_camera_translation = Pose2d(tagFieldPose.toPose2d().translation(), Rotation2d(cam_to_tag_rotation.radians() + math.pi)).transformBy(Transform2d(Translation2d(distance_2d_to_tag, 0.0))).translation()
+                
+                # Calculate the pose of the robot. We take the position of the camera to the tag and transform it by the robot to camera transform
+                robot_pose = Pose2d(field_to_camera_translation, Rotation2d(prevEstPose.rotation().radians() + self.robotToCam.rotation().Z())).transformBy(Transform2d(self.robotToCam.X(), self.robotToCam.Y(), Rotation2d(0)))
+                # Use previous angle (gyro) at the time for robot rotation
+                robot_pose = Pose2d(robot_pose.translation(), prevEstPose.rotation()) 
                 print(robot_pose)
                 #z_dist / (math.tan(self.robotToCam.rotation().Y() + target_y_angle))
 

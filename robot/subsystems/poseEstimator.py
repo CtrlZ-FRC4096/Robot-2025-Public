@@ -370,14 +370,13 @@ class PoseEstimator(Subsystem):
         allianceColor = DriverStation.getAlliance()
         self.single_tag_IDs = set()
         single_tag_poses = []
-  
 
         for idx, cam in enumerate(self.cams):
             cam.update(self.curEstPose, allianceColor=allianceColor, yaw=self.getYaw())
 
             # observations = cam.getPoseEstimates()
             tags = cam.getTagPositions()
-            single_tag_poses.append(cam.getPoseSingleTag())
+            single_tag_poses = cam.getPoseSingleTag()
             self.single_tag_IDs.update(cam.getSingleTagIDs())
             observations = cam.getPoseEstimates()
             # filter by closest based on global pose
@@ -402,7 +401,33 @@ class PoseEstimator(Subsystem):
                 self.xy_modifier = 3.0
                 self.theta_modifier = 3.0
 
-            for pose in single_tag_poses[idx]:
+            for observation in observations:
+                self.poseEst.addVisionMeasurement(
+                    observation.estFieldPose,
+                    observation.time,
+                    (
+                        self.xystd
+                        * (self.tag_dist**2)
+                        * self.xy_modifier,  # * (min_ambiguity / 0.4),
+                        self.xystd
+                        * (self.tag_dist**2)
+                        * self.xy_modifier,  # * (min_ambiguity / 0.4),
+                        self.thetastd
+                        * (self.tag_dist**2)
+                        * self.theta_modifier,  # * (min_ambiguity / 0.4),
+                    ),
+                )
+                if not (
+                    (observation.estFieldPose - self.poseEst.getEstimatedPosition())
+                    .translation()
+                    .norm()
+                    <= 0.5
+                ):
+                    self.poseConverge = False
+                self.camTargetsVisible = True
+        # self.telemetry.addVisionObservations(observations) #Might need later https://github.com/RobotCasserole1736/RobotCasserole2024/blob/fa033322e6f4efe87e8b1af938d8a3f69599f29b/drivetrain/poseEstimation/drivetrainPoseTelemetry.py#L15
+            
+            for pose in single_tag_poses:
                 self.poseEstSingleTag.addVisionMeasurement(
                     pose[0],
                     cam.getObsTime(),
@@ -415,42 +440,9 @@ class PoseEstimator(Subsystem):
                         * self.theta_modifier_single_tag,  # * (min_ambiguity / 0.4),
                     ),
                 )
-                # if not (
-                #     (observation.estFieldPose - self.poseEst.getEstimatedPosition())
-                #     .translation()
-                #     .norm()
-                #     <= 0.5
-                # ):
-                #     self.poseConverge = False
-                # self.camTargetsVisible = True
 
 
-                for observation in observations:
-                    self.poseEst.addVisionMeasurement(
-                        observation.estFieldPose,
-                        observation.time,
-                        (
-                            self.xystd
-                            * (self.tag_dist**2)
-                            * self.xy_modifier,  # * (min_ambiguity / 0.4),
-                            self.xystd
-                            * (self.tag_dist**2)
-                            * self.xy_modifier,  # * (min_ambiguity / 0.4),
-                            self.thetastd
-                            * (self.tag_dist**2)
-                            * self.theta_modifier,  # * (min_ambiguity / 0.4),
-                        ),
-                    )
-                    if not (
-                        (observation.estFieldPose - self.poseEst.getEstimatedPosition())
-                        .translation()
-                        .norm()
-                        <= 0.5
-                    ):
-                        self.poseConverge = False
-                    self.camTargetsVisible = True
-            # self.telemetry.addVisionObservations(observations) #Might need later https://github.com/RobotCasserole1736/RobotCasserole2024/blob/fa033322e6f4efe87e8b1af938d8a3f69599f29b/drivetrain/poseEstimation/drivetrainPoseTelemetry.py#L15
-
+        # Update poses with drivetrain information
         self.poseEst.update(self.getYaw(), self.get_module_positions())
         self.poseEstSingleTag.update(self.getYaw(), self.get_module_positions())
         # self.lastPeriodicEstPose = self.curEstPose
