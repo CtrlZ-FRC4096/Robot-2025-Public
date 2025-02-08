@@ -136,6 +136,7 @@ class PoseEstimator(Subsystem):
         )
 
         self.curEstPose = Pose2d(0, 0, self.getYaw())
+        self.curEstPoseSingleTag = Pose2d(0, 0, self.getYaw())
         # self.lastPeriodicEstPose = self.curEstPose
 
         self.poseEst = SwerveDrive4PoseEstimator(
@@ -148,8 +149,8 @@ class PoseEstimator(Subsystem):
         self.xystd = 0.3
         self.thetastd = 10.0  # .15
 
-        self.xystd_single_tag = 0.1
-        self.thetastd_single_tag = 6000.0
+        self.xystd_single_tag = 0.01
+        self.thetastd_single_tag = 1000.0
 
         # test position of camera 1 on front right module
         ROBOT_TO_CAM1 = Transform3d(
@@ -187,7 +188,7 @@ class PoseEstimator(Subsystem):
 
         self.cams = [
             WrapperedPhotonCamera("camera_1", ROBOT_TO_CAM1),
-            #WrapperedPhotonCamera("camera_2", ROBOT_TO_CAM2),
+            WrapperedPhotonCamera("camera_2", ROBOT_TO_CAM2),
             # WrapperedPhotonCamera("Camera3", ROBOT_TO_CAM3),
             # WrapperedPhotonCamera("Camera4", ROBOT_TO_CAM4),
         ]
@@ -319,6 +320,7 @@ class PoseEstimator(Subsystem):
         avg_pose_y = 0.0
         tag_in_use = self.calculate_closest_reef_tag(relevant_tags)
         poses_from_tag_used = []
+        ## This looping is not correct
         for cam in poses:
             for pose in cam:
                 if pose[1] == tag_in_use:
@@ -347,7 +349,7 @@ class PoseEstimator(Subsystem):
         x_offset = math.cos(angle_face.radians()) * dist_offset #offsetting that pose by a set offset that extends the pose as if there's a vector from the center face with angle: angle_face
         y_offset = math.sin(angle_face.radians()) * dist_offset
         target_pose_face = Pose2d(
-            center_face_x + x_offset, center_face_y + y_offset, angle_face 
+            center_face_x + x_offset, center_face_y + y_offset, angle_face
         )
 
         angle_to_branch = (
@@ -372,11 +374,12 @@ class PoseEstimator(Subsystem):
         single_tag_poses = []
 
         for idx, cam in enumerate(self.cams):
-            cam.update(self.curEstPose, allianceColor=allianceColor, yaw=self.getYaw())
+            cam.update(self.curEstPose, self.curEstPoseSingleTag, allianceColor=allianceColor, yaw=self.getYaw())
 
             # observations = cam.getPoseEstimates()
             tags = cam.getTagPositions()
             single_tag_poses = cam.getPoseSingleTag()
+            single_tag_ids = cam.getSingleTagIDs()
             self.single_tag_IDs.update(cam.getSingleTagIDs())
             observations = cam.getPoseEstimates()
             # filter by closest based on global pose
@@ -425,11 +428,11 @@ class PoseEstimator(Subsystem):
                 ):
                     self.poseConverge = False
                 self.camTargetsVisible = True
-        # self.telemetry.addVisionObservations(observations) #Might need later https://github.com/RobotCasserole1736/RobotCasserole2024/blob/fa033322e6f4efe87e8b1af938d8a3f69599f29b/drivetrain/poseEstimation/drivetrainPoseTelemetry.py#L15
-            
+            # self.telemetry.addVisionObservations(observations) #Might need later https://github.com/RobotCasserole1736/RobotCasserole2024/blob/fa033322e6f4efe87e8b1af938d8a3f69599f29b/drivetrain/poseEstimation/drivetrainPoseTelemetry.py#L15
+
             for pose in single_tag_poses:
                 self.poseEstSingleTag.addVisionMeasurement(
-                    pose[0],
+                    pose,
                     cam.getObsTime(),
                     (
                         self.xystd_single_tag
@@ -440,7 +443,6 @@ class PoseEstimator(Subsystem):
                         * self.theta_modifier_single_tag,  # * (min_ambiguity / 0.4),
                     ),
                 )
-
 
         # Update poses with drivetrain information
         self.poseEst.update(self.getYaw(), self.get_module_positions())
@@ -472,9 +474,10 @@ class PoseEstimator(Subsystem):
 
         self.relevant_tags = self.single_tag_IDs.intersection(FieldConstants.reef_tags)
 
-        self.single_tag_pose = self.get_pose_from_single_tag(
-            single_tag_poses, self.relevant_tags
-        )
+		# This is crashing, poses are not being passed correctly
+        # self.single_tag_pose = self.get_pose_from_single_tag(
+        #     single_tag_poses, self.relevant_tags
+        # )
 
         SmartDashboard.putData("Field", self.field)
         self.field.setRobotPose(self.poseEst.getEstimatedPosition())
@@ -488,6 +491,10 @@ class PoseEstimator(Subsystem):
 
         # robot_pose = Pose2d(single_tag_poses[0].translation(), self.gyro.get_yaw()) if len(single_tag_poses) > 0 else self.curEstPose.translation()
         # self.field.setRobotPose(Pose2d(robot_pose, self.gyro.get_yaw()))
+
+		# Plot the difference between the single pose and global pose
+
+        SmartDashboard.putNumber("Single/Global Pose Diff", self.curEstPose.translation().norm() - self.curEstPoseSingleTag.translation().norm())
 
         SmartDashboard.putNumber("Camera/Odometry X", self.curEstPose.x)
         SmartDashboard.putNumber("Camera/Odometry Y", self.curEstPose.y)

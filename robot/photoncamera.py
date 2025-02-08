@@ -55,10 +55,10 @@ class WrapperedPhotonCamera:
         self.counter = 0
 
     @staticmethod
-    def tgt_corner_to_list(target): 
+    def tgt_corner_to_list(target):
         return [target.x, target.y]
 
-    def update(self, prevEstPose: Pose2d, allianceColor: str, yaw : Rotation2d):
+    def update(self, prevEstPose: Pose2d, prevEstPoseSingleTag: Pose2d,  allianceColor: str, yaw : Rotation2d):
         # self.counter += 1
         self.poseEstimates = []
         self.tagPositions = []
@@ -137,7 +137,6 @@ class WrapperedPhotonCamera:
                 22,
             ]:  # Only use reef IDs, everything else is not great
 
-
                 tagFieldPose = tag_map.getTagPose(tgtID)
 
                 # corners = np.ndarray(
@@ -174,37 +173,47 @@ class WrapperedPhotonCamera:
                 target_x_angle = np.mean(corners[:, 0])
                 target_y_angle = np.mean(corners[:, 1])
 
-                print("targ x: ", target_x_angle)
-                print("target y: ", target_y_angle)
+                # print("targ x: ", target_x_angle)
+                # print("target y: ", target_y_angle)
 
                 # z_dist = tag_map.getTagPose(tgtID).Z() - inchesToMeters(4.87)
 
                 distance_3d = target.getBestCameraToTarget().translation().norm()
 
                 distance_2d_to_tag = distance_3d * math.cos((-1 * self.robotToCam.rotation().Y()) - target_y_angle) #cosine is even so we don't need to negate both
-                
-                # Calculate the rotation of the camera to the tag. The rotation of the robot + rotation of the camera - the angle of the target
-                cam_to_tag_rotation = Rotation2d(prevEstPose.rotation().radians() + self.robotToCam.rotation().Z() - target_x_angle)
-                
-                # Calculate the translation of the camera to the tag. We take the position of the tag, transform by the distance to the tag, in the direction of the camera
-                field_to_camera_translation = Pose2d(tagFieldPose.toPose2d().translation(), Rotation2d(cam_to_tag_rotation.radians() + math.pi)).transformBy(Transform2d(Translation2d(distance_2d_to_tag, 0.0))).translation()
-                
-                # Calculate the pose of the robot. We take the position of the camera to the tag and transform it by the robot to camera transform
-                robot_pose = Pose2d(field_to_camera_translation, Rotation2d(prevEstPose.rotation().radians() + self.robotToCam.rotation().Z())).transformBy(Transform2d(self.robotToCam.X(), self.robotToCam.Y(), Rotation2d(0)))
-                # Use previous angle (gyro) at the time for robot rotation
-                robot_pose = Pose2d(robot_pose.translation(), prevEstPose.rotation()) 
-                print(robot_pose)
-                #z_dist / (math.tan(self.robotToCam.rotation().Y() + target_y_angle))
 
+                # print(distance_2d_to_tag)
+
+                # Calculate the rotation of the camera to the tag. The rotation of the robot + rotation of the camera - the angle of the target
+                cam_to_tag_rotation = Rotation2d(
+                    prevEstPoseSingleTag.rotation().radians()
+                    + self.robotToCam.rotation().Z()
+                    - target_x_angle
+                )
+
+                # Calculate the translation of the camera to the tag. We take the position of the tag, transform by the distance to the tag, in the direction of the camera
+                field_to_camera_translation = Pose2d(tagFieldPose.toPose2d().translation(), Rotation2d(cam_to_tag_rotation.radians() + math.pi)).transformBy(Transform2d(Translation2d(distance_2d_to_tag, 0.0), Rotation2d())).translation()
+
+                # Calculate the pose of the robot. We take the position of the camera to the tag and transform it by the robot to camera transform
+                robot_pose = Pose2d(
+                    field_to_camera_translation,
+                    Rotation2d(
+                        prevEstPoseSingleTag.rotation().radians()
+                        + self.robotToCam.rotation().Z()
+                    ),
+                ).transformBy(Transform2d(Pose2d(self.robotToCam.X(), self.robotToCam.Y(), self.robotToCam.rotation().Z()), Pose2d()))
+                #     Transform2d(-self.robotToCam.X(), self.robotToCam.Y(), Rotation2d()) ##Throwing a negative on the cam y seemed to work, I hate this
+                # )
+                # Use previous angle (gyro) at the time for robot rotation
+                robot_pose = Pose2d(
+                    robot_pose.translation(), prevEstPoseSingleTag.rotation()
+                )
+                # print(robot_pose)
+                # z_dist / (math.tan(self.robotToCam.rotation().Y() + target_y_angle))
                 # absolute_angle = yaw.radians() + target_x_angle
 
                 # x_dist = distance_2d * math.cos(absolute_angle)
                 # y_dist = distance_2d * math.sin(absolute_angle)
-
-
-                
-
-
 
                 # distance = (
                 #     target.getBestCameraToTarget().translation().norm()
@@ -235,7 +244,7 @@ class WrapperedPhotonCamera:
                 # fieldPose = self._toFieldPose(tagFieldPose, camToTarget)
                 # # print(fieldPose)
 
-                self.poseSingleTag.append([robot_pose, tgtID])
+                self.poseSingleTag.append(robot_pose)
                 self.singleTagIDs.append(tgtID)
 
     def getObsTime(self):
