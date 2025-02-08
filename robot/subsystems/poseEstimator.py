@@ -148,7 +148,7 @@ class PoseEstimator(Subsystem):
         self.xystd = 0.3
         self.thetastd = 10.0  # .15
 
-        self.xystd_single_tag = 0.5
+        self.xystd_single_tag = 0.1
         self.thetastd_single_tag = 6000.0
 
         # test position of camera 1 on front right module
@@ -362,7 +362,7 @@ class PoseEstimator(Subsystem):
         target_pose = Pose2d(
             target_pose_face.X() + x_offset_branch,
             target_pose_face.Y() + y_offset_branch,
-            angle_face + 90, #don't know if this + 90 is needed, because our battery is facing forward and we want the camera side (scoring side) to face reef
+            Rotation2d.fromDegrees(angle_face + 90), #don't know if this + 90 is needed, because our battery is facing forward and we want the camera side (scoring side) to face reef
         )
         return target_pose
 
