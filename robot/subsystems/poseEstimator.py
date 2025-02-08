@@ -197,7 +197,7 @@ class PoseEstimator(Subsystem):
         self.last_periodic_accel_x = 0
         self.last_periodic_accel_y = 0
 
-        self.is_using_single_tag = False
+        # self.is_using_single_tag = False
 
     def stop(self):
         print("sike this aint stoppin")
@@ -342,27 +342,27 @@ class PoseEstimator(Subsystem):
 
         angle_face = FieldConstants.Reef.centerFaces[face].rotation()
         center_face_pose = FieldConstants.Reef.centerFaces[face].translation()
-        center_face_x = center_face_pose.X()
+        center_face_x = center_face_pose.X() # pose of center face (this is directly on the side of the reef)
         center_face_y = center_face_pose.Y()
-        x_offset = math.cos(angle_face.radians()) * dist_offset
+        x_offset = math.cos(angle_face.radians()) * dist_offset #offsetting that pose by a set offset that extends the pose as if there's a vector from the center face with angle: angle_face
         y_offset = math.sin(angle_face.radians()) * dist_offset
         target_pose_face = Pose2d(
-            center_face_x + x_offset, center_face_y + y_offset, angle_face
+            center_face_x + x_offset, center_face_y + y_offset, angle_face 
         )
 
         angle_to_branch = (
             (angle_face.degrees() + 90) % 360
             if right_branch
             else (angle_face.degrees() - 90) % 360
-        )
+        ) #angle change needed to do math to get to the branch, right branch needs + 90 degrees (CCW), left_branch needs -90 (CW)
 
-        x_offset_branch = math.sin(degreesToRadians(angle_to_branch)) * side_offset
+        x_offset_branch = math.sin(degreesToRadians(angle_to_branch)) * side_offset #same as above, extending the pose from the point outside of the reef in the direction of the desired branch
         y_offset_branch = math.cos(degreesToRadians(angle_to_branch)) * side_offset
 
         target_pose = Pose2d(
             target_pose_face.X() + x_offset_branch,
             target_pose_face.Y() + y_offset_branch,
-            angle_face + 90,
+            angle_face + 90, #don't know if this + 90 is needed, because our battery is facing forward and we want the camera side (scoring side) to face reef
         )
         return target_pose
 
@@ -487,7 +487,7 @@ class PoseEstimator(Subsystem):
         SmartDashboard.putData("Field", self.field)
         self.field.setRobotPose(self.poseEst.getEstimatedPosition())
         SmartDashboard.putData("Field w/ Single Tag", self.field_for_single_tag)
-        self.field_for_single_tag.setRobotPose(self.single_tag_pose)
+        self.field_for_single_tag.setRobotPose(self.curEstPoseSingleTag)
 
         if self.calculate_closest_reef_tag(self.relevant_tags):
             SmartDashboard.putNumber(

@@ -219,12 +219,11 @@ class OI:
                 FieldConstants.tag_to_face[
                     self.robot.poseEstimator.calculate_closest_reef_tag(
                         self.robot.poseEstimator.relevant_tags
-                    )
-                ],
+                )],
                 self.right_branch,
             )
             # self.robot.poseEstimator.tag_to_pathfind_reef = FieldConstants.face_to_tag[self.face]
-            self.robot.poseEstimator.is_using_single_tag = True
+            # self.robot.poseEstimator.is_using_single_tag = True
 
             self.pathfind_to_reef = AutoBuilder.pathfindToPose(
                 target_pose, constraints, 0.0
@@ -234,7 +233,7 @@ class OI:
         @self.driver1.LEFT_TRIGGER_AS_BUTTON.whenReleased  # stop pathfinnd
         def _():
             self.robot.scheduler.cancelAll()
-            self.robot.poseEstimator.is_using_single_tag = False
+            # self.robot.poseEstimator.is_using_single_tag = False
 
         @self.driver2.RIGHT_TRIGGER_AS_BUTTON.whenPressed  # right face
         def _():

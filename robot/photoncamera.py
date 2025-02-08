@@ -55,7 +55,7 @@ class WrapperedPhotonCamera:
         self.counter = 0
 
     @staticmethod
-    def tgt_corner_to_list(target):
+    def tgt_corner_to_list(target): 
         return [target.x, target.y]
 
     def update(self, prevEstPose: Pose2d, allianceColor: str, yaw : Rotation2d):
@@ -179,13 +179,13 @@ class WrapperedPhotonCamera:
 
                 # z_dist = tag_map.getTagPose(tgtID).Z() - inchesToMeters(4.87)
 
-                distance = target.getBestCameraToTarget().translation().norm()
+                distance_3d = target.getBestCameraToTarget().translation().norm()
 
-                distance_2d_to_tag = distance * math.cos((-1 * self.robotToCam.rotation().Y()) - target_y_angle)
-                cam_to_target_rotation = tagFieldPose.rotation().Z() + self.robotToCam.rotation().Z() + target_x_angle
-                transform_to_target = Transform2d(Translation2d(distance_2d_to_tag, 0 ), Rotation2d(cam_to_target_rotation))
-                field_to_camera = tagFieldPose.toPose2d().transformBy(transform_to_target)
-                robot_pose = field_to_camera.transformBy(Transform2d(self.robotToCam.X(), self.robotToCam.Y(), self.robotToCam.rotation().Z()))
+                distance_2d_to_tag = distance_3d * math.cos((-1 * self.robotToCam.rotation().Y()) - target_y_angle) #cosine is even so we don't need to negate both
+                cam_to_tag_rotation = tagFieldPose.rotation().Z() + self.robotToCam.rotation().Z() - target_x_angle
+                tag_to_camera = Transform2d(Translation2d(distance_2d_to_tag, 0), Rotation2d(cam_to_tag_rotation + math.pi))
+                camera_pose = tagFieldPose.toPose2d().transformBy(tag_to_camera)
+                robot_pose = camera_pose.transformBy(Transform2d(self.robotToCam.X(), self.robotToCam.Y(), self.robotToCam.rotation().Z()))
                 print(robot_pose)
                 #z_dist / (math.tan(self.robotToCam.rotation().Y() + target_y_angle))
 
