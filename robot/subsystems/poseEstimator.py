@@ -339,7 +339,7 @@ class PoseEstimator(Subsystem):
     def get_path_to_reef(face: int, right_branch: bool):
         side_offset = inchesToMeters(6.47)  # distance b/w center of face to branch
         dist_offset = (
-            inchesToMeters(29.5) + inchesToMeters(7.25) + inchesToMeters(12)
+            (inchesToMeters(29.5) / 2) + (inchesToMeters(7.25) / 2) + inchesToMeters(12)
         )  # robot size + bumper addition + error protection
 
         angle_face = FieldConstants.Reef.centerFaces[face - 1].rotation()
