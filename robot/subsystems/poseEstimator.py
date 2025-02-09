@@ -342,8 +342,8 @@ class PoseEstimator(Subsystem):
             inchesToMeters(29.5) + inchesToMeters(7.25) + inchesToMeters(12)
         )  # robot size + bumper addition + error protection
 
-        angle_face = FieldConstants.Reef.centerFaces[face].rotation()
-        center_face_pose = FieldConstants.Reef.centerFaces[face].translation()
+        angle_face = FieldConstants.Reef.centerFaces[face - 1].rotation()
+        center_face_pose = FieldConstants.Reef.centerFaces[face - 1].translation()
         center_face_x = center_face_pose.X() # pose of center face (this is directly on the side of the reef)
         center_face_y = center_face_pose.Y()
         x_offset = math.cos(angle_face.radians()) * dist_offset #offsetting that pose by a set offset that extends the pose as if there's a vector from the center face with angle: angle_face
@@ -364,7 +364,7 @@ class PoseEstimator(Subsystem):
         target_pose = Pose2d(
             target_pose_face.X() + x_offset_branch,
             target_pose_face.Y() + y_offset_branch,
-            Rotation2d.fromDegrees(angle_face + 90), #don't know if this + 90 is needed, because our battery is facing forward and we want the camera side (scoring side) to face reef
+            Rotation2d.fromDegrees(angle_face.degrees() + 90), #don't know if this + 90 is needed, because our battery is facing forward and we want the camera side (scoring side) to face reef
         )
         return target_pose
 
