@@ -189,7 +189,6 @@ class FieldConstants:
                 adjustX = inchesToMeters(30.738)
                 adjustY = inchesToMeters(6.469)
 
-                fillRight.append(level)
                 fillRight.append(
                     Pose3d(
                         Translation3d(
@@ -208,7 +207,6 @@ class FieldConstants:
                         ),
                     )
                 )
-                fillLeft.append(level)
                 fillLeft.append(
                     Pose3d(
                         Translation3d(
@@ -255,22 +253,25 @@ class FieldConstants:
 # print(FieldConstants.Reef.branchPositions)
 # print(FieldConstants.Reef.centerFaces)
 
-# for idx in range(len(FieldConstants.Reef.branchPositions)):
-#     for level in range(4):
-#         reefHeightLevels = {
-#              FieldConstants.ReefHeight.L4 : "4",
-#              FieldConstants.ReefHeight.L3 : "3",
-#              FieldConstants.ReefHeight.L2 : "2",
-#              FieldConstants.ReefHeight.L1 : "1"
-#         }
-#         for reef_height, lvl in reefHeightLevels.items():
-#              if math.isclose(FieldConstants.Reef.branchPositions[idx][level*2][0], reef_height.height, abs_tol=1e-6):
-#                 branch_level = lvl
+#array of elements that are lists of pose3d's for one sector (twelfth (face + right or left branch)) goes top branch to bottom
+# right, left, right, left, ...
+print(FieldConstants.Reef.branchPositions)
+for idx in range(len(FieldConstants.Reef.branchPositions)):
+    for level in range(4):
+        reefHeightLevels = {
+             FieldConstants.ReefHeight.L4 : "4",
+             FieldConstants.ReefHeight.L3 : "3",
+             FieldConstants.ReefHeight.L2 : "2",
+             FieldConstants.ReefHeight.L1 : "1"
+        }
+        for reef_height, lvl in reefHeightLevels.items():
+             if math.isclose(FieldConstants.Reef.branchPositions[idx][level].Z(), reef_height.height, abs_tol=1e-6):
+                branch_level = lvl
 
-#         print("Face", ((idx // 2) + 1),
-#             ", right-branch" if idx % 2 else ", left-branch",
-#             ", L" + branch_level,
-#             "Pitch:", FieldConstants.Reef.branchPositions[idx][level * 2][1],
-#             "\n Pose3d: \n", FieldConstants.Reef.branchPositions[idx][(level*2) + 1],
-#             end="\n\n"
-#             )
+        print("Face", ((idx // 2) + 1),
+            ", right-branch" if idx % 2 else ", left-branch",
+            ", L" + branch_level,
+            "Pitch:", FieldConstants.Reef.branchPositions[idx][level].rotation().Y(),
+            "\n Pose3d: \n", FieldConstants.Reef.branchPositions[idx][level],
+            end="\n\n"
+            )

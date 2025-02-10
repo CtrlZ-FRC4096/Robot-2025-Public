@@ -210,7 +210,7 @@ class OI:
         def _():
             self.robot.funnel_intake.is_running = True
 
-        @self.driver1.LEFT_TRIGGER_AS_BUTTON.whenHeld  # Pathfind to score
+        @self.driver1.LEFT_TRIGGER_AS_BUTTON.whenHeld  # Pathfind to right or left branch of closest reef face
         def _():
             constraints = PathConstraints(4.0, 4.0, 3.0 * math.pi, 3.0 * math.pi)
             if len(self.robot.poseEstimator.relevant_tags) == 0:
@@ -222,18 +222,16 @@ class OI:
                 )],
                 self.right_branch,
             )
-            # self.robot.poseEstimator.tag_to_pathfind_reef = FieldConstants.face_to_tag[self.face]
-            # self.robot.poseEstimator.is_using_single_tag = True
 
             self.pathfind_to_reef = AutoBuilder.pathfindToPose(
-                target_pose, constraints, 0.0
-            )
+                target_pose[0], constraints, 0.0
+            ) #idx 0 : branch pose w/ transforms, idx 1 : center face w/ transforms, idx 2: center face w/ trig
+            # all return different poses
             self.robot.scheduler.schedule(self.pathfind_to_reef.schedule())
 
         @self.driver1.LEFT_TRIGGER_AS_BUTTON.whenReleased  # stop pathfinnd
         def _():
             self.robot.scheduler.cancelAll()
-            # self.robot.poseEstimator.is_using_single_tag = False
 
         @self.driver2.RIGHT_TRIGGER_AS_BUTTON.whenPressed  # right face
         def _():

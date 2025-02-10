@@ -25,6 +25,7 @@ from wpimath.geometry import (
     Translation2d,
     Translation3d,
     Transform3d,
+    Transform2d,
     Rotation3d,
 )
 from wpimath.kinematics import (
@@ -336,16 +337,29 @@ class PoseEstimator(Subsystem):
         return avg_pose
 
     @staticmethod
-    def get_path_to_reef(face: int, right_branch: bool):
+    def get_path_to_reef(face: int, right_branch : bool):
         side_offset = inchesToMeters(6.47)  # distance b/w center of face to branch
         dist_offset = (
-            (inchesToMeters(29.5) / 2) + (inchesToMeters(7.25) / 2) + inchesToMeters(12)
+            (inchesToMeters(29.5) / 2) + (inchesToMeters(7.25) / 2) + inchesToMeters(24)
         )  # robot size + bumper addition + error protection
 
         angle_face = FieldConstants.Reef.centerFaces[face - 1].rotation()
-        center_face_pose = FieldConstants.Reef.centerFaces[face - 1].translation()
-        center_face_x = center_face_pose.X() # pose of center face (this is directly on the side of the reef)
-        center_face_y = center_face_pose.Y()
+        center_face_pose = FieldConstants.Reef.centerFaces[face - 1]
+        center_face_translation = center_face_pose.translation()
+
+        branch_pose = FieldConstants.Reef.branchPositions[(face - 1) * 2 + (0 if right_branch else 1)][0].toPose2d()
+        target_pose = branch_pose.transformBy(Transform2d(dist_offset, 0, 0))
+
+        offset_face_pose = center_face_pose.transformBy(Transform2d(dist_offset, 0, 0))
+        angle_to_branch = (
+            (angle_face.degrees() + 90) % 360
+            if right_branch
+            else (angle_face.degrees() - 90) % 360
+        )
+        target_pose_2 = offset_face_pose.transformBy(Transform2d(side_offset, 0, degreesToRadians(angle_to_branch)))
+
+        center_face_x = center_face_translation.X() # pose of center face (this is directly on the side of the reef)
+        center_face_y = center_face_translation.Y()
         x_offset = math.cos(angle_face.radians()) * dist_offset #offsetting that pose by a set offset that extends the pose as if there's a vector from the center face with angle: angle_face
         y_offset = math.sin(angle_face.radians()) * dist_offset
         target_pose_face = Pose2d(
@@ -361,13 +375,12 @@ class PoseEstimator(Subsystem):
         x_offset_branch = math.sin(degreesToRadians(angle_to_branch)) * side_offset #same as above, extending the pose from the point outside of the reef in the direction of the desired branch
         y_offset_branch = math.cos(degreesToRadians(angle_to_branch)) * side_offset
 
-        target_pose = Pose2d(
+        target_pose_3 = Pose2d(
             target_pose_face.X() + x_offset_branch,
             target_pose_face.Y() + y_offset_branch,
             Rotation2d.fromDegrees(angle_face.degrees() + 90), #don't know if this + 90 is needed, because our battery is facing forward and we want the camera side (scoring side) to face reef
         )
-        return target_pose
-
+        return [target_pose, target_pose_2, target_pose_3]
     def periodic(self):
         allianceColor = DriverStation.getAlliance()
         self.single_tag_IDs = set()

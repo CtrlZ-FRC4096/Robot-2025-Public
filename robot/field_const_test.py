@@ -3,6 +3,11 @@ from field_const import FieldConstants
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 
+
+from subsystems import poseEstimator
+import math
+from wpimath.units import degreesToRadians, inchesToMeters
+
 ## Plot and label the field
 
 # Read the image
@@ -68,6 +73,12 @@ for branch_sect in range(len(FieldConstants.Reef.branchPositions)):
     plt.scatter(blue_branch.X(), blue_branch.Y(), c=branch_colors[branch_sect])
     red_branch = FieldConstants.flip_Translation2d(blue_branch.toTranslation2d())
     plt.scatter(red_branch.X(), red_branch.Y(), c=branch_colors[branch_sect])
+
+    
+reef = poseEstimator.PoseEstimator.get_path_to_reef(6, True)
+plt.scatter(reef[0].X(), reef[0].Y(), c="pink")
+plt.scatter(reef[1].X(), reef[1].Y(), c="orange")
+plt.scatter(reef[2].X(), reef[2].Y(), c="black")
 
 # for i, reef_branch in enumerate(FieldConstants.Reef.branchPositions):
 #     plt.scatter(reef_branch[branch_keys[0]].X(), reef_branch[branch_keys[0]].Y(), c=branch_colors[i])
