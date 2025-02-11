@@ -38,6 +38,7 @@ from pathplannerlib.auto import (
     PathPlannerAuto,
     NamedCommands,
     PathConstraints,
+    PathPlannerPath
 )
 
 from robotpy_apriltag import AprilTagField, AprilTagFieldLayout
@@ -47,6 +48,7 @@ from robotpy_apriltag import AprilTagField, AprilTagFieldLayout
 from wpilibextra.customcontroller import XboxCommandController
 
 from field_const import FieldConstants
+from path_gen import PathGenerator
 from wpimath.units import inchesToMeters, degreesToRadians
 
 ###  IMPORTS ###
@@ -228,11 +230,7 @@ class OI:
             if len(self.robot.poseEstimator.relevant_tags) == 0:
                 return
             target_pose = self.robot.poseEstimator.get_path_to_reef(
-                FieldConstants.tag_to_face[
-                    self.robot.poseEstimator.calculate_closest_reef_tag(
-                        self.robot.poseEstimator.relevant_tags
-                    )
-                ],
+                self.robot.poseEstimator.calculate_closest_reef_tag()[1],
                 self.right_branch,
             )
             # self.robot.poseEstimator.score_intent = True
@@ -244,6 +242,9 @@ class OI:
                 target_pose, self.pathfinding_constraints, 0.0
             )  # idx 0 : branch pose w/ transforms, idx 1 : center face w/ transforms, idx 2: center face w/ trig
             # all return different poses
+                # waypoints = PathGenerator(self.robot.poseEstimator.curEstPoseGlobal, target_pose)
+                # path = AutoBuilder.followPath(PathPlannerPath(waypoints, self.pathfinding_constraints))
+                # self.robot.scheduler.schedule(path.schedule())
             self.robot.scheduler.schedule(self.pathfind_to_reef.schedule())
 
         @self.driver1.LEFT_TRIGGER_AS_BUTTON.whenReleased  # stop pathfinnd
