@@ -124,7 +124,7 @@ class Drivetrain(Subsystem):
         self.drive(Translation2d(0, 0), 0, False, True)
 
     def get_pose(self):
-        return self.robot.poseEstimator.poseEst.getEstimatedPosition()
+        return self.robot.poseEstimator.curEstPose
 
     def reset_odometry(self, pose):
         self.robot.poseEstimator.odometry.resetPosition(self.robot.poseEstimator.getYaw(), [*self.robot.poseEstimator.get_module_positions()], pose)  # type: ignore

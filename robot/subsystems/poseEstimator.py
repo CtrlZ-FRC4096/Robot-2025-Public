@@ -138,13 +138,19 @@ class PoseEstimator(Subsystem):
 
         self.curEstPose = Pose2d(0, 0, self.getYaw())
         self.curEstPoseSingleTag = Pose2d(0, 0, self.getYaw())
+        self.curEstPoseGlobal = Pose2d(0, 0, self.getYaw())
         # self.lastPeriodicEstPose = self.curEstPose
 
         self.poseEst = SwerveDrive4PoseEstimator(
-            const.SWERVE_KINEMATICS, self.getYaw(), self.get_module_positions(), self.curEstPose  # type: ignore
+            const.SWERVE_KINEMATICS, self.getYaw(), self.get_module_positions(), self.curEstPoseGlobal  # type: ignore
         )
 
-        self.poseEstSingleTag = SwerveDrive4PoseEstimator(const.SWERVE_KINEMATICS, self.getYaw(), self.get_module_positions(), self.curEstPose)
+        self.poseEstSingleTag = SwerveDrive4PoseEstimator(
+            const.SWERVE_KINEMATICS,
+            self.getYaw(),
+            self.get_module_positions(),
+            self.curEstPoseSingleTag,
+        )
 
         # self.poseEst.setVisionMeasurementStdDevs((0.0001, 0.0001, 0.5))
         self.xystd = 0.3
@@ -199,7 +205,8 @@ class PoseEstimator(Subsystem):
         self.last_periodic_accel_x = 0
         self.last_periodic_accel_y = 0
 
-        # self.is_using_single_tag = False
+        self.score_intent = False
+        self.temp_rotation_check = Rotation2d()
 
     def stop(self):
         print("sike this aint stoppin")
@@ -306,7 +313,7 @@ class PoseEstimator(Subsystem):
 
     def calculate_closest_reef_tag(self, relevant_tags):
         min_distance_to_tag = math.inf
-        closest_reef_tag = None
+        closest_reef_tag = 17
         tag_layout = AprilTagFieldLayout.loadField(AprilTagField.k2025Reefscape)
         for tag in relevant_tags:
             tag_pose = tag_layout.getTagPose(tag).toPose2d()
@@ -316,78 +323,77 @@ class PoseEstimator(Subsystem):
                 closest_reef_tag = tag
         return closest_reef_tag
 
-    def get_pose_from_single_tag(self, poses, relevant_tags):
-        avg_pose_x = 0.0
-        avg_pose_y = 0.0
-        tag_in_use = self.calculate_closest_reef_tag(relevant_tags)
-        poses_from_tag_used = []
-        ## This looping is not correct
-        for cam in poses:
-            for pose in cam:
-                if pose[1] == tag_in_use:
-                    poses_from_tag_used.append(pose[0])
-        if len(poses_from_tag_used) == 0:
-            return self.curEstPose
-        for pose in poses_from_tag_used:
-            avg_pose_x += pose.X()
-            avg_pose_y += pose.Y()
-        avg_pose_x /= len(poses_from_tag_used)
-        avg_pose_y /= len(poses_from_tag_used)
-        avg_pose = Pose2d(avg_pose_x, avg_pose_y, self.getYaw())
-        return avg_pose
-
     @staticmethod
-    def get_path_to_reef(face: int, right_branch : bool):
+    def get_path_to_reef(face: int, right_branch: bool):
         side_offset = inchesToMeters(6.47)  # distance b/w center of face to branch
         dist_offset = (
-            (inchesToMeters(29.5) / 2) + (inchesToMeters(7.25) / 2) + inchesToMeters(24)
+            (inchesToMeters(29.5) / 2) + (inchesToMeters(7.25) / 2) + inchesToMeters(6)
         )  # robot size + bumper addition + error protection
 
         angle_face = FieldConstants.Reef.centerFaces[face - 1].rotation()
         center_face_pose = FieldConstants.Reef.centerFaces[face - 1]
         center_face_translation = center_face_pose.translation()
 
-        branch_pose = FieldConstants.Reef.branchPositions[(face - 1) * 2 + (0 if right_branch else 1)][0].toPose2d()
-        target_pose = branch_pose.transformBy(Transform2d(dist_offset, 0, 0))
+        # branch_pose = FieldConstants.Reef.branchPositions[
+        #     (face - 1) * 2 + (0 if right_branch else 1)
+        # ][0].toPose2d()
+        # target_pose = branch_pose.transformBy(Transform2d(dist_offset, 0, 0)).rotateBy(Rotation2d.fromDegrees(-90))
 
-        offset_face_pose = center_face_pose.transformBy(Transform2d(dist_offset, 0, 0))
-        angle_to_branch = (
-            (angle_face.degrees() + 90) % 360
-            if right_branch
-            else (angle_face.degrees() - 90) % 360
-        )
-        target_pose_2 = offset_face_pose.transformBy(Transform2d(side_offset, 0, degreesToRadians(angle_to_branch)))
+        # offset_face_pose = center_face_pose.transformBy(Transform2d(dist_offset, 0, 0))
+        # angle_to_branch = (
+        #     (angle_face.degrees() + 90) % 360
+        #     if right_branch
+        #     else (angle_face.degrees() - 90) % 360
+        # )
+        # target_pose_2 = offset_face_pose.transformBy(
+        #     Transform2d(side_offset, 0, degreesToRadians(angle_to_branch))
+        # ).rotateBy(Rotation2d.fromDegrees(-90))
 
-        center_face_x = center_face_translation.X() # pose of center face (this is directly on the side of the reef)
+        center_face_x = (
+            center_face_translation.X()
+        )  # pose of center face (this is directly on the side of the reef)
         center_face_y = center_face_translation.Y()
-        x_offset = math.cos(angle_face.radians()) * dist_offset #offsetting that pose by a set offset that extends the pose as if there's a vector from the center face with angle: angle_face
+        x_offset = (
+            math.cos(angle_face.radians()) * dist_offset
+        )  # offsetting that pose by a set offset that extends the pose as if there's a vector from the center face with angle: angle_face
         y_offset = math.sin(angle_face.radians()) * dist_offset
         target_pose_face = Pose2d(
             center_face_x + x_offset, center_face_y + y_offset, angle_face
         )
 
         angle_to_branch = (
-            (angle_face.degrees() + 90) % 360
+            (angle_face.degrees() - 90) % 360
             if right_branch
-            else (angle_face.degrees() - 90) % 360
-        ) #angle change needed to do math to get to the branch, right branch needs + 90 degrees (CCW), left_branch needs -90 (CW)
+            else (angle_face.degrees() + 90) % 360
+        )  # angle change needed to do math to get to the branch, right branch needs + 90 degrees (CCW), left_branch needs -90 (CW)
 
-        x_offset_branch = math.sin(degreesToRadians(angle_to_branch)) * side_offset #same as above, extending the pose from the point outside of the reef in the direction of the desired branch
+
+        x_offset_branch = (
+            math.sin(degreesToRadians(angle_to_branch)) * side_offset
+        )  # same as above, extending the pose from the point outside of the reef in the direction of the desired branch
         y_offset_branch = math.cos(degreesToRadians(angle_to_branch)) * side_offset
 
         target_pose_3 = Pose2d(
             target_pose_face.X() + x_offset_branch,
             target_pose_face.Y() + y_offset_branch,
-            Rotation2d.fromDegrees(angle_face.degrees() + 90), #don't know if this + 90 is needed, because our battery is facing forward and we want the camera side (scoring side) to face reef
+            Rotation2d.fromDegrees(
+                angle_face.degrees() - 90
+            ),  # don't know if this + 90 is needed, because our battery is facing forward and we want the camera side (scoring side) to face reef
         )
-        return [target_pose, target_pose_2, target_pose_3]
+        return target_pose_3
+
     def periodic(self):
         allianceColor = DriverStation.getAlliance()
         self.single_tag_IDs = set()
         single_tag_poses = []
 
         for idx, cam in enumerate(self.cams):
-            cam.update(self.curEstPose, self.curEstPoseSingleTag, allianceColor=allianceColor, yaw=self.getYaw())
+            cam.update(
+                self.curEstPoseGlobal,
+                self.curEstPoseSingleTag,
+                allianceColor=allianceColor,
+                yaw=self.getYaw(),
+            )
 
             # observations = cam.getPoseEstimates()
             tags = cam.getTagPositions()
@@ -406,7 +412,7 @@ class PoseEstimator(Subsystem):
 
             for tag in tags:
                 tag2D = tag.toPose2d()
-                self.tag_dist += (self.curEstPose - tag2D).translation().norm()
+                self.tag_dist += (self.curEstPoseGlobal - tag2D).translation().norm()
             if len(tags) > 0:
                 self.tag_dist /= len(tags)
             if len(tags) == 1:
@@ -460,7 +466,7 @@ class PoseEstimator(Subsystem):
         # Update poses with drivetrain information
         self.poseEst.update(self.getYaw(), self.get_module_positions())
         self.poseEstSingleTag.update(self.getYaw(), self.get_module_positions())
-        # self.lastPeriodicEstPose = self.curEstPose
+        # self.lastPeriodicEstPose = self.curEstPos
 
         SmartDashboard.putNumber("skidding ratio", self.get_skidding_ratio())
         SmartDashboard.putNumber("jerk val", self.get_jerk_val())
@@ -469,12 +475,32 @@ class PoseEstimator(Subsystem):
 
         possible_pose_single_tag = self.poseEstSingleTag.getEstimatedPosition()
 
-        SmartDashboard.putBoolean("pose 4 u :3", self.candidate_pose_OK(possible_pose_global))
+        tag_map = AprilTagFieldLayout.loadField(AprilTagField.k2025Reefscape)
 
+        SmartDashboard.putBoolean(
+            "pose 4 u :3", self.candidate_pose_OK(possible_pose_global)
+        )
+
+        SmartDashboard.putBoolean("right branch", self.robot.oi.right_branch)
+        single_tag = False
         if self.candidate_pose_OK(possible_pose_global):
-            self.curEstPose = self.poseEst.getEstimatedPosition()
+            self.curEstPoseGlobal = possible_pose_global
         if self.candidate_pose_OK(possible_pose_single_tag):
-            self.curEstPoseSingleTag = self.poseEstSingleTag.getEstimatedPosition()
+            self.curEstPoseSingleTag = possible_pose_single_tag
+        self.relevant_tags = self.single_tag_IDs.intersection(FieldConstants.reef_tags)
+        if self.score_intent:
+            if (self.curEstPoseGlobal - tag_map.getTagPose(self.calculate_closest_reef_tag(self.relevant_tags)).toPose2d()).translation().norm() > 2:
+                self.curEstPose = self.curEstPoseGlobal
+                single_tag = False
+            else:
+                self.curEstPose = self.curEstPoseSingleTag
+                single_tag = True
+
+        else:
+            self.curEstPose = self.curEstPoseGlobal
+            single_tag = False
+
+        SmartDashboard.putBoolean("single tag :3", single_tag)
 
         if (self.robot.leds.mode == self.robot.leds.MODE_LOST_ODOMETRY) or (
             self.robot.leds.mode == self.robot.leds.MODE_ODOMETRY
@@ -485,9 +511,8 @@ class PoseEstimator(Subsystem):
                 self.robot.leds.set_mode(self.robot.leds.MODE_ODOMETRY)
         self.poseConverge = True
 
-        self.relevant_tags = self.single_tag_IDs.intersection(FieldConstants.reef_tags)
 
-		# This is crashing, poses are not being passed correctly
+        # This is crashing, poses are not being passed correctly
         # self.single_tag_pose = self.get_pose_from_single_tag(
         #     single_tag_poses, self.relevant_tags
         # )
@@ -495,19 +520,29 @@ class PoseEstimator(Subsystem):
         SmartDashboard.putData("Field", self.field)
         self.field.setRobotPose(self.poseEst.getEstimatedPosition())
         SmartDashboard.putData("Field w/ Single Tag", self.field_for_single_tag)
-        self.field_for_single_tag.setRobotPose(self.curEstPoseSingleTag)
+        self.field_for_single_tag.setRobotPose(
+            self.poseEstSingleTag.getEstimatedPosition()
+        )
 
         if self.calculate_closest_reef_tag(self.relevant_tags):
             SmartDashboard.putNumber(
                 "closest reef tag", self.calculate_closest_reef_tag(self.relevant_tags)
             )
 
+        SmartDashboard.putNumber(
+            "rotation of target pose: ", self.temp_rotation_check.degrees()
+        )
+
         # robot_pose = Pose2d(single_tag_poses[0].translation(), self.gyro.get_yaw()) if len(single_tag_poses) > 0 else self.curEstPose.translation()
         # self.field.setRobotPose(Pose2d(robot_pose, self.gyro.get_yaw()))
 
-		# Plot the difference between the single pose and global pose
+        # Plot the difference between the single pose and global pose
 
-        SmartDashboard.putNumber("Single/Global Pose Diff", self.curEstPose.translation().norm() - self.curEstPoseSingleTag.translation().norm())
+        SmartDashboard.putNumber(
+            "Single/Global Pose Diff",
+            self.curEstPose.translation().norm()
+            - self.curEstPoseSingleTag.translation().norm(),
+        )
 
         SmartDashboard.putNumber("Camera/Odometry X", self.curEstPose.x)
         SmartDashboard.putNumber("Camera/Odometry Y", self.curEstPose.y)

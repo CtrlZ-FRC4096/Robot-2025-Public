@@ -96,6 +96,7 @@ class OI:
         self.right_branch = True
         self.tag_to_pathfind = 0
         self.pathfind_to_reef = None
+        self.running_path = False
 
         @self.rumble_button.whenPressed
         def _():
@@ -123,6 +124,10 @@ class OI:
                     left_right *= 0.8
 
                 rotate = -self.driver1.RIGHT_JOY_X()
+
+                if self.running_path and (abs(self.driver1.LEFT_JOY_X()) > 0.02 or abs(self.driver1.LEFT_JOY_Y()) > 0.02 or abs(self.driver1.RIGHT_JOY_X()) > 0.1 or abs(self.driver1.RIGHT_JOY_Y()) > 0.1):
+                    self.robot.scheduler.cancelAll()
+                    self.running_path = False
 
                 if abs(rotate) >= 0.02:
                     self.cardinal_directing = False
@@ -219,19 +224,26 @@ class OI:
                 FieldConstants.tag_to_face[
                     self.robot.poseEstimator.calculate_closest_reef_tag(
                         self.robot.poseEstimator.relevant_tags
-                )],
+                    )
+                ],
                 self.right_branch,
             )
+            # self.robot.poseEstimator.score_intent = True
+            self.robot.poseEstimator.temp_rotation_check = target_pose.rotation()
+            self.robot_oriented_angle = target_pose.rotation().degrees()
+            self.running_path = True
 
             self.pathfind_to_reef = AutoBuilder.pathfindToPose(
-                target_pose[0], constraints, 0.0
-            ) #idx 0 : branch pose w/ transforms, idx 1 : center face w/ transforms, idx 2: center face w/ trig
+                target_pose, constraints, 0.0
+            )  # idx 0 : branch pose w/ transforms, idx 1 : center face w/ transforms, idx 2: center face w/ trig
             # all return different poses
             self.robot.scheduler.schedule(self.pathfind_to_reef.schedule())
 
         @self.driver1.LEFT_TRIGGER_AS_BUTTON.whenReleased  # stop pathfinnd
         def _():
             self.robot.scheduler.cancelAll()
+            self.running_path = False
+            # self.robot.poseEstimator.score_intent = False
 
         @self.driver2.RIGHT_TRIGGER_AS_BUTTON.whenPressed  # right face
         def _():
@@ -240,6 +252,14 @@ class OI:
         @self.driver2.LEFT_TRIGGER_AS_BUTTON.whenPressed  # left face
         def _():
             self.right_branch = False
+
+        @self.driver2.RIGHT_BUMPER.whenHeld  # single tag yes
+        def _():
+            self.robot.poseEstimator.score_intent = True
+
+        @self.driver2.RIGHT_BUMPER.whenReleased  # single tag no
+        def _():
+            self.robot.poseEstimator.score_intent = False
 
         # @self.driver2.A.whenPressed # face 6
         # def _():
