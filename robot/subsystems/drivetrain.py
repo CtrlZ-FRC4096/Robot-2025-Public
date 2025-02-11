@@ -132,7 +132,7 @@ class Drivetrain(Subsystem):
     def go_to_pose_profiled_pid(self, target_pose: Pose2d):
         vx = self.x_controller.calculate(self.get_pose.X(), target_pose.X())
         vy = self.y_controller.calculate(self.get_pose.Y(), target_pose.Y())
-        omega = self.theta_controller.calculate(self.get_pose.rotation().radians(), target_pose.rotation().radians())
+        omega = self.theta_controller.calculate(self.get_pose.rotation().degrees(), target_pose.rotation().degrees())
         self.drive(Translation2d(vx, vy), omega, True, False)
 
     def stop(self):
