@@ -97,6 +97,8 @@ class OI:
         self.tag_to_pathfind = 0
         self.pathfind_to_reef = None
         self.running_path = False
+        self.running_pid = False
+        self.target_pose = Pose2d()
 
         self.pathfinding_constraints = PathConstraints(4.0, 4.0, 3.0 * math.pi, 3.0 * math.pi)
 
@@ -130,6 +132,7 @@ class OI:
                 if self.running_path and (abs(self.driver1.LEFT_JOY_X()) > 0.02 or abs(self.driver1.LEFT_JOY_Y()) > 0.02 or abs(self.driver1.RIGHT_JOY_X()) > 0.1 or abs(self.driver1.RIGHT_JOY_Y()) > 0.1):
                     self.robot.scheduler.cancelAll()
                     self.running_path = False
+                    self.running_pid = False
 
                 if abs(rotate) >= 0.02:
                     self.cardinal_directing = False
@@ -146,6 +149,8 @@ class OI:
                     self.robot_oriented_angle = (
                         self.robot.poseEstimator.getYaw().degrees()
                     )
+                elif self.running_pid & self.running_path:
+                    self.robot.drivetrain.go_to_pose_profiled_pid(self.target_pose)
                 else:
                     # if not self.cardinal_directing:
                     #     if self.find_heading:
@@ -246,6 +251,28 @@ class OI:
             self.robot.scheduler.cancelAll()
             self.running_path = False
             # self.robot.poseEstimator.score_intent = False
+            
+        @self.driver1.RIGHT_TRIGGER_AS_BUTTON.whenHeld  # Run profiled PID to tag
+        def _():
+            if len(self.robot.poseEstimator.relevant_tags) == 0:
+                return
+            self.target_pose = self.robot.poseEstimator.get_path_to_reef(
+                FieldConstants.tag_to_face[
+                    self.robot.poseEstimator.calculate_closest_reef_tag(
+                        self.robot.poseEstimator.relevant_tags
+                    )
+                ],
+                self.right_branch,
+            )
+            self.running_path = True
+            self.running_pid = True
+            
+        @self.driver1.RIGHT_TRIGGER_AS_BUTTON.whenReleased  # stop profiled PID
+        def _():
+            self.running_path = False
+            self.running_pid = False
+            # self.robot.drivetrain.stop() May or may not be needed to stop the robot from tracking the PID
+
 
         @self.driver2.RIGHT_TRIGGER_AS_BUTTON.whenPressed  # right face
         def _():

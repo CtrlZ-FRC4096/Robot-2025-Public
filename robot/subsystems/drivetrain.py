@@ -59,6 +59,15 @@ class Drivetrain(Subsystem):
         self.angle_pid = PIDController(0.075, 0.0, 0.001)
         self.angle_pid.enableContinuousInput(0, 360)
         self.angle_pid.setTolerance(0.5)  # Set position tolerance to 0.5 degrees
+        
+        self.x_controller = ProfiledPIDController(const.X_KP, const.X_KI, const.X_KD, TrapezoidProfile.Constraints(4.0, 4.0))
+        self.y_controller = ProfiledPIDController(const.Y_KP, const.Y_KI, const.Y_KD, TrapezoidProfile.Constraints(4.0, 4.0))
+        self.theta_controller = ProfiledPIDController(const.THETA_KP, const.THETA_KI, const.THETA_KD, TrapezoidProfile.Constraints(3.0 * math.pi, 3.0 * math.pi))
+        
+        ## Need to check these tolerances
+        self.x_controller.setTolerance(0.01, 0.01)
+        self.y_controller.setTolerance(0.01, 0.01)
+        self.theta_controller.setTolerance(0.01, 0.01)
 
         ### Field Visualisation - Needs testing ###
         self.previous_chassisspeeds = ChassisSpeeds()
@@ -119,6 +128,12 @@ class Drivetrain(Subsystem):
         for idx, module in enumerate(self.robot.poseEstimator.modules):
             # print(module_states[idx].speed)
             module.set_desired_state(module_states[idx], is_open_loop=False)
+            
+    def go_to_pose_profiled_pid(self, target_pose: Pose2d):
+        vx = self.x_controller.calculate(self.get_pose.X(), target_pose.X())
+        vy = self.y_controller.calculate(self.get_pose.Y(), target_pose.Y())
+        omega = self.theta_controller.calculate(self.get_pose.rotation().radians(), target_pose.rotation().radians())
+        self.drive(Translation2d(vx, vy), omega, True, False)
 
     def stop(self):
         self.drive(Translation2d(0, 0), 0, False, True)
