@@ -62,11 +62,12 @@ class Drivetrain(Subsystem):
         
         self.x_controller = ProfiledPIDController(const.X_KP, const.X_KI, const.X_KD, TrapezoidProfile.Constraints(4.0, 4.0))
         self.y_controller = ProfiledPIDController(const.Y_KP, const.Y_KI, const.Y_KD, TrapezoidProfile.Constraints(4.0, 4.0))
-        self.theta_controller = ProfiledPIDController(const.THETA_KP, const.THETA_KI, const.THETA_KD, TrapezoidProfile.Constraints(3.0 * math.pi, 3.0 * math.pi))
+        self.theta_controller = ProfiledPIDController(const.THETA_KP, const.THETA_KI, const.THETA_KD, TrapezoidProfile.Constraints(540, 720))
         
         ## Need to check these tolerances
         self.x_controller.setTolerance(0.01, 0.01)
         self.y_controller.setTolerance(0.01, 0.01)
+        self.theta_controller.enableContinuousInput(0, 360)
         self.theta_controller.setTolerance(0.01, 0.01)
 
         ### Field Visualisation - Needs testing ###
