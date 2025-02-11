@@ -98,6 +98,8 @@ class OI:
         self.pathfind_to_reef = None
         self.running_path = False
 
+        self.pathfinding_constraints = PathConstraints(4.0, 4.0, 3.0 * math.pi, 3.0 * math.pi)
+
         @self.rumble_button.whenPressed
         def _():
             timer = Timer()
@@ -217,7 +219,7 @@ class OI:
 
         @self.driver1.LEFT_TRIGGER_AS_BUTTON.whenHeld  # Pathfind to right or left branch of closest reef face
         def _():
-            constraints = PathConstraints(4.0, 4.0, 3.0 * math.pi, 3.0 * math.pi)
+            # constraints = PathConstraints(4.0, 4.0, 3.0 * math.pi, 3.0 * math.pi)
             if len(self.robot.poseEstimator.relevant_tags) == 0:
                 return
             target_pose = self.robot.poseEstimator.get_path_to_reef(
@@ -234,7 +236,7 @@ class OI:
             self.running_path = True
 
             self.pathfind_to_reef = AutoBuilder.pathfindToPose(
-                target_pose, constraints, 0.0
+                target_pose, self.pathfinding_constraints, 0.0
             )  # idx 0 : branch pose w/ transforms, idx 1 : center face w/ transforms, idx 2: center face w/ trig
             # all return different poses
             self.robot.scheduler.schedule(self.pathfind_to_reef.schedule())
