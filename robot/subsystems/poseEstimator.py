@@ -208,6 +208,8 @@ class PoseEstimator(Subsystem):
         self.score_intent = False
         self.temp_rotation_check = Rotation2d()
 
+        self.tag_layout = AprilTagFieldLayout.loadField(AprilTagField.k2025Reefscape)
+
     def stop(self):
         print("sike this aint stoppin")
 
@@ -314,9 +316,8 @@ class PoseEstimator(Subsystem):
     def calculate_closest_reef_tag(self, relevant_tags):
         min_distance_to_tag = math.inf
         closest_reef_tag = 17
-        tag_layout = AprilTagFieldLayout.loadField(AprilTagField.k2025Reefscape)
         for tag in relevant_tags:
-            tag_pose = tag_layout.getTagPose(tag).toPose2d()
+            tag_pose = self.tag_layout.getTagPose(tag).toPose2d()
             distance = (self.curEstPose - tag_pose).translation().norm()
             if distance < min_distance_to_tag:
                 min_distance_to_tag = distance
@@ -366,7 +367,6 @@ class PoseEstimator(Subsystem):
             if right_branch
             else (angle_face.degrees() + 90) % 360
         )  # angle change needed to do math to get to the branch, right branch needs + 90 degrees (CCW), left_branch needs -90 (CW)
-
 
         x_offset_branch = (
             math.sin(degreesToRadians(angle_to_branch)) * side_offset
@@ -475,8 +475,6 @@ class PoseEstimator(Subsystem):
 
         possible_pose_single_tag = self.poseEstSingleTag.getEstimatedPosition()
 
-        tag_map = AprilTagFieldLayout.loadField(AprilTagField.k2025Reefscape)
-
         SmartDashboard.putBoolean(
             "pose 4 u :3", self.candidate_pose_OK(possible_pose_global)
         )
@@ -489,7 +487,12 @@ class PoseEstimator(Subsystem):
             self.curEstPoseSingleTag = possible_pose_single_tag
         self.relevant_tags = self.single_tag_IDs.intersection(FieldConstants.reef_tags)
         if self.score_intent:
-            if (self.curEstPoseGlobal - tag_map.getTagPose(self.calculate_closest_reef_tag(self.relevant_tags)).toPose2d()).translation().norm() > 2:
+            if (
+                self.curEstPoseGlobal
+                - self.tag_layout.getTagPose(
+                    self.calculate_closest_reef_tag(self.relevant_tags)
+                ).toPose2d()
+            ).translation().norm() > 2:
                 self.curEstPose = self.curEstPoseGlobal
                 single_tag = False
             else:
@@ -510,7 +513,6 @@ class PoseEstimator(Subsystem):
             elif self.poseConverge:
                 self.robot.leds.set_mode(self.robot.leds.MODE_ODOMETRY)
         self.poseConverge = True
-
 
         # This is crashing, poses are not being passed correctly
         # self.single_tag_pose = self.get_pose_from_single_tag(
