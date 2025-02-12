@@ -137,15 +137,32 @@ class Drivetrain(Subsystem):
             module.set_desired_state(module_states[idx], is_open_loop=False)
 
     def go_to_pose_profiled_pid(self, target_pose):
-        SmartDashboard.putNumber("t_pose x", target_pose.X())
-        SmartDashboard.putNumber("t_pose y", target_pose.Y())
-        vx = self.x_controller.calculate(self.get_pose().X(), target_pose.X())
-        vy = self.y_controller.calculate(self.get_pose().Y(), target_pose.Y())
+        # Get the current pose
+        current_pose = self.get_pose()
+
+        # Calculate the control outputs
+        vx = self.x_controller.calculate(current_pose.X(), target_pose.X())
+        vy = self.y_controller.calculate(current_pose.Y(), target_pose.Y())
         omega = self.theta_controller.calculate(
-            self.get_pose().rotation().degrees(), target_pose.rotation().degrees()
+            current_pose.rotation().degrees(), target_pose.rotation().degrees()
         )
+
+        # Check if the controllers are at their setpoints
+        if self.x_controller.atSetpoint() and self.y_controller.atSetpoint() and self.theta_controller.atSetpoint():
+            # Optionally, stop the drivetrain if at setpoint
+            self.stop()
+            return
+
+        # Drive the robot using the calculated velocities
         self.drive(Translation2d(vx, vy), omega, True, False)
 
+        # Update SmartDashboard values for debugging
+        SmartDashboard.putNumber("t_pose x", target_pose.X())
+        SmartDashboard.putNumber("t_pose y", target_pose.Y())
+        SmartDashboard.putNumber("vx", vx)
+        SmartDashboard.putNumber("vy", vy)
+        SmartDashboard.putNumber("omega", omega)
+        
     def stop(self):
         self.drive(Translation2d(0, 0), 0, False, True)
 

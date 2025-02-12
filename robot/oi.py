@@ -304,8 +304,6 @@ class OI:
 
         @self.driver1.RIGHT_TRIGGER_AS_BUTTON.whenHeld  # Run profiled PID to tag
         def _():
-            if len(self.robot.poseEstimator.single_tag_IDs) == 0:
-                return
             self.target_pose = self.robot.poseEstimator.get_path_to_reef(
                 self.robot.poseEstimator.calculate_closest_reef_tag()[1],
                 self.right_branch,
