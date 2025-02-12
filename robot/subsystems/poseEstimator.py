@@ -313,16 +313,17 @@ class PoseEstimator(Subsystem):
         else:
             return True
 
-    def calculate_closest_reef_tag(self, relevant_tags):
+    def calculate_closest_reef_tag(self):
         min_distance_to_tag = math.inf
         closest_reef_tag = 17
-        for tag in relevant_tags:
-            tag_pose = self.tag_layout.getTagPose(tag).toPose2d()
-            distance = (self.curEstPose - tag_pose).translation().norm()
+        tag_layout = AprilTagFieldLayout.loadField(AprilTagField.k2025Reefscape)
+        for tagID in FieldConstants.reef_tags:
+            tag_pose = tag_layout.getTagPose(tagID).toPose2d()
+            distance = (self.curEstPoseGlobal - tag_pose).translation().norm()
             if distance < min_distance_to_tag:
                 min_distance_to_tag = distance
-                closest_reef_tag = tag
-        return closest_reef_tag
+                closest_reef_tag = tagID
+        return [closest_reef_tag, FieldConstants.tag_to_face[closest_reef_tag]]
 
     @staticmethod
     def get_path_to_reef(face: int, right_branch: bool):
@@ -485,7 +486,6 @@ class PoseEstimator(Subsystem):
             self.curEstPoseGlobal = possible_pose_global
         if self.candidate_pose_OK(possible_pose_single_tag):
             self.curEstPoseSingleTag = possible_pose_single_tag
-        self.relevant_tags = self.single_tag_IDs.intersection(FieldConstants.reef_tags)
         if self.score_intent:
             if (
                 self.curEstPoseGlobal
@@ -526,10 +526,7 @@ class PoseEstimator(Subsystem):
             self.poseEstSingleTag.getEstimatedPosition()
         )
 
-        if self.calculate_closest_reef_tag(self.relevant_tags):
-            SmartDashboard.putNumber(
-                "closest reef tag", self.calculate_closest_reef_tag(self.relevant_tags)
-            )
+        SmartDashboard.putNumber("closest reef tag", self.calculate_closest_reef_tag()[0])
 
         SmartDashboard.putNumber(
             "rotation of target pose: ", self.temp_rotation_check.degrees()
