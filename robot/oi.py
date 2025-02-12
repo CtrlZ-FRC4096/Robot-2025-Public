@@ -38,7 +38,12 @@ from pathplannerlib.auto import (
     PathPlannerAuto,
     NamedCommands,
     PathConstraints,
-    PathPlannerPath
+    PathPlannerPath,
+)
+from pathplannerlib.path import (
+    GoalEndState,
+    Waypoint,
+    IdealStartingState,
 )
 
 from robotpy_apriltag import AprilTagField, AprilTagFieldLayout
@@ -102,7 +107,9 @@ class OI:
         self.running_pid = False
         self.target_pose = Pose2d()
 
-        self.pathfinding_constraints = PathConstraints(4.0, 4.0, 3.0 * math.pi, 3.0 * math.pi)
+        self.pathfinding_constraints = PathConstraints(
+            4.0, 4.0, 3.0 * math.pi, 3.0 * math.pi
+        )
 
         @self.rumble_button.whenPressed
         def _():
@@ -131,10 +138,14 @@ class OI:
 
                 rotate = -self.driver1.RIGHT_JOY_X()
 
-                if self.running_path and (abs(self.driver1.LEFT_JOY_X()) > 0.02 or abs(self.driver1.LEFT_JOY_Y()) > 0.02 or abs(self.driver1.RIGHT_JOY_X()) > 0.1 or abs(self.driver1.RIGHT_JOY_Y()) > 0.1):
+                if (self.running_path) and (
+                    abs(self.driver1.LEFT_JOY_X()) > 0.05
+                    or abs(self.driver1.LEFT_JOY_Y()) > 0.05
+                    or abs(self.driver1.RIGHT_JOY_X()) > 0.1
+                    or abs(self.driver1.RIGHT_JOY_Y()) > 0.1
+                ):
                     self.robot.scheduler.cancelAll()
                     self.running_path = False
-                    self.running_pid = False
 
                 if abs(rotate) >= 0.02:
                     self.cardinal_directing = False
@@ -151,7 +162,7 @@ class OI:
                     self.robot_oriented_angle = (
                         self.robot.poseEstimator.getYaw().degrees()
                     )
-                elif self.running_pid & self.running_path:
+                elif self.running_pid:
                     self.robot.drivetrain.go_to_pose_profiled_pid(self.target_pose)
                 else:
                     # if not self.cardinal_directing:
@@ -227,53 +238,87 @@ class OI:
         @self.driver1.LEFT_TRIGGER_AS_BUTTON.whenHeld  # Pathfind to right or left branch of closest reef face
         def _():
             # constraints = PathConstraints(4.0, 4.0, 3.0 * math.pi, 3.0 * math.pi)
-            if len(self.robot.poseEstimator.relevant_tags) == 0:
+            if len(self.robot.poseEstimator.single_tag_IDs) == 0:
                 return
             target_pose = self.robot.poseEstimator.get_path_to_reef(
                 self.robot.poseEstimator.calculate_closest_reef_tag()[1],
                 self.right_branch,
             )
-            # self.robot.poseEstimator.score_intent = True
+            self.robot.poseEstimator.score_intent = True
             self.robot.poseEstimator.temp_rotation_check = target_pose.rotation()
             self.robot_oriented_angle = target_pose.rotation().degrees()
             self.running_path = True
 
-            self.pathfind_to_reef = AutoBuilder.pathfindToPose(
-                target_pose, self.pathfinding_constraints, 0.0
-            )  # idx 0 : branch pose w/ transforms, idx 1 : center face w/ transforms, idx 2: center face w/ trig
+            # self.pathfind_to_reef = AutoBuilder.pathfindToPose(
+            #     target_pose, self.pathfinding_constraints, 0.0
+            # )  # idx 0 : branch pose w/ transforms, idx 1 : center face w/ transforms, idx 2: center face w/ trig
             # all return different poses
-                # waypoints = PathGenerator(self.robot.poseEstimator.curEstPoseGlobal, target_pose)
-                # path = AutoBuilder.followPath(PathPlannerPath(waypoints, self.pathfinding_constraints))
-                # self.robot.scheduler.schedule(path.schedule())
-            self.robot.scheduler.schedule(self.pathfind_to_reef.schedule())
+            control_points = PathGenerator(
+                self.robot.poseEstimator.curEstPose, target_pose
+            ).controlPoints
+            waypoints = []
+            for idx in range(len(control_points)):
+                if idx == 0:
+                    waypoints.append(
+                        Waypoint(
+                            prevControl=self.robot.poseEstimator.curEstPose.translation(),
+                            anchor=control_points[idx],
+                            nextControl=control_points[idx + 1],
+                        )
+                    )
+                elif idx == len(control_points) - 1:
+                    waypoints.append(
+                        Waypoint(
+                            prevControl=control_points[idx - 1],
+                            anchor=control_points[idx],
+                            nextControl=target_pose.translation(),
+                        )
+                    )
+                else:
+                    waypoints.append(
+                        Waypoint(
+                            prevControl=control_points[idx - 1],
+                            anchor=control_points[idx],
+                            nextControl=control_points[idx + 1],
+                        )
+                    )
+            path = AutoBuilder.followPath(
+                PathPlannerPath(
+                    waypoints=waypoints,
+                    constraints=self.pathfinding_constraints,
+                    ideal_starting_state=IdealStartingState(
+                        0.0, self.robot.poseEstimator.curEstPose.rotation()
+                    ),
+                    goal_end_state=GoalEndState(0.0, target_pose.rotation()),
+                )
+            )
+            print(waypoints)
+            # self.robot.scheduler.schedule(path.schedule())
+            # self.robot.scheduler.schedule(self.pathfind_to_reef.schedule())
 
         @self.driver1.LEFT_TRIGGER_AS_BUTTON.whenReleased  # stop pathfinnd
         def _():
             self.robot.scheduler.cancelAll()
             self.running_path = False
-            # self.robot.poseEstimator.score_intent = False
-            
+            self.robot.poseEstimator.score_intent = False
+
         @self.driver1.RIGHT_TRIGGER_AS_BUTTON.whenHeld  # Run profiled PID to tag
         def _():
-            if len(self.robot.poseEstimator.relevant_tags) == 0:
+            if len(self.robot.poseEstimator.single_tag_IDs) == 0:
                 return
             self.target_pose = self.robot.poseEstimator.get_path_to_reef(
-                FieldConstants.tag_to_face[
-                    self.robot.poseEstimator.calculate_closest_reef_tag(
-                        self.robot.poseEstimator.relevant_tags
-                    )
-                ],
+                self.robot.poseEstimator.calculate_closest_reef_tag()[1],
                 self.right_branch,
             )
-            self.running_path = True
             self.running_pid = True
-            
+            self.robot.poseEstimator.score_intent = True
+
         @self.driver1.RIGHT_TRIGGER_AS_BUTTON.whenReleased  # stop profiled PID
         def _():
-            self.running_path = False
             self.running_pid = False
+            self.robot.poseEstimator.score_intent = False
+            self.robot_oriented_angle = self.robot.poseEstimator.getYaw().degrees()
             # self.robot.drivetrain.stop() May or may not be needed to stop the robot from tracking the PID
-
 
         @self.driver2.RIGHT_TRIGGER_AS_BUTTON.whenPressed  # right face
         def _():
@@ -282,14 +327,6 @@ class OI:
         @self.driver2.LEFT_TRIGGER_AS_BUTTON.whenPressed  # left face
         def _():
             self.right_branch = False
-
-        @self.driver2.RIGHT_BUMPER.whenHeld  # single tag yes
-        def _():
-            self.robot.poseEstimator.score_intent = True
-
-        @self.driver2.RIGHT_BUMPER.whenReleased  # single tag no
-        def _():
-            self.robot.poseEstimator.score_intent = False
 
         # @self.driver2.A.whenPressed # face 6
         # def _():

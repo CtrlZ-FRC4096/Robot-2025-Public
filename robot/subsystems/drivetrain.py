@@ -59,11 +59,17 @@ class Drivetrain(Subsystem):
         self.angle_pid = PIDController(0.075, 0.0, 0.001)
         self.angle_pid.enableContinuousInput(0, 360)
         self.angle_pid.setTolerance(0.5)  # Set position tolerance to 0.5 degrees
-        
-        self.x_controller = ProfiledPIDController(const.X_KP, const.X_KI, const.X_KD, TrapezoidProfile.Constraints(4.0, 4.0))
-        self.y_controller = ProfiledPIDController(const.Y_KP, const.Y_KI, const.Y_KD, TrapezoidProfile.Constraints(4.0, 4.0))
-        self.theta_controller = ProfiledPIDController(const.THETA_KP, const.THETA_KI, const.THETA_KD, TrapezoidProfile.Constraints(540, 720))
-        
+
+        self.x_controller = ProfiledPIDController(
+            1.5, 0.0, 0.0, TrapezoidProfile.Constraints(4.0, 4.0)
+        )
+        self.y_controller = ProfiledPIDController(
+            1.5, 0.0, 0.0, TrapezoidProfile.Constraints(4.0, 4.0)
+        )
+        self.theta_controller = ProfiledPIDController(
+            0.075, 0.0, 0.001, TrapezoidProfile.Constraints(540, 720)
+        )
+
         ## Need to check these tolerances
         self.x_controller.setTolerance(0.01, 0.01)
         self.y_controller.setTolerance(0.01, 0.01)
@@ -129,11 +135,15 @@ class Drivetrain(Subsystem):
         for idx, module in enumerate(self.robot.poseEstimator.modules):
             # print(module_states[idx].speed)
             module.set_desired_state(module_states[idx], is_open_loop=False)
-            
-    def go_to_pose_profiled_pid(self, target_pose: Pose2d):
-        vx = self.x_controller.calculate(self.get_pose.X(), target_pose.X())
-        vy = self.y_controller.calculate(self.get_pose.Y(), target_pose.Y())
-        omega = self.theta_controller.calculate(self.get_pose.rotation().degrees(), target_pose.rotation().degrees())
+
+    def go_to_pose_profiled_pid(self, target_pose):
+        SmartDashboard.putNumber("t_pose x", target_pose.X())
+        SmartDashboard.putNumber("t_pose y", target_pose.Y())
+        vx = self.x_controller.calculate(self.get_pose().X(), target_pose.X())
+        vy = self.y_controller.calculate(self.get_pose().Y(), target_pose.Y())
+        omega = self.theta_controller.calculate(
+            self.get_pose().rotation().degrees(), target_pose.rotation().degrees()
+        )
         self.drive(Translation2d(vx, vy), omega, True, False)
 
     def stop(self):
@@ -163,6 +173,12 @@ class Drivetrain(Subsystem):
     def periodic(self):
         # if DriverStation.isDisabled():
         #     self.reset_modules_to_absolute()
+
+        SmartDashboard.putData("PID Controller for going to reef, x", self.x_controller)
+        SmartDashboard.putData("PID Controller for going to reef, y", self.y_controller)
+        SmartDashboard.putData(
+            "PID Controller for going to reef, theta", self.theta_controller
+        )
 
         SmartDashboard.putData("PID Controller (Drivetrain)", self.angle_pid)
         SmartDashboard.putBoolean("Angle at Setpoint", self.angle_pid.atSetpoint())

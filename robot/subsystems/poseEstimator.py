@@ -315,10 +315,9 @@ class PoseEstimator(Subsystem):
 
     def calculate_closest_reef_tag(self):
         min_distance_to_tag = math.inf
-        closest_reef_tag = 17
-        tag_layout = AprilTagFieldLayout.loadField(AprilTagField.k2025Reefscape)
+        closest_reef_tag = None
         for tagID in FieldConstants.reef_tags:
-            tag_pose = tag_layout.getTagPose(tagID).toPose2d()
+            tag_pose = self.tag_layout.getTagPose(tagID).toPose2d()
             distance = (self.curEstPoseGlobal - tag_pose).translation().norm()
             if distance < min_distance_to_tag:
                 min_distance_to_tag = distance
@@ -490,7 +489,7 @@ class PoseEstimator(Subsystem):
             if (
                 self.curEstPoseGlobal
                 - self.tag_layout.getTagPose(
-                    self.calculate_closest_reef_tag(self.relevant_tags)
+                    self.calculate_closest_reef_tag()[0]
                 ).toPose2d()
             ).translation().norm() > 2:
                 self.curEstPose = self.curEstPoseGlobal
@@ -513,11 +512,6 @@ class PoseEstimator(Subsystem):
             elif self.poseConverge:
                 self.robot.leds.set_mode(self.robot.leds.MODE_ODOMETRY)
         self.poseConverge = True
-
-        # This is crashing, poses are not being passed correctly
-        # self.single_tag_pose = self.get_pose_from_single_tag(
-        #     single_tag_poses, self.relevant_tags
-        # )
 
         SmartDashboard.putData("Field", self.field)
         self.field.setRobotPose(self.poseEst.getEstimatedPosition())
