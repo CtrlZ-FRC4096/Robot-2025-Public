@@ -507,7 +507,7 @@ class PoseEstimator(Subsystem):
         self.poseConverge = True
 
         SmartDashboard.putData("Field", self.field)
-        self.field.setRobotPose(self.poseEst.getEstimatedPosition())
+        # self.field.setRobotPose(self.poseEst.getEstimatedPosition())
         SmartDashboard.putData("Field w/ Single Tag", self.field_for_single_tag)
         self.field_for_single_tag.setRobotPose(
             self.poseEstSingleTag.getEstimatedPosition()

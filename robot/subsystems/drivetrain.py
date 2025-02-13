@@ -72,6 +72,8 @@ class Drivetrain(Subsystem):
 
         ### Field Visualisation - Needs testing ###
         self.previous_chassisspeeds = ChassisSpeeds()
+        self.curPose = Pose2d(1, 1, Rotation2d.fromDegrees(0))
+        self.isFirstTick = True
 
     def drive(self, translation: Translation2d, rotation, field_relative, is_open_loop):
         SmartDashboard.putNumber("Swerve/Translation X", translation.x)
@@ -132,14 +134,21 @@ class Drivetrain(Subsystem):
 
     def go_to_pose_profiled_pid(self, target_pose, is_last_point):
         # Get the current pose
-        current_pose = self.get_pose()
+        if self.isFirstTick:
+            self.robot.poseEstimator.field.setRobotPose(self.curPose)
+            self.isFirstTick = False
+        
+        current_pose = self.curPose
 
         # Calculate the control outputs
-        vx = self.x_controller.calculate(current_pose.X(), target_pose.X())
+        vx = self.x_controller.calculate(current_pose.X(), target_pose.X()) # meters / 0.05 seconds
         vy = self.y_controller.calculate(current_pose.Y(), target_pose.Y())
         # omega = self.theta_controller.calculate(
         #     current_pose.rotation().degrees(), target_pose.rotation().degrees()
         # )
+        pose = self.robot.poseEstimator.field.getObject("current pose")
+        self.curPose = Pose2d(current_pose.X() + (vx), current_pose.Y() + vy, Rotation2d.fromDegrees(0))
+        pose.setPose(self.curPose)
 
         # Check if the controllers are at their setpoints
         if (

@@ -10,10 +10,11 @@ from wpimath.kinematics import (
     SwerveModuleState,
 )
 from wpimath.trajectory import Trajectory, TrajectoryConfig, TrajectoryGenerator
-from wpimath.trajectory.constraint import DifferentialDriveVoltageConstraint
+from wpimath.units import inchesToMeters
 
 from field_const import FieldConstants
 import math
+import typing
 
 class QueueNode():
     def __init__(self, data, cost):
@@ -41,7 +42,7 @@ class PriorityQueue():
         return len(self.nodes) == 0
 
 class Obstacle():
-    def __init__(self, lowerLeftCorner, upperRightCorner):
+    def __init__(self, lowerLeftCorner : Translation2d, upperRightCorner : Translation2d):
         buffer = 0.3
         x = [lowerLeftCorner.X(), upperRightCorner.X()]
         y = [lowerLeftCorner.Y(), upperRightCorner.Y()]
@@ -49,12 +50,20 @@ class Obstacle():
         self.lowerLeft = Translation2d(min(x) - buffer, min(y) - buffer)
         self.upperRight = Translation2d(max(x) + buffer, max(y) + buffer)
 
+class ObstacleRotation():
+    def __init__(self, center : Translation2d, width : float, height : float, rotation : Rotation2d):
+        buffer = 0.1
+        self.center = center
+        self.width = width + 2 * buffer
+        self.height = height + 2 * buffer
+        self.rotation = rotation
+
+
 class ObstacleConstants():
     obstacleList = []
-    obstacleList.append(Obstacle(Translation2d(3.0, 5.0), Translation2d(5.0, 3.0)))
-    #1-4 lowerLeft inches (131.53, 135.716), upperRight inches (221.022, 187.384)
-    #2-5
-    #3-6
+    obstacleList.append([Obstacle(Translation2d(inchesToMeters(131.53), inchesToMeters(135.716)), Translation2d(inchesToMeters(221.022), inchesToMeters(187.384))), False]) # 1, 4 faces
+    obstacleList.append([ObstacleRotation(Translation2d(inchesToMeters(176.19), inchesToMeters(158.5)), inchesToMeters(89.491), inchesToMeters(51.668), Rotation2d.fromDegrees(-60)), True]) # center, width, height, rotation for 2,5
+    obstacleList.append([ObstacleRotation(Translation2d(inchesToMeters(176.19), inchesToMeters(158.5)), inchesToMeters(89.491), inchesToMeters(51.668), Rotation2d.fromDegrees(60)), True]) # 3, 6
 
 class PathGenerator():
     def __init__(self, initialPosition, finalPosition):
@@ -75,13 +84,25 @@ class PathGenerator():
     def containedIn(self, pose : Translation2d, lowerLeft : Translation2d, upperRight : Translation2d) -> bool:
         #lowerleft is on cad default rotation lowerleft
         return (pose.X() >= lowerLeft.X() and pose.Y() >= lowerLeft.Y() and
-            pose.X() <= upperRight.X() and pose.Y() <= upperRight.Y()
-            )
+            pose.X() <= upperRight.X() and pose.Y() <= upperRight.Y())
+    def containedInRotated(self, pose : Translation2d, obstacle : ObstacleRotation):
+        translated = pose - obstacle.center
+
+        local_x = translated.X() * obstacle.rotation.cos() + translated.Y() * obstacle.rotation.sin()
+        local_y = -translated.X() * obstacle.rotation.sin() + translated.Y() * obstacle.rotation.cos()
+
+        return (-obstacle.width / 2 <= local_x <= obstacle.width / 2) and (-obstacle.height / 2 <= local_y <= obstacle.height / 2)
+
+
 
     def inObstacle(self, pose : Translation2d) -> bool:
         for obstacle in ObstacleConstants.obstacleList:
-            if self.containedIn(pose, obstacle.lowerLeft, obstacle.upperRight):
-                return True
+            if obstacle[1]:
+                if self.containedInRotated(pose, obstacle[0]):
+                    return True
+            else:
+                if self.containedIn(pose, obstacle[0].lowerLeft, obstacle[0].upperRight):
+                    return True
         return False
 
     def obstacleBetween(self, initialPose : Translation2d, finalPose : Translation2d):
@@ -99,7 +120,7 @@ class PathGenerator():
             for y in range(-1, 2):
                 if x == y:
                     continue
-                pose = Translation2d(node.position.X() + (x / 4), node.position.Y() + (y / 4))
+                pose = Translation2d(node.position.X() + (x / 8), node.position.Y() + (y / 8))
                 if not(self.inObstacle(pose)):
                     element = self.PathNode(pose, finalPosition)
                     neighbors.append(element)
