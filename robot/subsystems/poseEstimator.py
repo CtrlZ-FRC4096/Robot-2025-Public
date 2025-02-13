@@ -332,8 +332,8 @@ class PoseEstimator(Subsystem):
                 closest_reef_tag = tagID
         return [closest_reef_tag, FieldConstants.tag_to_face[closest_reef_tag]]
 
-    @staticmethod
-    def get_path_to_reef(face: int, right_branch: bool):
+
+    def get_path_to_reef(self, face: int, right_branch: bool):
         side_offset = inchesToMeters(6.47)  # distance b/w center of face to branch
         dist_offset = (
             (inchesToMeters(29.5) / 2) + (inchesToMeters(7.25) / 2) + inchesToMeters(6)
@@ -371,15 +371,15 @@ class PoseEstimator(Subsystem):
         )
 
         angle_to_branch = (
-            (angle_face.degrees() - 90) % 360
+            (angle_face.degrees() + 90) % 360
             if right_branch
-            else (angle_face.degrees() + 90) % 360
+            else (angle_face.degrees() - 90) % 360
         )  # angle change needed to do math to get to the branch, right branch needs + 90 degrees (CCW), left_branch needs -90 (CW)
 
         x_offset_branch = (
-            math.sin(degreesToRadians(angle_to_branch)) * side_offset
+            math.cos(degreesToRadians(angle_to_branch)) * side_offset
         )  # same as above, extending the pose from the point outside of the reef in the direction of the desired branch
-        y_offset_branch = math.cos(degreesToRadians(angle_to_branch)) * side_offset
+        y_offset_branch = math.sin(degreesToRadians(angle_to_branch)) * side_offset
 
         target_pose_3 = Pose2d(
             target_pose_face.X() + x_offset_branch,
@@ -527,13 +527,14 @@ class PoseEstimator(Subsystem):
         self.field_for_single_tag.setRobotPose(
             self.poseEstSingleTag.getEstimatedPosition()
         )
+
         SmartDashboard.putNumber("closest reef tag", self.calculate_closest_reef_tag()[0])
 
         SmartDashboard.putNumber(
             "rotation of target pose: ", self.temp_rotation_check.degrees()
         )
 
-        
+
         # target_pose = self.get_path_to_reef(3, True)
 
         # control_points = PathGenerator(

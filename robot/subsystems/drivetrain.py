@@ -60,15 +60,9 @@ class Drivetrain(Subsystem):
         self.angle_pid.enableContinuousInput(0, 360)
         self.angle_pid.setTolerance(0.5)  # Set position tolerance to 0.5 degrees
 
-        self.x_controller = ProfiledPIDController(
-            1.5, 0.0, 0.0, TrapezoidProfile.Constraints(4.0, 4.0)
-        )
-        self.y_controller = ProfiledPIDController(
-            1.5, 0.0, 0.0, TrapezoidProfile.Constraints(4.0, 4.0)
-        )
-        self.theta_controller = ProfiledPIDController(
-            0.075, 0.0, 0.001, TrapezoidProfile.Constraints(540, 720)
-        )
+        self.x_controller = PIDController(1.5, 0.0, 0.0)
+        self.y_controller = PIDController(1.5, 0.0, 0.0)
+        self.theta_controller = PIDController(0.075, 0.0, 0.001)
 
         ## Need to check these tolerances
         self.x_controller.setTolerance(0.01, 0.01)
@@ -148,7 +142,11 @@ class Drivetrain(Subsystem):
         )
 
         # Check if the controllers are at their setpoints
-        if self.x_controller.atSetpoint() and self.y_controller.atSetpoint() and self.theta_controller.atSetpoint():
+        if (
+            self.x_controller.atSetpoint()
+            and self.y_controller.atSetpoint()
+            and self.theta_controller.atSetpoint()
+        ):
             # Optionally, stop the drivetrain if at setpoint
             self.stop()
             return
@@ -162,7 +160,7 @@ class Drivetrain(Subsystem):
         SmartDashboard.putNumber("vx", vx)
         SmartDashboard.putNumber("vy", vy)
         SmartDashboard.putNumber("omega", omega)
-        
+
     def stop(self):
         self.drive(Translation2d(0, 0), 0, False, True)
 
