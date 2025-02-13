@@ -35,6 +35,13 @@ from wpimath.kinematics import (
     SwerveModulePosition,
     SwerveModuleState,
 )
+
+from pathplannerlib.path import (
+    Waypoint,
+    PathPlannerPath,
+    GoalEndState,
+    IdealStartingState,
+)
 from phoenix6 import configs
 
 # from pathplannerlib.commands import PathfindHolonomic
@@ -62,6 +69,7 @@ from pathplannerlib.config import (
 
 from wpilib import BuiltInAccelerometer
 from wpimath.filter import LinearFilter
+from path_gen import PathGenerator
 
 from pathplannerlib.path import PathPlannerTrajectory
 from pathplannerlib.path import PathPlannerPath, PathConstraints
@@ -519,15 +527,21 @@ class PoseEstimator(Subsystem):
         self.field_for_single_tag.setRobotPose(
             self.poseEstSingleTag.getEstimatedPosition()
         )
-
         SmartDashboard.putNumber("closest reef tag", self.calculate_closest_reef_tag()[0])
 
         SmartDashboard.putNumber(
             "rotation of target pose: ", self.temp_rotation_check.degrees()
         )
 
-        # robot_pose = Pose2d(single_tag_poses[0].translation(), self.gyro.get_yaw()) if len(single_tag_poses) > 0 else self.curEstPose.translation()
-        # self.field.setRobotPose(Pose2d(robot_pose, self.gyro.get_yaw()))
+        
+        # target_pose = self.get_path_to_reef(3, True)
+
+        # control_points = PathGenerator(
+        #     Pose2d(1, 1, Rotation2d.fromDegrees(0)), target_pose
+        # ).getPointList()
+        # for idx in range(len(control_points)):
+        #     field_object = self.field.getObject("point " + str(idx))
+        #     field_object.setPose(Pose2d(control_points[idx], Rotation2d.fromDegrees(0)))
 
         # Plot the difference between the single pose and global pose
 

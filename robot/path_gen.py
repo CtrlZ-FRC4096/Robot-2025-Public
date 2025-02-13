@@ -44,6 +44,10 @@ class Obstacle():
 
 class ObstacleConstants():
     obstacleList = []
+    obstacleList.append(Obstacle(Translation2d(3.0, 5.0), Translation2d(5.0, 3.0)))
+    #1-4 lowerLeft inches (131.53, 135.716), upperRight inches (221.022, 187.384)
+    #2-5
+    #3-6
 
 class PathGenerator():
     def __init__(self, initialPosition, finalPosition):
@@ -52,19 +56,26 @@ class PathGenerator():
         self.lastSlope = 1
         self.currentSlope = 1
         self.controlPoints = self.buildPath(self.astar(Translation2d(self.initialPosition.X(), self.initialPosition.Y()), Translation2d(self.finalPosition.X(), self.finalPosition.Y())))
-        # self.removeDuplicateSlopes()
-        # self.prunePath()
+        #self.removeDuplicateSlopes()
+        #self.prunePath()
 
     class PathNode():
         def __init__(self, position, finalPosition, parent=None):
             self.position = position
             self.finalPosition = finalPosition
             self.parent = parent
+
     def containedIn(self, pose : Translation2d, lowerLeft : Translation2d, upperRight : Translation2d) -> bool:
-        return pose.X() >= lowerLeft.X() and pose.Y() >= lowerLeft.Y() and pose.X() <= upperRight.X() and pose.Y() <= upperRight.Y()
+        #lowerleft is on cad default rotation lowerleft
+        return (pose.X() >= lowerLeft.X() and pose.Y() >= lowerLeft.Y() and
+            pose.X() <= upperRight.X() and pose.Y() <= upperRight.Y()
+            )
 
     def inObstacle(self, pose : Translation2d) -> bool:
-        return False #TODO: ADD OBSTACLES
+        for obstacle in ObstacleConstants.obstacleList:
+            if self.containedIn(pose, obstacle.lowerLeft, obstacle.upperRight):
+                return True
+        return False
 
     def obstacleBetween(self, initialPose : Translation2d, finalPose : Translation2d):
         steps = 25
@@ -112,7 +123,7 @@ class PathGenerator():
     def getSlope(self, first : Translation2d, second : Translation2d):
         if (first.X() - second.X()) == 0:
             return self.lastSlope
-        slope = (first.Y() - second.Y()) / (first.X() - second.X())
+        slope = abs(first.Y() - second.Y()) / abs(first.X() - second.X())
         return slope
 
     def removeDuplicateSlopes(self):
@@ -142,3 +153,7 @@ class PathGenerator():
         points.insert(0, self.initialPosition.translation())
         points.append(self.finalPosition.translation())
         return points
+
+class PurePursuit():
+    def __init__(self):
+        pass
