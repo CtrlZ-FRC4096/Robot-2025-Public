@@ -15,7 +15,7 @@ import const
 
 from phoenix6.hardware import CANrange
 from phoenix6.configs import CANcoderConfigurator
-from phoenix6.configs.config_groups import ProximityParamsConfigs 
+from phoenix6.configs.config_groups import ProximityParamsConfigs
 
 
 class FunnelIntake(Subsystem):
@@ -49,25 +49,24 @@ class FunnelIntake(Subsystem):
 
         self.canrange_1_config = configs.CANrangeConfiguration()
         self.canrange_1_prox_config = ProximityParamsConfigs()
-        self.canrange_1_prox_config.proximity_threshold = 0.3048 #1 foot
-        self.canrange_1_prox_config.proximity_hysteresis = 0.0508 #+- 2 inches
+        self.canrange_1_prox_config.proximity_threshold = 0.3048  # 1 foot
+        self.canrange_1_prox_config.proximity_hysteresis = 0.0508  # +- 2 inches
         self.canrange_1_config.with_proximity_params(self.canrange_1_prox_config)
-        
-        self.canrange_1.configurator.apply(self.canrange_1_config)
 
+        self.canrange_1.configurator.apply(self.canrange_1_config)
 
     def stop(self):
         self.intake_motor.set_control(controls.VelocityTorqueCurrentFOC(0))
 
-    def intake(self, speed=83):
+    def intake(self, speed=-150):
         self.intake_motor.set_control(controls.VelocityTorqueCurrentFOC(speed))
-    
+
     def periodic(self):
         if self.is_running:
             # if we want to stop the intake if we see a piece
-            if self.canrange_1.get_is_detected():
-                self.stop()
-                self.is_running = False
+            # if self.canrange_1.get_is_detected():
+            #     self.stop()
+            #     self.is_running = False
             self.intake()
 
     def log(self):

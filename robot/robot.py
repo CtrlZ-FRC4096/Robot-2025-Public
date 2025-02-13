@@ -34,6 +34,7 @@ import ntcore
 import subsystems.drivetrain
 
 # import subsystems.limelight
+import subsystems.funnel_intake
 import subsystems.leds
 
 import subsystems.limelight
@@ -95,11 +96,13 @@ class Robot(CoroutineRobot):
         self.leds = subsystems.leds.LEDs(self)
         self.limelight = subsystems.limelight.Limelight_Wrapper()
         self.poseEstimator = subsystems.poseEstimator.PoseEstimator(self)
+        self.funnel_intake = subsystems.funnel_intake.FunnelIntake(self)
 
         self.subsystems = [
             self.drivetrain,
             self.leds,
             self.poseEstimator,
+            self.funnel_intake,
         ]
 
         # If everything in self.subsystems is a Subsystem object, then
@@ -194,11 +197,6 @@ class Robot(CoroutineRobot):
 
         while True:
             yield
-
-    ### MISC ###
-
-    def stop_all_subsystems(self):  # Update as we add more subsystems
-        self.funnel_intake.is_running = False
 
     def log(self):
         """
