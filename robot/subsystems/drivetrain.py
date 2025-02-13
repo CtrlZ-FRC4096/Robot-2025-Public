@@ -130,7 +130,7 @@ class Drivetrain(Subsystem):
             # print(module_states[idx].speed)
             module.set_desired_state(module_states[idx], is_open_loop=False)
 
-    def go_to_pose_profiled_pid(self, target_pose):
+    def go_to_pose_profiled_pid(self, target_pose, is_last_point):
         # Get the current pose
         current_pose = self.get_pose()
 
@@ -147,9 +147,15 @@ class Drivetrain(Subsystem):
             and self.y_controller.atSetpoint()
             and self.theta_controller.atSetpoint()
         ):
+            if is_last_point:
+                self.robot.oi.astar_count = 0
+                self.stop()
+                return
+            else:
+                self.robot.oi.astar_next_point = True
+                return
             # Optionally, stop the drivetrain if at setpoint
-            self.stop()
-            return
+            
 
         # Drive the robot using the calculated velocities
         self.drive(Translation2d(vx, vy), omega, True, False)

@@ -343,21 +343,6 @@ class PoseEstimator(Subsystem):
         center_face_pose = FieldConstants.Reef.centerFaces[face - 1]
         center_face_translation = center_face_pose.translation()
 
-        # branch_pose = FieldConstants.Reef.branchPositions[
-        #     (face - 1) * 2 + (0 if right_branch else 1)
-        # ][0].toPose2d()
-        # target_pose = branch_pose.transformBy(Transform2d(dist_offset, 0, 0)).rotateBy(Rotation2d.fromDegrees(-90))
-
-        # offset_face_pose = center_face_pose.transformBy(Transform2d(dist_offset, 0, 0))
-        # angle_to_branch = (
-        #     (angle_face.degrees() + 90) % 360
-        #     if right_branch
-        #     else (angle_face.degrees() - 90) % 360
-        # )
-        # target_pose_2 = offset_face_pose.transformBy(
-        #     Transform2d(side_offset, 0, degreesToRadians(angle_to_branch))
-        # ).rotateBy(Rotation2d.fromDegrees(-90))
-
         center_face_x = (
             center_face_translation.X()
         )  # pose of center face (this is directly on the side of the reef)
