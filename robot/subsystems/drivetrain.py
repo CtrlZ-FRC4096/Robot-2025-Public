@@ -137,15 +137,15 @@ class Drivetrain(Subsystem):
         # Calculate the control outputs
         vx = self.x_controller.calculate(current_pose.X(), target_pose.X())
         vy = self.y_controller.calculate(current_pose.Y(), target_pose.Y())
-        omega = self.theta_controller.calculate(
-            current_pose.rotation().degrees(), target_pose.rotation().degrees()
-        )
+        # omega = self.theta_controller.calculate(
+        #     current_pose.rotation().degrees(), target_pose.rotation().degrees()
+        # )
 
         # Check if the controllers are at their setpoints
         if (
             self.x_controller.atSetpoint()
             and self.y_controller.atSetpoint()
-            and self.theta_controller.atSetpoint()
+            # and self.theta_controller.atSetpoint()
         ):
             if is_last_point:
                 self.robot.oi.astar_count = 0
@@ -158,14 +158,14 @@ class Drivetrain(Subsystem):
             
 
         # Drive the robot using the calculated velocities
-        self.drive(Translation2d(vx, vy), omega, True, False)
+        self.drive(Translation2d(vx, vy), 0, True, False)
 
         # Update SmartDashboard values for debugging
         SmartDashboard.putNumber("t_pose x", target_pose.X())
         SmartDashboard.putNumber("t_pose y", target_pose.Y())
         SmartDashboard.putNumber("vx", vx)
         SmartDashboard.putNumber("vy", vy)
-        SmartDashboard.putNumber("omega", omega)
+        SmartDashboard.putNumber("omega", 0)
 
     def stop(self):
         self.drive(Translation2d(0, 0), 0, False, True)

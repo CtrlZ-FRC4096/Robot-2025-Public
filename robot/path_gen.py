@@ -2,11 +2,18 @@ from wpimath.controller import SimpleMotorFeedforwardMeters
 from wpimath.geometry import (
     Pose2d,
     Translation2d,
+    Rotation2d,
+)
+from wpimath.kinematics import (
+    ChassisSpeeds,
+    SwerveDrive4Kinematics,
+    SwerveModuleState,
 )
 from wpimath.trajectory import Trajectory, TrajectoryConfig, TrajectoryGenerator
 from wpimath.trajectory.constraint import DifferentialDriveVoltageConstraint
 
 from field_const import FieldConstants
+import math
 
 class QueueNode():
     def __init__(self, data, cost):
@@ -154,6 +161,61 @@ class PathGenerator():
         points.append(self.finalPosition.translation())
         return points
 
-class PurePursuit():
-    def __init__(self):
-        pass
+# class PurePursuit():
+#     def __init__(self, path, lookahead_dist, max_speed, swerve_kinematics):
+#         """
+#         :param path: List of Translation2d waypoints.
+#         :param lookahead_distance: Distance to look ahead on the path.
+#         :param max_speed: Maximum robot speed (m/s).
+#         :param swerve_kinematics: WPILib SwerveDriveKinematics object.
+#         """
+#         self.path = path
+#         self.lookahead_dist = lookahead_dist
+#         self.max_spede = max_speed
+#         self.kinematics = swerve_kinematics
+#     def find_lookahead_point(self, curPose : Pose2d):
+#         for point in self.path:
+#             if (curPose.translation() - point).norm() >= self.lookahead_dist:
+#                 return point
+#         else:
+#             return self.path[-1]
+        
+#     def calculate_chassis_speeds(self, curPose : Pose2d):
+#         lookahead = self.find_lookahead_point(curPose)
+#         relative_lookahead : Translation2d = lookahead - curPose.translation()
+#         heading = curPose.rotation()
+
+#         xL = relative_lookahead.rotateBy(heading.__neg__()).X()
+#         yL = relative_lookahead.rotateBy(heading.__neg__()).Y()
+
+#         # Compute curvature
+#         if yL == 0:
+#             curvature = 0  # Drive straight
+#         else:
+#             curvature = (2 * yL) / (self.lookahead_distance ** 2)
+
+#         # Convert curvature into desired speeds
+#         vx = self.max_speed  # Forward velocity
+#         omega = curvature * self.max_speed  # Rotational velocity
+
+#         return ChassisSpeeds(vx, 0, omega)
+#     def curvature_to_point(self, curEstPose: Pose2d, point: Translation2d):
+#         x_slope = -math.tan(position.Theta())
+#         y_slope = 1
+#         y_intersect = math.tan(position.Theta()) * position.X() - position.Y()
+
+#         # Calculate perpendicular distance from the point to the line
+#         x = abs(point.X() * x_slope + point.Y() * b + c) / math.sqrt(a * a + b * b)
+
+#         # Calculate side of the line (left or right)
+#         side_l = math.sin(position.Theta()) * (point.X() - position.X()) - math.cos(position.Theta()) * (point.Y() - position.Y())
+#         side = side_l / abs(side_l) if side_l != 0 else 0  # side is either 1 or -1, or 0 if exactly on the line
+
+#         if side_l == 0:
+#             return 0  # Curvature is 0 if point is exactly on the line
+
+#         # Calculate chord (distance between robot and point)
+#         chord = math.sqrt((point.X() - position.X())**2 + (point.Y() - position.Y())**2)
+
+#         # Calculate and return the curvature
+#         return (2 * x) / (chord ** 2) * side
