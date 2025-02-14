@@ -22,7 +22,7 @@ class FunnelIntake(Subsystem):
     def __init__(self, robot: "Robot"):
         super().__init__()
         self.robot = robot
-        self.intake_motor = hardware.TalonFX(const.INTAKE_MOTOR_CAN_ID, "rio")
+        self.intake_motor = hardware.TalonFX(const.FUNNEL_INTAKE_MOTOR_CAN_ID, "rio")
 
         funnel_intake_config = configs.TalonFXConfiguration()  # apply config file
         funnel_intake_config.motor_output.inverted = signals.InvertedValue(0)
@@ -45,7 +45,7 @@ class FunnelIntake(Subsystem):
         self.intake_motor.configurator.apply(funnel_intake_config)  # type: ignore
 
         self.is_running = False
-        self.canrange_1 = CANrange(const.CANRANGE_1_CAN_ID, "carnivore")
+        self.canrange_1 = CANrange(const.FUNNEL_CANRANGE_ID, "rio")
 
         self.canrange_1_config = configs.CANrangeConfiguration()
         self.canrange_1_prox_config = ProximityParamsConfigs()
