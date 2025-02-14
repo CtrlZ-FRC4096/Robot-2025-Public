@@ -10,6 +10,7 @@ from phoenix6.hardware import TalonFX
 from wpilib import SmartDashboard, Timer
 from phoenix6 import configs, hardware, controls, signals
 from commands2 import Subsystem
+import wpilib
 
 import const
 
@@ -57,13 +58,30 @@ class Elevator(Subsystem):
         )
         self.elevator_motor_config.current_limits.stator_current_limit = 100
 
+        self.elevator_motor_config.motion_magic.motion_magic_cruise_velocity = 100
+        self.elevator_motor_config.motion_magic.motion_magic_acceleration = 1000
+
         self.elevator_motor_1.configurator.apply(self.elevator_motor_config)  # type: ignore
+
+        self.elevator_motor_config.motor_output.inverted = signals.InvertedValue(1)
         self.elevator_motor_2.configurator.apply(self.elevator_motor_config)  # type: ignore
+
+        self.elevator_encoder = wpilib.DutyCycleEncoder(0)
+
+        self.max_height = 100 # need to adjust later
+        self.min_height = 0 # need to adjust later
 
 
     def stop(self):
         self.elevator_motor_1.set_control(controls.VelocityTorqueCurrentFOC(0.0))
         self.elevator_motor_2.set_control(controls.VelocityTorqueCurrentFOC(0.0))
+
+    def get_height(self):
+        return (self.elevator_motor_1.get_position().value + self.elevator_motor_2.get_position().value) / 2
+
+    def set_elevator_height(self, height):
+        self.elevator_motor_1.set_control(controls.MotionMagicTorqueCurrentFOC(height))
+        self.elevator_motor_2.set_control(controls.MotionMagicTorqueCurrentFOC(height))
 
     def periodic(self):
         pass
