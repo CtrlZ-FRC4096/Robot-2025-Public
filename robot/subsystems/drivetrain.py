@@ -132,11 +132,11 @@ class Drivetrain(Subsystem):
             # print(module_states[idx].speed)
             module.set_desired_state(module_states[idx], is_open_loop=False)
 
-    def go_to_pose_profiled_pid(self, target_pose, is_last_point):
+    def go_to_pose_profiled_pid(self, target_pose : Translation2d):
         # Get the current pose
-        if self.isFirstTick:
-            self.robot.poseEstimator.field.setRobotPose(self.curPose)
-            self.isFirstTick = False
+        # if self.isFirstTick:
+        #     self.robot.poseEstimator.field.setRobotPose(self.curPose)
+        #     self.isFirstTick = False
         
         current_pose = self.curPose
 
@@ -146,23 +146,17 @@ class Drivetrain(Subsystem):
         # omega = self.theta_controller.calculate(
         #     current_pose.rotation().degrees(), target_pose.rotation().degrees()
         # )
-        pose = self.robot.poseEstimator.field.getObject("current pose")
-        self.curPose = Pose2d(current_pose.X() + (vx), current_pose.Y() + vy, Rotation2d.fromDegrees(0))
-        pose.setPose(self.curPose)
+        omega = 0
+        
 
         # Check if the controllers are at their setpoints
-        if (
-            self.x_controller.atSetpoint()
-            and self.y_controller.atSetpoint()
-            # and self.theta_controller.atSetpoint()
-        ):
-            if is_last_point:
-                self.robot.oi.astar_count = 0
-                self.stop()
-                return
-            else:
-                self.robot.oi.astar_next_point = True
-                return
+        # if (
+        #     self.x_controller.atSetpoint()
+        #     and self.y_controller.atSetpoint()
+        #     # and self.theta_controller.atSetpoint()
+        # ):
+        #     self.stop()
+        #     return
             # Optionally, stop the drivetrain if at setpoint
             
 

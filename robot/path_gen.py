@@ -14,7 +14,8 @@ from wpimath.units import inchesToMeters
 
 from field_const import FieldConstants
 import math
-import typing
+import numpy as np
+from wpilib import SmartDashboard
 
 class QueueNode():
     def __init__(self, data, cost):
@@ -72,6 +73,8 @@ class PathGenerator():
         self.lastSlope = 1
         self.currentSlope = 1
         self.controlPoints = self.buildPath(self.astar(Translation2d(self.initialPosition.X(), self.initialPosition.Y()), Translation2d(self.finalPosition.X(), self.finalPosition.Y())))
+        self.all_points = self.getPointList()
+        self.smooth_path = self.smooth_points(self.all_points, 0.5, 0.5, 0.000001)
         #self.removeDuplicateSlopes()
         #self.prunePath()
 
@@ -80,6 +83,9 @@ class PathGenerator():
             self.position = position
             self.finalPosition = finalPosition
             self.parent = parent
+
+    def getSmoothPath(self):
+        return self.smooth_path
 
     def containedIn(self, pose : Translation2d, lowerLeft : Translation2d, upperRight : Translation2d) -> bool:
         #lowerleft is on cad default rotation lowerleft
@@ -120,7 +126,7 @@ class PathGenerator():
             for y in range(-1, 2):
                 if x == y:
                     continue
-                pose = Translation2d(node.position.X() + (x / 8), node.position.Y() + (y / 8))
+                pose = Translation2d(node.position.X() + (x / 2), node.position.Y() + (y / 2))
                 if not(self.inObstacle(pose)):
                     element = self.PathNode(pose, finalPosition)
                     neighbors.append(element)
@@ -182,61 +188,151 @@ class PathGenerator():
         points.append(self.finalPosition.translation())
         return points
 
-# class PurePursuit():
-#     def __init__(self, path, lookahead_dist, max_speed, swerve_kinematics):
-#         """
-#         :param path: List of Translation2d waypoints.
-#         :param lookahead_distance: Distance to look ahead on the path.
-#         :param max_speed: Maximum robot speed (m/s).
-#         :param swerve_kinematics: WPILib SwerveDriveKinematics object.
-#         """
-#         self.path = path
-#         self.lookahead_dist = lookahead_dist
-#         self.max_spede = max_speed
-#         self.kinematics = swerve_kinematics
-#     def find_lookahead_point(self, curPose : Pose2d):
-#         for point in self.path:
-#             if (curPose.translation() - point).norm() >= self.lookahead_dist:
-#                 return point
-#         else:
-#             return self.path[-1]
+
+    def smooth_points(self, path : list, weight_smoothing, weight_data, tolerance):
+        newPath = path
+        change = tolerance
         
-#     def calculate_chassis_speeds(self, curPose : Pose2d):
-#         lookahead = self.find_lookahead_point(curPose)
-#         relative_lookahead : Translation2d = lookahead - curPose.translation()
-#         heading = curPose.rotation()
+        while change >= tolerance:
+            change = 0.0
+            for i in range(1, len(path) - 1):
+                x = newPath[i].X()
+                y = newPath[i].Y()
+                aux_x = x
+                aux_y = y
 
-#         xL = relative_lookahead.rotateBy(heading.__neg__()).X()
-#         yL = relative_lookahead.rotateBy(heading.__neg__()).Y()
+                new_x = x + weight_smoothing * (path[i].X() - x) + weight_data * (newPath[i - 1].X() + newPath[i + 1].X() - 2.0 * x)
+                new_y = y + weight_smoothing * (path[i].Y() - y) + weight_data * (newPath[i - 1].Y() + newPath[i + 1].Y() - 2.0 * y)
+                if self.obstacleBetween(Translation2d(aux_x, aux_y), Translation2d(new_x, new_y)):
+                    continue
+                else:
+                    newPath[i] = Translation2d(new_x, new_y)
+                change += abs(aux_x - new_x) + abs(aux_y - new_y)
+        return newPath
+    
+class PurePursuitController():
+    def __init__(self, lookahead_dist, smooth_path):
+        self.last_closest_point_idx = 0
+        self.lookahead_dist = lookahead_dist
+        self.last_lookahead_point_idx = 0
+        self.last_lookahead_point = None
+        self.path = smooth_path
 
-#         # Compute curvature
-#         if yL == 0:
-#             curvature = 0  # Drive straight
-#         else:
-#             curvature = (2 * yL) / (self.lookahead_distance ** 2)
+    def getClosestPoint(self, curPose : Pose2d, start_idx : int) -> Translation2d:
+        min_dist = math.inf
+        print("len path: ", len(self.path))
+        for i in range(start_idx, len(self.path) - 2):
+            dist = (self.path[i] - curPose.translation()).norm()
+            if dist < min_dist:
+                min_dist = dist
+                start_idx = i
+        print("closest idx: ", start_idx) # Ensure progress
+        self.last_closest_point_idx = start_idx
+        return [self.path[start_idx], start_idx]
 
-#         # Convert curvature into desired speeds
-#         vx = self.max_speed  # Forward velocity
-#         omega = curvature * self.max_speed  # Rotational velocity
+        
+        
+        # path = self.path
+        # closest_point = path[0]
+        # closest_point_idx = 0 # default
+        # for idx in range(len(path)):
+        #     if (curPose.translation() - path[idx]).norm() <= (curPose.translation() - closest_point).norm():
+        #         closest_point = path[idx]
+        #         closest_point_idx = idx
+        # self.last_closest_point_idx = closest_point_idx
+        # return [closest_point, closest_point_idx]
+    
+    def getLookaheadIntersectionAllPath(self, curPose: Pose2d):
+        best_lookahead = curPose.translation()
+        best_alignment = -1
+        robot_heading = curPose.rotation()
+        robot_direction = Translation2d(robot_heading.cos(), robot_heading.sin())
+        
+        for idx in range(self.getClosestPoint(curPose, self.last_closest_point_idx)[1] + 1, len(self.path) - 2):
+            intersections = self.getLookaheadIntersection(curPose, idx)
+            #print(intersections)
+            if intersections:
+                for lookahead in intersections:
+                    path_segment = (self.path[idx  + 1] - self.path[idx])
+                    alignment = robot_direction.X() * path_segment.X() + robot_direction.Y() * path_segment.Y()
 
-#         return ChassisSpeeds(vx, 0, omega)
-#     def curvature_to_point(self, curEstPose: Pose2d, point: Translation2d):
-#         x_slope = -math.tan(position.Theta())
-#         y_slope = 1
-#         y_intersect = math.tan(position.Theta()) * position.X() - position.Y()
+                    if alignment > best_alignment:
+                        best_alignment = alignment
+                        best_lookahead = lookahead
+            if best_lookahead == curPose.translation():
+                continue
+            else:  
+                self.last_lookahead_point = best_lookahead
+                self.last_lookahead_point_idx = idx
+                break
+        else:
+            best_lookahead = self.path[self.getClosestPoint(curPose, 0)[1] + 1]
+        
+        print("best lookahead: ", best_lookahead)
+        return best_lookahead
 
-#         # Calculate perpendicular distance from the point to the line
-#         x = abs(point.X() * x_slope + point.Y() * b + c) / math.sqrt(a * a + b * b)
+            
 
-#         # Calculate side of the line (left or right)
-#         side_l = math.sin(position.Theta()) * (point.X() - position.X()) - math.cos(position.Theta()) * (point.Y() - position.Y())
-#         side = side_l / abs(side_l) if side_l != 0 else 0  # side is either 1 or -1, or 0 if exactly on the line
+    def getLookaheadIntersection(self, curPose : Pose2d, start_point_idx : int):
+        path = self.path
+        start_point = path[start_point_idx]
+        end_point = path[start_point_idx + 1]
 
-#         if side_l == 0:
-#             return 0  # Curvature is 0 if point is exactly on the line
+        direction_vector = end_point - start_point
+        pose_to_start_point = start_point - curPose.translation()
 
-#         # Calculate chord (distance between robot and point)
-#         chord = math.sqrt((point.X() - position.X())**2 + (point.Y() - position.Y())**2)
+        a = (direction_vector.X() ** 2) + (direction_vector.Y() ** 2)  # Squared magnitude of d
+        b = 2 * (pose_to_start_point.X() * direction_vector.X() + pose_to_start_point.Y() * direction_vector.Y())  # Interaction between d and f
+        c = ((pose_to_start_point.X() ** 2) + (pose_to_start_point.Y() ** 2)) - (self.lookahead_dist ** 2)  # Determines circle intersection condition
 
-#         # Calculate and return the curvature
-#         return (2 * x) / (chord ** 2) * side
+        discriminant = (b ** 2) - (4 * a * c)
+        if discriminant < 0:
+            return False
+        discriminant = math.sqrt(discriminant)
+        
+        intersections = []
+        candidate_intersection_1 = (-b - discriminant) / (2 * a)
+        candidate_intersection_2 = (-b + discriminant) / (2 * a) # because quadratic equation is plus-minus
+
+        
+        
+        # if 0 <= candidate_intersection_1 <= 1:
+        #     print("intersect 1")
+        #     intersections.append(Translation2d(start_point.X() + candidate_intersection_1 * direction_vector.X(), start_point.Y() + candidate_intersection_1 * direction_vector.Y()))
+        # if 0 <= candidate_intersection_2 <= 1:
+        #     print("intersect 2")
+        #     intersections.append(Translation2d(start_point.X() + candidate_intersection_2 * direction_vector.X(), start_point.Y() + candidate_intersection_2 * direction_vector.Y()))
+        for candidate in [candidate_intersection_1, candidate_intersection_2]:
+            if 0 <= candidate <= 1:
+                intersection = Translation2d(
+                    start_point.X() + candidate * direction_vector.X(),
+                    start_point.Y() + candidate * direction_vector.Y()
+                )
+
+                # Ensure forward progress (dot product check)
+                lookahead_direction = intersection - curPose.translation()
+                if (lookahead_direction.X() * direction_vector.X() + lookahead_direction.Y() * direction_vector.Y()) > 0:
+                    intersections.append(intersection)
+
+
+        if intersections == []:
+            return False
+        else:
+            print("have intersections: ", intersections)
+            return intersections
+    def isPosesClose(self, pose1 : Translation2d, pose2 : Translation2d):
+        if (pose1 - pose2).norm() < 0.05:
+            return True
+        else:
+            return False
+
+    def getVelocities(self, curPose : Pose2d):
+        lookahead_point = self.getLookaheadIntersectionAllPath(curPose)
+        if self.isPosesClose(curPose.translation(), self.path[-1]):
+            print("end path")
+            return False
+        vx = lookahead_point.X() - curPose.X() 
+        vy = lookahead_point.Y() - curPose.Y()
+        SmartDashboard.putNumber("vx velocity", vx)
+        SmartDashboard.putNumber("vy velocity", vy)
+        return [vx, vy]

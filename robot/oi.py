@@ -53,7 +53,7 @@ from robotpy_apriltag import AprilTagField, AprilTagFieldLayout
 from wpilibextra.customcontroller import XboxCommandController
 
 from field_const import FieldConstants
-from path_gen import PathGenerator
+from path_gen import PathGenerator, PurePursuitController
 from wpimath.units import inchesToMeters, degreesToRadians
 
 ###  IMPORTS ###
@@ -119,11 +119,25 @@ class OI:
                 3,
                 self.right_branch,
             )
+        print("before path")
         path = PathGenerator(self.robot.drivetrain.curPose, self.target_pose)
-        self.path_to_reef = path.getPointList()
-        for idx in range(len(self.path_to_reef)):
-            field_object = self.robot.poseEstimator.field_for_single_tag.getObject("point " + str(idx))
-            field_object.setPose(Pose2d(self.path_to_reef[idx], Rotation2d.fromDegrees(0)))
+        print("before smooth")
+        self.path_to_reef = path.getSmoothPath()
+        print("before pursuit")
+        self.pure_pursuit = PurePursuitController(0.05, self.path_to_reef)
+        print("after pursuit")
+
+        # tgt_pose = self.robot.poseEstimator.field.getObject("tgt pose")
+        # tgt_pose.setPose(self.target_pose)
+        
+        lookahead_point = self.pure_pursuit.getLookaheadIntersectionAllPath(self.robot.drivetrain.curPose)
+        lookahead = self.robot.poseEstimator.field.getObject("lookahead point")
+        lookahead.setPose(Pose2d(lookahead_point, Rotation2d.fromDegrees(0)))
+        
+
+        # for idx in range(len(self.path_to_reef)):
+        #     field_object = self.robot.poseEstimator.field_for_single_tag.getObject("point " + str(idx))
+        #     field_object.setPose(Pose2d(self.path_to_reef[idx], Rotation2d.fromDegrees(0)))
 
         @self.rumble_button.whenPressed
         def _():
@@ -140,7 +154,6 @@ class OI:
         def _():
             while True:
                 yield
-
                 def square(x):
                     return abs(x) * x
 
@@ -176,15 +189,24 @@ class OI:
                     self.robot_oriented_angle = (
                         self.robot.poseEstimator.getYaw().degrees()
                     )
-                elif self.run_path or self.running_pid:
-                    if self.astar_next_point:
-                        self.astar_next_point = False
-                        self.astar_count += 1
-                    if self.astar_count == len(self.path_to_reef) - 1:
-                        self.robot.drivetrain.go_to_pose_profiled_pid(self.path_to_reef[self.astar_count], True)
+                elif self.run_path: #or self.running_pid:
+                    # if self.astar_next_point:
+                    #     self.astar_next_point = False
+                    #     self.astar_count += 1
+                    # if self.astar_count == len(self.path_to_reef) - 1:
+                    #self.pure_pursuit.last_lookahead_point = self.robot.drivetrain.curPose.translation()
+                    print("driving with profiled, ", self.pure_pursuit.getLookaheadIntersectionAllPath(self.robot.drivetrain.curPose))
+                    if self.pure_pursuit.getVelocities(self.robot.drivetrain.curPose) == False:
                         self.run_path = False
-                    else:
-                        self.robot.drivetrain.go_to_pose_profiled_pid(self.path_to_reef[self.astar_count], False)
+                    vx = min(self.pure_pursuit.getVelocities(self.robot.drivetrain.curPose)[0], 4 / 1000)
+                    vy = min(self.pure_pursuit.getVelocities(self.robot.drivetrain.curPose)[1], 4 / 1000)
+                    pose = self.robot.poseEstimator.field.getObject("current pose")
+                    self.robot.drivetrain.curPose = Pose2d(self.robot.drivetrain.curPose.X() + vx, self.robot.drivetrain.curPose.Y() + vy, Rotation2d.fromDegrees(0))
+                    pose.setPose(self.robot.drivetrain.curPose)
+                    self.robot.drivetrain.drive(Translation2d(vx, vy), 0, True, False)
+                        # self.run_path = False
+                    # else:
+                    #     self.robot.drivetrain.go_to_pose_profiled_pid(self.path_to_reef[self.astar_count], False)
                 else:
                     # if not self.cardinal_directing:
                     #     if self.find_heading:
