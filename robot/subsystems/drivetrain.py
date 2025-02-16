@@ -103,6 +103,11 @@ class Drivetrain(Subsystem):
 
         for idx, module in enumerate(self.robot.poseEstimator.modules):
             module.set_desired_state(module_states[idx], is_open_loop)
+        
+        self.curPose = Pose2d(self.curPose.X() + translation.X(), self.curPose.Y() + translation.Y(), Rotation2d.fromDegrees(0))
+        pose = self.robot.poseEstimator.field.getObject("current pose")
+
+        pose.setPose(self.curPose)
 
     def drive_with_pid(self, translation: Translation2d, target_angle):
         pid_output = self.angle_pid.calculate(self.robot.poseEstimator.getYaw().degrees(), target_angle)  # type: ignore

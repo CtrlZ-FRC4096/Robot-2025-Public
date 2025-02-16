@@ -74,7 +74,7 @@ class PathGenerator():
         self.currentSlope = 1
         self.controlPoints = self.buildPath(self.astar(Translation2d(self.initialPosition.X(), self.initialPosition.Y()), Translation2d(self.finalPosition.X(), self.finalPosition.Y())))
         self.all_points = self.getPointList()
-        self.smooth_path = self.smooth_points(self.all_points, 0.5, 0.5, 0.000001)
+        self.smooth_path = self.smooth_points(self.all_points, 0.5, 0.5, 0.0001)
         #self.removeDuplicateSlopes()
         #self.prunePath()
 
@@ -331,7 +331,7 @@ class PurePursuitController():
         if self.isPosesClose(curPose.translation(), self.path[-1]):
             print("end path")
             return False
-        vx = lookahead_point.X() - curPose.X() 
+        vx = lookahead_point.X() - curPose.X()
         vy = lookahead_point.Y() - curPose.Y()
         SmartDashboard.putNumber("vx velocity", vx)
         SmartDashboard.putNumber("vy velocity", vy)
