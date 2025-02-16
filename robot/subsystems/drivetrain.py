@@ -109,6 +109,10 @@ class Drivetrain(Subsystem):
 
         pose.setPose(self.curPose)
 
+        lookahead_point = self.robot.oi.pure_pursuit.getLookaheadIntersectionAllPath(self.curPose)
+        lookahead = self.robot.poseEstimator.field.getObject("lookahead point")
+        lookahead.setPose(Pose2d(lookahead_point, Rotation2d.fromDegrees(0)))
+
     def drive_with_pid(self, translation: Translation2d, target_angle):
         pid_output = self.angle_pid.calculate(self.robot.poseEstimator.getYaw().degrees(), target_angle)  # type: ignore
 

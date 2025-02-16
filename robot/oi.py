@@ -116,13 +116,24 @@ class OI:
         )
 
         self.target_pose = self.robot.poseEstimator.get_path_to_reef(
-                3,
+                4,
                 False
             )
         print("before path")
         path = PathGenerator(self.robot.drivetrain.curPose, self.target_pose)
         print("before smooth")
-        self.path_to_reef = path.getSmoothPath()
+        smooth_path = [point for point in reversed(path.getSmoothPath())]
+
+        for idx in range(len(smooth_path)):
+            if idx == 0:
+                self.path_to_reef.append(smooth_path[-1])
+            elif idx == len(smooth_path) - 1:
+                self.path_to_reef.append(smooth_path[0])
+            else:
+                self.path_to_reef.append(smooth_path[idx])
+        
+        # self.path_to_reef = path.getSmoothPath()
+        print(self.path_to_reef)
         print("before pursuit")
         self.pure_pursuit = PurePursuitController(0.05, self.path_to_reef)
         print("after pursuit")
@@ -130,12 +141,10 @@ class OI:
         tgt_pose = self.robot.poseEstimator.field.getObject("tgt pose")
         tgt_pose.setPose(self.target_pose)
         
-        lookahead_point = self.pure_pursuit.getLookaheadIntersectionAllPath(self.robot.drivetrain.curPose)
-        lookahead = self.robot.poseEstimator.field.getObject("lookahead point")
-        lookahead.setPose(Pose2d(lookahead_point, Rotation2d.fromDegrees(0)))
+        
         
 
-        # for idx in range(len(self.path_to_reef)):
+        # for idx in range(len(self.path_to_reef) - 6):
         #     field_object = self.robot.poseEstimator.field_for_single_tag.getObject("point " + str(idx))
         #     field_object.setPose(Pose2d(self.path_to_reef[idx], Rotation2d.fromDegrees(0)))
 
@@ -198,10 +207,10 @@ class OI:
                     print("driving with profiled, ", self.pure_pursuit.getLookaheadIntersectionAllPath(self.robot.drivetrain.curPose))
                     if self.pure_pursuit.getVelocities(self.robot.drivetrain.curPose) == False:
                         self.run_path = False
-                    vx = self.pure_pursuit.getVelocities(self.robot.drivetrain.curPose)[0]
-                    vy = self.pure_pursuit.getVelocities(self.robot.drivetrain.curPose)[1]
-                    
-                    self.robot.drivetrain.drive(Translation2d(vx, vy), 0, True, False)
+                    else:
+                        vx = self.pure_pursuit.getVelocities(self.robot.drivetrain.curPose)[0]
+                        vy = self.pure_pursuit.getVelocities(self.robot.drivetrain.curPose)[1]
+                        self.robot.drivetrain.drive(Translation2d(vx, vy), 0, True, False)
                         # self.run_path = False
                     # else:
                     #     self.robot.drivetrain.go_to_pose_profiled_pid(self.path_to_reef[self.astar_count], False)
