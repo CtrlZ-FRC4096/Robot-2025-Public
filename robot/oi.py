@@ -101,51 +101,16 @@ class OI:
 
         self.face = 1
         self.right_branch = True
-        self.tag_to_pathfind = 0
-        self.pathfind_to_reef = None
-        self.running_path = False
-        self.running_pid = False
-        self.target_pose = Pose2d()
+        self.running_pid_lineup = False
+        #self.target_pose = Pose2d()
+        self.raw_path = None
         self.path_to_reef = []
-        # self.astar_count = 0
-        # self.astar_next_point = False
-        self.run_path = True
-
-        self.pathfinding_constraints = PathConstraints(
-            4.0, 4.0, 3.0 * math.pi, 3.0 * math.pi
-        )
-
-        self.target_pose = self.robot.poseEstimator.get_path_to_reef(
-                3,
-                False,
-                24,
-                False
-            )
-        print("before path")
-        path = PathGenerator(self.robot.drivetrain.curPose, self.target_pose, False)
-        print("before smooth")
-        # smooth_path = [point for point in reversed(path.getSmoothPath())]
-
-        # for idx in range(len(smooth_path)):
-        #     if idx == 0:
-        #         self.path_to_reef.append(smooth_path[-1])
-        #     elif idx == len(smooth_path) - 1:
-        #         self.path_to_reef.append(smooth_path[0])
-        #     else:
-        #         self.path_to_reef.append(smooth_path[idx])
-        self.path_to_reef = path.getSmoothPath()
-        print(self.path_to_reef)
-        print("before pursuit")
-        self.pure_pursuit = PurePursuitController(0.05, self.path_to_reef)
-        print("after pursuit")
-
-        tgt_pose = self.robot.poseEstimator.field.getObject("tgt pose")
-        tgt_pose.setPose(self.target_pose)
-
-        for idx in range(len(self.path_to_reef)):
-            # if path.inObstacle(self.path_to_reef[idx]):
-                field_object = self.robot.poseEstimator.field_for_single_tag.getObject("point " + str(idx))
-                field_object.setPose(Pose2d(self.path_to_reef[idx], Rotation2d.fromDegrees(0)))
+        self.pure_pursuit_controller = PurePursuitController(5, [])
+        self.running_general_path = False
+        self.boost_pathfind = False
+        # self.pathfinding_constraints = PathConstraints(
+        #     4.0, 4.0, 3.0 * math.pi, 3.0 * math.pi
+        # )
 
         @self.rumble_button.whenPressed
         def _():
@@ -197,22 +162,30 @@ class OI:
                     self.robot_oriented_angle = (
                         self.robot.poseEstimator.getYaw().degrees()
                     )
-                elif self.run_path: #or self.running_pid:
-                    # if self.astar_next_point:
-                    #     self.astar_next_point = False
-                    #     self.astar_count += 1
-                    # if self.astar_count == len(self.path_to_reef) - 1:
-                    #self.pure_pursuit.last_lookahead_point = self.robot.drivetrain.curPose.translation()
-                    print("driving with profiled, ", self.pure_pursuit.getLookaheadIntersectionAllPath(self.robot.drivetrain.curPose))
-                    if self.pure_pursuit.getVelocities(self.robot.drivetrain.curPose) == False:
-                        self.run_path = False
-                    else:
-                        vx = self.pure_pursuit.getVelocities(self.robot.drivetrain.curPose)[0]
-                        vy = self.pure_pursuit.getVelocities(self.robot.drivetrain.curPose)[1]
+                elif self.running_general_path or self.running_pid_lineup:
+                    if self.running_general_path:
+                        if self.pure_pursuit_controller.getVelocities(self.robot.poseEstimator.curEstPose) == False:
+                            self.running_general_path = False
+                            self.running_pid_lineup = True
+                    
+                    if self.running_pid_lineup:
+                        self.robot.drivetrain.go_to_pose_profiled_pid(
+                            self.robot.poseEstimator.get_path_to_reef(
+                                self.face,
+                                self.right_branch,
+                                6,
+                                True
+                            )
+                        )
+                    elif self.running_general_path:
+                        vx = self.pure_pursuit_controller.getVelocities(self.robot.poseEstimator.curEstPose)[0]
+                        vy = self.pure_pursuit_controller.getVelocities(self.robot.poseEstimator.curEstPose)[1]
+                        #do the stuff about how far away
+                        
+                        if self.boost_pathfind:
+                            vx *= 1.3
+                            vy *= 1.3
                         self.robot.drivetrain.drive(Translation2d(vx, vy), 0, True, False)
-                        # self.run_path = False
-                    # else:
-                    #     self.robot.drivetrain.go_to_pose_profiled_pid(self.path_to_reef[self.astar_count], False)
                 else:
                     # if not self.cardinal_directing:
                     #     if self.find_heading:
@@ -285,28 +258,61 @@ class OI:
             self.robot.funnel_intake.is_running = True
 
 
-        # @self.driver1.LEFT_TRIGGER_AS_BUTTON.whenReleased  # stop pathfinnd
-        # def _():
-        #     self.robot.scheduler.cancelAll()
-        #     self.running_path = False
-        #     self.robot.poseEstimator.score_intent = False
-
-        @self.driver1.RIGHT_TRIGGER_AS_BUTTON.whenHeld  # Run profiled PID to tag
+        @self.driver1.LEFT_TRIGGER_AS_BUTTON.whenHeld  # pathfind
         def _():
-            self.target_pose = self.robot.poseEstimator.get_path_to_reef(
-                self.robot.poseEstimator.calculate_closest_reef_tag()[1],
+            target_pose = self.robot.poseEstimator.get_path_to_reef(
+                self.face,
                 self.right_branch,
+                28, #distance offset from reef in inches
+                True
             )
-            path = PathGenerator(self.robot.poseEstimator.curEstPose, self.target_pose)
-            self.path_to_reef = path.getPointList()
-            self.running_pid = True
+            
+            self.raw_path = PathGenerator(self.robot.poseEstimator.curEstPose, target_pose)
+            self.path_to_reef = self.raw_path.getSmoothPath()
+            self.pure_pursuit = PurePursuitController(0.05, self.path_to_reef) #LOOKAHEAD DISTANCE METERS
+            self.running_general_path = True
             self.robot.poseEstimator.score_intent = True
 
-        @self.driver1.RIGHT_TRIGGER_AS_BUTTON.whenReleased  # stop profiled PID
+            # tgt_pose = self.robot.poseEstimator.field.getObject("tgt pose")
+            # tgt_pose.setPose(self.target_pose)
+
+            # for idx in range(len(self.path_to_reef)):
+            #     # if path.inObstacle(self.path_to_reef[idx]):
+            #         field_object = self.robot.poseEstimator.field_for_single_tag.getObject("point " + str(idx))
+            #         field_object.setPose(Pose2d(self.path_to_reef[idx], Rotation2d.fromDegrees(0)))
+
+
+
+        @self.driver1.LEFT_TRIGGER_AS_BUTTON.whenReleased #stop pathfind
         def _():
-            self.running_pid = False
+            self.running_general_path = False
+            self.running_pid_lineup = False
             self.robot.poseEstimator.score_intent = False
-            self.robot_oriented_angle = self.robot.poseEstimator.getYaw().degrees()
+
+        @self.driver1.RIGHT_BUMPER.whenHeld #boost pathfind
+        def _():
+            self.boost_pathfind = True
+        @self.driver1.RIGHT_BUMPER.whenReleased #no boost
+        def _():
+            self.boost_pathfind = False
+
+        #TEMPORARY COMMENT OUT
+        # @self.driver1.RIGHT_TRIGGER_AS_BUTTON.whenHeld  # Run profiled PID to tag
+        # def _():
+        #     self.target_pose = self.robot.poseEstimator.get_path_to_reef(
+        #         self.robot.poseEstimator.calculate_closest_reef_tag()[1],
+        #         self.right_branch,
+        #     )
+        #     path = PathGenerator(self.robot.poseEstimator.curEstPose, self.target_pose)
+        #     self.path_to_reef = path.getPointList()
+        #     self.running_pid_lineup = True
+        #     self.robot.poseEstimator.score_intent = True
+
+        # @self.driver1.RIGHT_TRIGGER_AS_BUTTON.whenReleased  # stop profiled PID
+        # def _():
+        #     self.running_pid_lineup = False
+        #     self.robot.poseEstimator.score_intent = False
+        #     self.robot_oriented_angle = self.robot.poseEstimator.getYaw().degrees()
             # self.robot.drivetrain.stop() May or may not be needed to stop the robot from tracking the PID
 
         @self.driver2.RIGHT_TRIGGER_AS_BUTTON.whenPressed  # right face
@@ -317,9 +323,25 @@ class OI:
         def _():
             self.right_branch = False
 
-        # @self.driver2.A.whenPressed # face 6
-        # def _():
-        #     self.face = 6
+        #TEMPORARY FACE SELECTION FOR TESTING
+        @self.driver2.POV.DOWN.whenPressed #face 1
+        def _():
+            self.face = 1
+        @self.driver2.POV.UP.whenPressed #face 4
+        def _():
+            self.face = 4
+        @self.driver2.A.whenPressed #face 6
+        def _():
+            self.face = 6
+        @self.driver2.B.whenPressed #face 5
+        def _():
+            self.face = 6
+        @self.driver2.Y.whenPressed #face 3
+        def _():
+            self.face = 6
+        @self.driver2.X.whenPressed #face 2
+        def _():
+            self.face = 6
 
         @self.driver2.POV.RIGHT.whenPressed  # STOP ALL SUBSYSTEMS
         def _():

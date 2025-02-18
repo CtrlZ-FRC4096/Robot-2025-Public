@@ -377,6 +377,9 @@ class PoseEstimator(Subsystem):
             return target_pose_3
         else:
             return target_pose_face
+        
+    def useSingleTag(self):
+        return (self.curEstPoseGlobal - self.tag_layout.getTagPose(self.calculate_closest_reef_tag()[0]).toPose2d()).translation().norm() > 2
 
     def periodic(self):
         allianceColor = DriverStation.getAlliance()
@@ -476,24 +479,20 @@ class PoseEstimator(Subsystem):
         )
 
         SmartDashboard.putBoolean("right branch", self.robot.oi.right_branch)
+        SmartDashboard.putNumber("face to path ", self.robot.oi.face)
+
         single_tag = False
         if self.candidate_pose_OK(possible_pose_global):
             self.curEstPoseGlobal = possible_pose_global
         if self.candidate_pose_OK(possible_pose_single_tag):
             self.curEstPoseSingleTag = possible_pose_single_tag
         if self.score_intent:
-            if (
-                self.curEstPoseGlobal
-                - self.tag_layout.getTagPose(
-                    self.calculate_closest_reef_tag()[0]
-                ).toPose2d()
-            ).translation().norm() > 2:
+            if not self.useSingleTag():
                 self.curEstPose = self.curEstPoseGlobal
                 single_tag = False
             else:
                 self.curEstPose = self.curEstPoseSingleTag
                 single_tag = True
-
         else:
             self.curEstPose = self.curEstPoseGlobal
             single_tag = False
@@ -521,6 +520,8 @@ class PoseEstimator(Subsystem):
         SmartDashboard.putNumber(
             "rotation of target pose: ", self.temp_rotation_check.degrees()
         )
+
+
 
 
         # target_pose = self.get_path_to_reef(3, True)

@@ -73,8 +73,8 @@ class Drivetrain(Subsystem):
 
         ### Field Visualisation - Needs testing ###
         self.previous_chassisspeeds = ChassisSpeeds()
-        self.curPose = Pose2d(inchesToMeters(235.726), 0.8, Rotation2d.fromDegrees(0))
-        self.isFirstTick = True
+        # self.curPose = Pose2d(inchesToMeters(235.726), 0.8, Rotation2d.fromDegrees(0))
+        # self.isFirstTick = True
 
     def drive(self, translation: Translation2d, rotation, field_relative, is_open_loop):
         SmartDashboard.putNumber("Swerve/Translation X", translation.x)
@@ -105,15 +105,12 @@ class Drivetrain(Subsystem):
         for idx, module in enumerate(self.robot.poseEstimator.modules):
             module.set_desired_state(module_states[idx], is_open_loop)
         
-        self.curPose = Pose2d(self.curPose.X() + min(translation.X(), (3.0 * translation.X()) / abs(translation.X()) if translation.X() != 0 else 3.0), self.curPose.Y() + min(translation.Y(), (3.0 * translation.Y()) / abs(translation.Y()) if translation.Y() != 0 else 3.0), Rotation2d.fromDegrees(0))
-        print(self.curPose)
-        pose = self.robot.poseEstimator.field.getObject("current pose")
+        # self.curPose = Pose2d(self.curPose.X() + min(translation.X(), (3.0 * translation.X()) / abs(translation.X()) if translation.X() != 0 else 3.0), self.curPose.Y() + min(translation.Y(), (3.0 * translation.Y()) / abs(translation.Y()) if translation.Y() != 0 else 3.0), Rotation2d.fromDegrees(0))
+        # print(self.curPose)
+        # pose = self.robot.poseEstimator.field.getObject("current pose")
 
-        pose.setPose(self.curPose)
+        # pose.setPose(self.curPose)
 
-        lookahead_point = self.robot.oi.pure_pursuit.getLookaheadIntersectionAllPath(self.curPose)
-        lookahead = self.robot.poseEstimator.field.getObject("lookahead point")
-        lookahead.setPose(Pose2d(lookahead_point, Rotation2d.fromDegrees(0)))
 
     def drive_with_pid(self, translation: Translation2d, target_angle):
         pid_output = self.angle_pid.calculate(self.robot.poseEstimator.getYaw().degrees(), target_angle)  # type: ignore
@@ -144,12 +141,8 @@ class Drivetrain(Subsystem):
             module.set_desired_state(module_states[idx], is_open_loop=False)
 
     def go_to_pose_profiled_pid(self, target_pose : Translation2d):
-        # Get the current pose
-        # if self.isFirstTick:
-        #     self.robot.poseEstimator.field.setRobotPose(self.curPose)
-        #     self.isFirstTick = False
         
-        current_pose = self.curPose
+        current_pose = self.robot.poseEstimator.curEstPose
 
         # Calculate the control outputs
         vx = self.x_controller.calculate(current_pose.X(), target_pose.X()) # meters / 0.05 seconds
@@ -161,13 +154,14 @@ class Drivetrain(Subsystem):
         
 
         # Check if the controllers are at their setpoints
-        # if (
-        #     self.x_controller.atSetpoint()
-        #     and self.y_controller.atSetpoint()
-        #     # and self.theta_controller.atSetpoint()
-        # ):
-        #     self.stop()
-        #     return
+        if (
+            self.x_controller.atSetpoint()
+            and self.y_controller.atSetpoint()
+            # and self.theta_controller.atSetpoint()
+        ):
+            self.robot.oi.running_pid_lineup = False
+            self.stop()
+            return
             # Optionally, stop the drivetrain if at setpoint
             
 

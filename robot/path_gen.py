@@ -72,12 +72,11 @@ class ObstacleConstants():
     ] #face's right branch point
     for idx in range(len(reefVertices)):
         reefVertices[idx] = Translation2d(reefVertices[idx].X() + buffer, reefVertices[idx].Y() + buffer)
-    print(reefVertices)
     #obstacleList = [Obstacle(Translation2d(3.0, 3.0), Translation2d(4.5, 4.5))]
     
 
 class PathGenerator():
-    def __init__(self, initialPosition, finalPosition, subPath):
+    def __init__(self, initialPosition, finalPosition):
         self.initialPosition = FieldConstants.flip_Pose2d(initialPosition)
         self.finalPosition = FieldConstants.flip_Pose2d(finalPosition)
         self.lastSlope = 1
@@ -137,7 +136,6 @@ class PathGenerator():
                 inReef = False
         else:
             inReef = False
-        print("pose: ", pose, "inreef :", inReef)
         return inReef
 
 
@@ -172,8 +170,6 @@ class PathGenerator():
             pose = Translation2d(node.position.X() + dx, node.position.Y() + dy)
             if not(self.inObstacle(pose)):
                 neighbors.append(self.PathNode(pose, finalPosition))
-            else:
-                print(pose, " was an obstacle")
         return neighbors
 
     def astar(self, initialPosition : Translation2d, finalPosition : Translation2d):
@@ -261,13 +257,13 @@ class PurePursuitController():
 
     def getClosestPoint(self, curPose : Pose2d, start_idx : int) -> Translation2d:
         min_dist = math.inf
-        print("len path: ", len(self.path))
+        # print("len path: ", len(self.path))
         for i in range(start_idx, len(self.path) - 2):
             dist = (self.path[i] - curPose.translation()).norm()
             if dist < min_dist:
                 min_dist = dist
                 start_idx = i
-        print("closest idx: ", start_idx) # Ensure progress
+        # print("closest idx: ", start_idx) # Ensure progress
         self.last_closest_point_idx = start_idx
         return [self.path[start_idx], start_idx]
 
@@ -306,10 +302,10 @@ class PurePursuitController():
                 self.last_lookahead_point = best_lookahead
                 self.last_lookahead_point_idx = idx
                 break
-        else:
-            best_lookahead = self.path[self.getClosestPoint(curPose, 0)[1] + 1]
+        # else:
+        #     best_lookahead = self.path[self.getClosestPoint(curPose, 0)[1] + 1] # SHOULDN'T NEED THIS
         
-        print("best lookahead: ", best_lookahead)
+        # print("best lookahead: ", best_lookahead)
         return best_lookahead
 
             
@@ -335,14 +331,6 @@ class PurePursuitController():
         candidate_intersection_1 = (-b - discriminant) / (2 * a)
         candidate_intersection_2 = (-b + discriminant) / (2 * a) # because quadratic equation is plus-minus
 
-        
-        
-        # if 0 <= candidate_intersection_1 <= 1:
-        #     print("intersect 1")
-        #     intersections.append(Translation2d(start_point.X() + candidate_intersection_1 * direction_vector.X(), start_point.Y() + candidate_intersection_1 * direction_vector.Y()))
-        # if 0 <= candidate_intersection_2 <= 1:
-        #     print("intersect 2")
-        #     intersections.append(Translation2d(start_point.X() + candidate_intersection_2 * direction_vector.X(), start_point.Y() + candidate_intersection_2 * direction_vector.Y()))
         for candidate in [candidate_intersection_1, candidate_intersection_2]:
             if 0 <= candidate <= 1:
                 intersection = Translation2d(
@@ -359,18 +347,16 @@ class PurePursuitController():
         if intersections == []:
             return False
         else:
-            print("have intersections: ", intersections)
+            # print("have intersections: ", intersections)
             return intersections
-    def isPosesClose(self, pose1 : Translation2d, pose2 : Translation2d):
-        if (pose1 - pose2).norm() < 0.05:
+    def isAtEnd(self, curPose : Pose2d):
+        if (curPose.translation() - self.path[-1]).norm() < 0.3: #if we are closer than 0.3 meters
             return True
-        else:
-            return False
+        return False
 
     def getVelocities(self, curPose : Pose2d):
         lookahead_point = self.getLookaheadIntersectionAllPath(curPose)
-        if self.isPosesClose(curPose.translation(), self.path[-1]):
-            print("end path")
+        if self.isAtEnd(curPose.translation()):
             return False
         vx = lookahead_point.X() - curPose.X()
         vy = lookahead_point.Y() - curPose.Y()
