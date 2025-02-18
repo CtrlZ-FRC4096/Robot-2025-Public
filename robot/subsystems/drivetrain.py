@@ -29,6 +29,7 @@ from phoenix6 import configs
 
 
 import const
+from field_const import FieldConstants
 
 # from leds import LEDs
 # from shooter import Shooter
@@ -48,7 +49,7 @@ from pathplannerlib.path import PathPlannerTrajectory
 from pathplannerlib.path import PathPlannerPath, PathConstraints
 from wpimath.estimator import SwerveDrive4PoseEstimator
 from photoncamera import WrapperedPhotonCamera
-from wpimath.units import degreesToRadians
+from wpimath.units import degreesToRadians, inchesToMeters
 
 
 class Drivetrain(Subsystem):
@@ -72,7 +73,7 @@ class Drivetrain(Subsystem):
 
         ### Field Visualisation - Needs testing ###
         self.previous_chassisspeeds = ChassisSpeeds()
-        self.curPose = Pose2d(1, 1, Rotation2d.fromDegrees(0))
+        self.curPose = Pose2d(inchesToMeters(235.726), 0.8, Rotation2d.fromDegrees(0))
         self.isFirstTick = True
 
     def drive(self, translation: Translation2d, rotation, field_relative, is_open_loop):
@@ -104,7 +105,8 @@ class Drivetrain(Subsystem):
         for idx, module in enumerate(self.robot.poseEstimator.modules):
             module.set_desired_state(module_states[idx], is_open_loop)
         
-        self.curPose = Pose2d(self.curPose.X() + translation.X(), self.curPose.Y() + translation.Y(), Rotation2d.fromDegrees(0))
+        self.curPose = Pose2d(self.curPose.X() + min(translation.X(), (3.0 * translation.X()) / abs(translation.X()) if translation.X() != 0 else 3.0), self.curPose.Y() + min(translation.Y(), (3.0 * translation.Y()) / abs(translation.Y()) if translation.Y() != 0 else 3.0), Rotation2d.fromDegrees(0))
+        print(self.curPose)
         pose = self.robot.poseEstimator.field.getObject("current pose")
 
         pose.setPose(self.curPose)

@@ -116,23 +116,24 @@ class OI:
         )
 
         self.target_pose = self.robot.poseEstimator.get_path_to_reef(
-                4,
+                3,
+                False,
+                24,
                 False
             )
         print("before path")
-        path = PathGenerator(self.robot.drivetrain.curPose, self.target_pose)
+        path = PathGenerator(self.robot.drivetrain.curPose, self.target_pose, False)
         print("before smooth")
-        smooth_path = [point for point in reversed(path.getSmoothPath())]
+        # smooth_path = [point for point in reversed(path.getSmoothPath())]
 
-        for idx in range(len(smooth_path)):
-            if idx == 0:
-                self.path_to_reef.append(smooth_path[-1])
-            elif idx == len(smooth_path) - 1:
-                self.path_to_reef.append(smooth_path[0])
-            else:
-                self.path_to_reef.append(smooth_path[idx])
-        
-        # self.path_to_reef = path.getSmoothPath()
+        # for idx in range(len(smooth_path)):
+        #     if idx == 0:
+        #         self.path_to_reef.append(smooth_path[-1])
+        #     elif idx == len(smooth_path) - 1:
+        #         self.path_to_reef.append(smooth_path[0])
+        #     else:
+        #         self.path_to_reef.append(smooth_path[idx])
+        self.path_to_reef = path.getSmoothPath()
         print(self.path_to_reef)
         print("before pursuit")
         self.pure_pursuit = PurePursuitController(0.05, self.path_to_reef)
@@ -140,13 +141,11 @@ class OI:
 
         tgt_pose = self.robot.poseEstimator.field.getObject("tgt pose")
         tgt_pose.setPose(self.target_pose)
-        
-        
-        
 
-        # for idx in range(len(self.path_to_reef) - 6):
-        #     field_object = self.robot.poseEstimator.field_for_single_tag.getObject("point " + str(idx))
-        #     field_object.setPose(Pose2d(self.path_to_reef[idx], Rotation2d.fromDegrees(0)))
+        for idx in range(len(self.path_to_reef)):
+            # if path.inObstacle(self.path_to_reef[idx]):
+                field_object = self.robot.poseEstimator.field_for_single_tag.getObject("point " + str(idx))
+                field_object.setPose(Pose2d(self.path_to_reef[idx], Rotation2d.fromDegrees(0)))
 
         @self.rumble_button.whenPressed
         def _():
@@ -286,11 +285,11 @@ class OI:
             self.robot.funnel_intake.is_running = True
 
 
-        @self.driver1.LEFT_TRIGGER_AS_BUTTON.whenReleased  # stop pathfinnd
-        def _():
-            self.robot.scheduler.cancelAll()
-            self.running_path = False
-            self.robot.poseEstimator.score_intent = False
+        # @self.driver1.LEFT_TRIGGER_AS_BUTTON.whenReleased  # stop pathfinnd
+        # def _():
+        #     self.robot.scheduler.cancelAll()
+        #     self.running_path = False
+        #     self.robot.poseEstimator.score_intent = False
 
         @self.driver1.RIGHT_TRIGGER_AS_BUTTON.whenHeld  # Run profiled PID to tag
         def _():

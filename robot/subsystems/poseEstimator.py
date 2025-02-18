@@ -333,10 +333,10 @@ class PoseEstimator(Subsystem):
         return [closest_reef_tag, FieldConstants.tag_to_face[closest_reef_tag]]
 
 
-    def get_path_to_reef(self, face: int, right_branch: bool):
+    def get_path_to_reef(self, face: int, right_branch: bool, margin_dist_offset : int, do_side_offset : bool):
         side_offset = inchesToMeters(6.47)  # distance b/w center of face to branch
         dist_offset = (
-            (inchesToMeters(29.5) / 2) + (inchesToMeters(7.25) / 2) + inchesToMeters(6)
+            (inchesToMeters(29.5) / 2) + (inchesToMeters(7.25) / 2) + inchesToMeters(margin_dist_offset)
         )  # robot size + bumper addition + error protection
 
         angle_face = FieldConstants.Reef.centerFaces[face - 1].rotation()
@@ -355,25 +355,28 @@ class PoseEstimator(Subsystem):
             center_face_x + x_offset, center_face_y + y_offset, angle_face
         )
 
-        angle_to_branch = (
-            (angle_face.degrees() + 90) % 360
-            if right_branch
-            else (angle_face.degrees() - 90) % 360
-        )  # angle change needed to do math to get to the branch, right branch needs + 90 degrees (CCW), left_branch needs -90 (CW)
+        if do_side_offset:
+            angle_to_branch = (
+                (angle_face.degrees() + 90) % 360
+                if right_branch
+                else (angle_face.degrees() - 90) % 360
+            )  # angle change needed to do math to get to the branch, right branch needs + 90 degrees (CCW), left_branch needs -90 (CW)
 
-        x_offset_branch = (
-            math.cos(degreesToRadians(angle_to_branch)) * side_offset
-        )  # same as above, extending the pose from the point outside of the reef in the direction of the desired branch
-        y_offset_branch = math.sin(degreesToRadians(angle_to_branch)) * side_offset
+            x_offset_branch = (
+                math.cos(degreesToRadians(angle_to_branch)) * side_offset
+            )  # same as above, extending the pose from the point outside of the reef in the direction of the desired branch
+            y_offset_branch = math.sin(degreesToRadians(angle_to_branch)) * side_offset
 
-        target_pose_3 = Pose2d(
-            target_pose_face.X() + x_offset_branch,
-            target_pose_face.Y() + y_offset_branch,
-            Rotation2d.fromDegrees(
-                angle_face.degrees() - 90
-            ),  # don't know if this + 90 is needed, because our battery is facing forward and we want the camera side (scoring side) to face reef
-        )
-        return target_pose_3
+            target_pose_3 = Pose2d(
+                target_pose_face.X() + x_offset_branch,
+                target_pose_face.Y() + y_offset_branch,
+                Rotation2d.fromDegrees(
+                    angle_face.degrees() - 90
+                ),  # don't know if this + 90 is needed, because our battery is facing forward and we want the camera side (scoring side) to face reef
+            )
+            return target_pose_3
+        else:
+            return target_pose_face
 
     def periodic(self):
         allianceColor = DriverStation.getAlliance()

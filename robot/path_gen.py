@@ -42,18 +42,18 @@ class PriorityQueue():
     def isEmpty(self):
         return len(self.nodes) == 0
 
-class Obstacle():
-    def __init__(self, lowerLeftCorner : Translation2d, upperRightCorner : Translation2d):
-        buffer = 0.3
-        x = [lowerLeftCorner.X(), upperRightCorner.X()]
-        y = [lowerLeftCorner.Y(), upperRightCorner.Y()]
+# class Obstacle():
+#     def __init__(self, lowerLeftCorner : Translation2d, upperRightCorner : Translation2d):
+#         buffer = 0.5
+#         x = [lowerLeftCorner.X(), upperRightCorner.X()]
+#         y = [lowerLeftCorner.Y(), upperRightCorner.Y()]
 
-        self.lowerLeft = Translation2d(min(x) - buffer, min(y) - buffer)
-        self.upperRight = Translation2d(max(x) + buffer, max(y) + buffer)
+#         self.lowerLeft = Translation2d(min(x) - buffer, min(y) - buffer)
+#         self.upperRight = Translation2d(max(x) + buffer, max(y) + buffer)
 
 class ObstacleRotation():
     def __init__(self, center : Translation2d, width : float, height : float, rotation : Rotation2d):
-        buffer = 0.1
+        buffer = 0.5
         self.center = center
         self.width = width + 2 * buffer
         self.height = height + 2 * buffer
@@ -61,22 +61,36 @@ class ObstacleRotation():
 
 
 class ObstacleConstants():
-    obstacleList = []
-    obstacleList.append([Obstacle(Translation2d(inchesToMeters(131.53), inchesToMeters(135.716)), Translation2d(inchesToMeters(221.022), inchesToMeters(187.384))), False]) # 1, 4 faces
-    obstacleList.append([ObstacleRotation(Translation2d(inchesToMeters(176.19), inchesToMeters(158.5)), inchesToMeters(89.491), inchesToMeters(51.668), Rotation2d.fromDegrees(-60)), True]) # center, width, height, rotation for 2,5
-    obstacleList.append([ObstacleRotation(Translation2d(inchesToMeters(176.19), inchesToMeters(158.5)), inchesToMeters(89.491), inchesToMeters(51.668), Rotation2d.fromDegrees(60)), True]) # 3, 6
+    buffer = 3
+    reefVertices = [
+        Translation2d(3.643, 3.565),
+        Translation2d(3.654, 4.519),
+        Translation2d(4.486, 4.986),
+        Translation2d(5.307, 4.501),
+        Translation2d(5.298, 3.547),
+        Translation2d(4.467, 3.077)
+    ] #face's right branch point
+    for idx in range(len(reefVertices)):
+        reefVertices[idx] = Translation2d(reefVertices[idx].X() + buffer, reefVertices[idx].Y() + buffer)
+    print(reefVertices)
+    #obstacleList = [Obstacle(Translation2d(3.0, 3.0), Translation2d(4.5, 4.5))]
+    
 
 class PathGenerator():
-    def __init__(self, initialPosition, finalPosition):
+    def __init__(self, initialPosition, finalPosition, subPath):
         self.initialPosition = FieldConstants.flip_Pose2d(initialPosition)
         self.finalPosition = FieldConstants.flip_Pose2d(finalPosition)
         self.lastSlope = 1
         self.currentSlope = 1
         self.controlPoints = self.buildPath(self.astar(Translation2d(self.initialPosition.X(), self.initialPosition.Y()), Translation2d(self.finalPosition.X(), self.finalPosition.Y())))
-        self.all_points = self.getPointList()
-        self.smooth_path = self.smooth_points(self.all_points, 0.5, 0.5, 0.0001)
         #self.removeDuplicateSlopes()
-        #self.prunePath()
+        
+        self.all_points = self.getPointList()
+        self.smooth_path = self.smooth_points(self.all_points, 0.5, 0.5, 1)
+        # self.prunePath()
+
+
+        
 
     class PathNode():
         def __init__(self, position, finalPosition, parent=None):
@@ -85,34 +99,65 @@ class PathGenerator():
             self.parent = parent
 
     def getSmoothPath(self):
+        
         return self.smooth_path
 
-    def containedIn(self, pose : Translation2d, lowerLeft : Translation2d, upperRight : Translation2d) -> bool:
-        #lowerleft is on cad default rotation lowerleft
-        return (pose.X() >= lowerLeft.X() and pose.Y() >= lowerLeft.Y() and
-            pose.X() <= upperRight.X() and pose.Y() <= upperRight.Y())
-    def containedInRotated(self, pose : Translation2d, obstacle : ObstacleRotation):
-        translated = pose - obstacle.center
-
-        local_x = translated.X() * obstacle.rotation.cos() + translated.Y() * obstacle.rotation.sin()
-        local_y = -translated.X() * obstacle.rotation.sin() + translated.Y() * obstacle.rotation.cos()
-
-        return (-obstacle.width / 2 <= local_x <= obstacle.width / 2) and (-obstacle.height / 2 <= local_y <= obstacle.height / 2)
+    # def containedIn(self, pose : Translation2d, lowerLeft : Translation2d, upperRight : Translation2d) -> bool:
+    #     #lowerleft is on cad default rotation lowerleft
+    #     return (pose.X() >= lowerLeft.X() and pose.Y() >= lowerLeft.Y() and
+    #         pose.X() <= upperRight.X() and pose.Y() <= upperRight.Y())
 
 
+    def inReef(self, pose: Translation2d):
+        x = pose.X()
+        y = pose.Y()
+        x_navgrid = math.floor(x / 0.3)
+        y_navgrid = math.floor(y / 0.3)
+        #8 - 18 in y
+        inReef = False
+        if x_navgrid == 10 or x_navgrid == 19:
+            if y_navgrid in range(11,16):
+                inReef = True
+            else:
+                inReef = False
+        elif x_navgrid == 11 or x_navgrid == 18:
+            if y_navgrid in range(10,17):
+                inReef = True
+            else:
+                inReef = False
+        elif x_navgrid == 12 or x_navgrid == 13 or x_navgrid == 16 or x_navgrid == 17:
+            if y_navgrid in range(9, 18):
+                inReef  = True
+            else:
+                inReef = False
+        elif x_navgrid == 14 or x_navgrid == 15:
+            if y_navgrid in range(8, 19):
+                inReef =  True
+            else:
+                inReef = False
+        else:
+            inReef = False
+        print("pose: ", pose, "inreef :", inReef)
+        return inReef
+
+
+
+
+    # def containedInRotated(self, pose : Translation2d, obstacle : ObstacleRotation):
+    #     translated = pose - obstacle.center
+
+    #     local_x = translated.X() * obstacle.rotation.cos() + translated.Y() * obstacle.rotation.sin()
+    #     local_y = -translated.X() * obstacle.rotation.sin() + translated.Y() * obstacle.rotation.cos()
+
+    #     return (-obstacle.width / 2 <= local_x <= obstacle.width / 2) and (-obstacle.height / 2 <= local_y <= obstacle.height / 2)
 
     def inObstacle(self, pose : Translation2d) -> bool:
-        for obstacle in ObstacleConstants.obstacleList:
-            if obstacle[1]:
-                if self.containedInRotated(pose, obstacle[0]):
-                    return True
-            else:
-                if self.containedIn(pose, obstacle[0].lowerLeft, obstacle[0].upperRight):
-                    return True
+        if self.inReef(pose):
+                return True
         return False
 
     def obstacleBetween(self, initialPose : Translation2d, finalPose : Translation2d):
-        steps = 25
+        steps = 50
         step = Translation2d((finalPose.X() - initialPose.X()) / steps,  (finalPose.Y() - initialPose.Y()) / steps)
         for _ in range(steps):
             if self.inObstacle(initialPose):
@@ -122,14 +167,13 @@ class PathGenerator():
 
     def getNeighbors(self, node : PathNode, finalPosition : Translation2d):
         neighbors = []
-        for x in range(-1, 2):
-            for y in range(-1, 2):
-                if x == y:
-                    continue
-                pose = Translation2d(node.position.X() + (x / 2), node.position.Y() + (y / 2))
-                if not(self.inObstacle(pose)):
-                    element = self.PathNode(pose, finalPosition)
-                    neighbors.append(element)
+        step_size = 0.5  # Ensures small incremental movement
+        for dx, dy in [(-step_size, 0), (step_size, 0), (0, -step_size), (0, step_size), (-step_size, -step_size), (step_size, step_size), (step_size, -step_size), (-step_size, step_size)]:
+            pose = Translation2d(node.position.X() + dx, node.position.Y() + dy)
+            if not(self.inObstacle(pose)):
+                neighbors.append(self.PathNode(pose, finalPosition))
+            else:
+                print(pose, " was an obstacle")
         return neighbors
 
     def astar(self, initialPosition : Translation2d, finalPosition : Translation2d):
@@ -173,19 +217,17 @@ class PathGenerator():
         self.controlPoints = newPath
 
     def prunePath(self):
-        for i in reversed(range(len(self.controlPoints))):
-            if not(self.obstacleBetween(self.initialPosition.translation(), self.controlPoints[i])):
-                del self.controlPoints[0:i]
+        for i in reversed(range(len(self.smooth_path))):
+            if not(self.obstacleBetween(self.initialPosition.translation(), self.smooth_path[i])):
+                del self.smooth_path[0:i]
                 break
-        for i in range(len(self.controlPoints)):
-            if not(self.obstacleBetween(self.finalPosition.translation(), self.controlPoints[i])):
-                del self.controlPoints[i+1:]
+        for i in range(len(self.smooth_path)):
+            if not(self.obstacleBetween(self.finalPosition.translation(), self.smooth_path[i])):
+                del self.smooth_path[i+1:]
                 break
 
     def getPointList(self):
-        points = self.controlPoints
-        points.insert(0, self.initialPosition.translation())
-        points.append(self.finalPosition.translation())
+        points = [self.initialPosition.translation()] + self.controlPoints + [self.finalPosition.translation()]
         return points
 
 
@@ -205,8 +247,7 @@ class PathGenerator():
                 new_y = y + weight_smoothing * (path[i].Y() - y) + weight_data * (newPath[i - 1].Y() + newPath[i + 1].Y() - 2.0 * y)
                 if self.obstacleBetween(Translation2d(aux_x, aux_y), Translation2d(new_x, new_y)):
                     continue
-                else:
-                    newPath[i] = Translation2d(new_x, new_y)
+                newPath[i] = Translation2d(new_x, new_y)
                 change += abs(aux_x - new_x) + abs(aux_y - new_y)
         return newPath
     
