@@ -229,7 +229,7 @@ class OI:
             if self.can_crash:
                 4096 / 0
 
-        @self.driver2.POV.UP.whenPressed  # Run funnel intake
+        @self.driver1.RIGHT_BUMPER.whenPressed  # Run funnel intake
         def _():
             self.robot.funnel_intake.is_running = True
 
@@ -273,30 +273,6 @@ class OI:
         @self.driver2.LEFT_TRIGGER_AS_BUTTON.whenPressed  # left face
         def _():
             self.right_branch = False
-
-        #TEMPORARY FACE SELECTION FOR TESTING
-        @self.driver2.POV.DOWN.whenPressed #face 1
-        def _():
-            self.face = 1
-        @self.driver2.POV.UP.whenPressed #face 4
-        def _():
-            self.face = 4
-        @self.driver2.A.whenPressed #face 6
-        def _():
-            self.face = 6
-        @self.driver2.B.whenPressed #face 5
-        def _():
-            self.face = 6
-        @self.driver2.Y.whenPressed #face 3
-        def _():
-            self.face = 6
-        @self.driver2.X.whenPressed #face 2
-        def _():
-            self.face = 6
-
-        @self.driver2.POV.RIGHT.whenPressed  # STOP ALL SUBSYSTEMS
-        def _():
-            self.robot.stop_all_subsystems()
 
     def log(self):
         SmartDashboard.putNumber("robot oriented angle", self.robot_oriented_angle)
