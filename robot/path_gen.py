@@ -73,7 +73,7 @@ class ObstacleConstants():
     for idx in range(len(reefVertices)):
         reefVertices[idx] = Translation2d(reefVertices[idx].X() + buffer, reefVertices[idx].Y() + buffer)
     #obstacleList = [Obstacle(Translation2d(3.0, 3.0), Translation2d(4.5, 4.5))]
-    
+
 
 class PathGenerator():
     def __init__(self, initialPosition, finalPosition):
@@ -83,13 +83,13 @@ class PathGenerator():
         self.currentSlope = 1
         self.controlPoints = self.buildPath(self.astar(Translation2d(self.initialPosition.X(), self.initialPosition.Y()), Translation2d(self.finalPosition.X(), self.finalPosition.Y())))
         #self.removeDuplicateSlopes()
-        
+
         self.all_points = self.getPointList()
         self.smooth_path = self.smooth_points(self.all_points, 0.5, 0.5, 1)
         # self.prunePath()
 
 
-        
+
 
     class PathNode():
         def __init__(self, position, finalPosition, parent=None):
@@ -98,7 +98,7 @@ class PathGenerator():
             self.parent = parent
 
     def getSmoothPath(self):
-        
+
         return self.smooth_path
 
     # def containedIn(self, pose : Translation2d, lowerLeft : Translation2d, upperRight : Translation2d) -> bool:
@@ -165,11 +165,14 @@ class PathGenerator():
 
     def getNeighbors(self, node : PathNode, finalPosition : Translation2d):
         neighbors = []
-        step_size = 0.5  # Ensures small incremental movement
-        for dx, dy in [(-step_size, 0), (step_size, 0), (0, -step_size), (0, step_size), (-step_size, -step_size), (step_size, step_size), (step_size, -step_size), (-step_size, step_size)]:
-            pose = Translation2d(node.position.X() + dx, node.position.Y() + dy)
-            if not(self.inObstacle(pose)):
-                neighbors.append(self.PathNode(pose, finalPosition))
+        for x in range(-1, 2):
+            for y in range(-1, 2):
+                #if x == y:
+                 #   continue
+                pose = Translation2d(node.position.X() + (x / 20), node.position.Y() + (y / 20))
+                if not(self.inObstacle(pose)):
+                    element = self.PathNode(pose, finalPosition)
+                    neighbors.append(element)
         return neighbors
 
     def astar(self, initialPosition : Translation2d, finalPosition : Translation2d):
@@ -230,7 +233,7 @@ class PathGenerator():
     def smooth_points(self, path : list, weight_smoothing, weight_data, tolerance):
         newPath = path
         change = tolerance
-        
+
         while change >= tolerance:
             change = 0.0
             for i in range(1, len(path) - 1):
@@ -246,7 +249,7 @@ class PathGenerator():
                 newPath[i] = Translation2d(new_x, new_y)
                 change += abs(aux_x - new_x) + abs(aux_y - new_y)
         return newPath
-    
+
 class PurePursuitController():
     def __init__(self, lookahead_dist, smooth_path):
         self.last_closest_point_idx = 0
@@ -255,7 +258,7 @@ class PurePursuitController():
         self.last_lookahead_point = None
         self.path = smooth_path
 
-    def getClosestPoint(self, curPose : Pose2d, start_idx : int) -> Translation2d:
+    def getClosestPoint(self, curPose : Pose2d, start_idx : int):
         min_dist = math.inf
         # print("len path: ", len(self.path))
         for i in range(start_idx, len(self.path) - 2):
@@ -267,8 +270,8 @@ class PurePursuitController():
         self.last_closest_point_idx = start_idx
         return [self.path[start_idx], start_idx]
 
-        
-        
+
+
         # path = self.path
         # closest_point = path[0]
         # closest_point_idx = 0 # default
@@ -278,13 +281,13 @@ class PurePursuitController():
         #         closest_point_idx = idx
         # self.last_closest_point_idx = closest_point_idx
         # return [closest_point, closest_point_idx]
-    
+
     def getLookaheadIntersectionAllPath(self, curPose: Pose2d):
         best_lookahead = curPose.translation()
         best_alignment = -1
         robot_heading = curPose.rotation()
         robot_direction = Translation2d(robot_heading.cos(), robot_heading.sin())
-        
+
         for idx in range(self.getClosestPoint(curPose, self.last_closest_point_idx)[1] + 1, len(self.path) - 2):
             intersections = self.getLookaheadIntersection(curPose, idx)
             #print(intersections)
@@ -298,17 +301,19 @@ class PurePursuitController():
                         best_lookahead = lookahead
             if best_lookahead == curPose.translation():
                 continue
-            else:  
+            else:
                 self.last_lookahead_point = best_lookahead
                 self.last_lookahead_point_idx = idx
                 break
-        # else:
-        #     best_lookahead = self.path[self.getClosestPoint(curPose, 0)[1] + 1] # SHOULDN'T NEED THIS
-        
-        # print("best lookahead: ", best_lookahead)
+        else:
+            print("no intersections")
+            best_lookahead = self.path[self.getClosestPoint(curPose, 0)[1] + 1] # SHOULDN'T NEED THIS
+
+        print("best lookahead: ", best_lookahead)
+
         return best_lookahead
 
-            
+
 
     def getLookaheadIntersection(self, curPose : Pose2d, start_point_idx : int):
         path = self.path
@@ -326,7 +331,7 @@ class PurePursuitController():
         if discriminant < 0:
             return False
         discriminant = math.sqrt(discriminant)
-        
+
         intersections = []
         candidate_intersection_1 = (-b - discriminant) / (2 * a)
         candidate_intersection_2 = (-b + discriminant) / (2 * a) # because quadratic equation is plus-minus
@@ -355,11 +360,17 @@ class PurePursuitController():
         return False
 
     def getVelocities(self, curPose : Pose2d):
-        lookahead_point = self.getLookaheadIntersectionAllPath(curPose)
-        if self.isAtEnd(curPose.translation()):
+        # lookahead_point = self.getLookaheadIntersectionAllPath(curPose)
+
+        if self.isAtEnd(curPose):
             return False
+        try:
+            lookahead_point = self.path[self.getClosestPoint(curPose, 0)[1] + 10]
+        except:
+            lookahead_point = self.path[self.getClosestPoint(curPose, 0)[1] + 1]
         vx = lookahead_point.X() - curPose.X()
         vy = lookahead_point.Y() - curPose.Y()
+        print("in velocities")
         SmartDashboard.putNumber("vx velocity", vx)
         SmartDashboard.putNumber("vy velocity", vy)
         return [vx, vy]

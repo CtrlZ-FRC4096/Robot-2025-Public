@@ -138,14 +138,15 @@ class OI:
 
                 rotate = -self.driver1.RIGHT_JOY_X()
 
-                if (self.running_path) and (
+                if (self.running_general_path or self.running_pid_lineup) and (
                     abs(self.driver1.LEFT_JOY_X()) > 0.05
                     or abs(self.driver1.LEFT_JOY_Y()) > 0.05
                     or abs(self.driver1.RIGHT_JOY_X()) > 0.1
                     or abs(self.driver1.RIGHT_JOY_Y()) > 0.1
                 ):
                     self.robot.scheduler.cancelAll()
-                    self.running_path = False
+                    self.running_general_path = False
+                    self.running_pid_lineup = False
 
                 if abs(rotate) >= 0.02:
                     self.cardinal_directing = False
@@ -163,12 +164,14 @@ class OI:
                         self.robot.poseEstimator.getYaw().degrees()
                     )
                 elif self.running_general_path or self.running_pid_lineup:
+                    print("pathfinding")
                     if self.running_general_path:
                         if self.pure_pursuit_controller.getVelocities(self.robot.poseEstimator.curEstPose) == False:
                             self.running_general_path = False
                             self.running_pid_lineup = True
-                    
+
                     if self.running_pid_lineup:
+                        print("lineup")
                         self.robot.drivetrain.go_to_pose_profiled_pid(
                             self.robot.poseEstimator.get_path_to_reef(
                                 self.face,
@@ -178,10 +181,12 @@ class OI:
                             )
                         )
                     elif self.running_general_path:
+                        print("gen path")
                         vx = self.pure_pursuit_controller.getVelocities(self.robot.poseEstimator.curEstPose)[0]
                         vy = self.pure_pursuit_controller.getVelocities(self.robot.poseEstimator.curEstPose)[1]
                         #do the stuff about how far away
-                        
+                        vx *= 3
+                        vx *= 3
                         if self.boost_pathfind:
                             vx *= 1.3
                             vy *= 1.3
@@ -266,20 +271,21 @@ class OI:
                 28, #distance offset from reef in inches
                 True
             )
-            
+            print(self.face)
+
             self.raw_path = PathGenerator(self.robot.poseEstimator.curEstPose, target_pose)
             self.path_to_reef = self.raw_path.getSmoothPath()
-            self.pure_pursuit = PurePursuitController(0.05, self.path_to_reef) #LOOKAHEAD DISTANCE METERS
+            self.pure_pursuit_controller = PurePursuitController(0.2, self.path_to_reef) #LOOKAHEAD DISTANCE METERS
             self.running_general_path = True
             self.robot.poseEstimator.score_intent = True
 
             # tgt_pose = self.robot.poseEstimator.field.getObject("tgt pose")
             # tgt_pose.setPose(self.target_pose)
 
-            # for idx in range(len(self.path_to_reef)):
-            #     # if path.inObstacle(self.path_to_reef[idx]):
-            #         field_object = self.robot.poseEstimator.field_for_single_tag.getObject("point " + str(idx))
-            #         field_object.setPose(Pose2d(self.path_to_reef[idx], Rotation2d.fromDegrees(0)))
+            for idx in range(len(self.path_to_reef)):
+                # if path.inObstacle(self.path_to_reef[idx]):
+                    field_object = self.robot.poseEstimator.field_for_single_tag.getObject("point " + str(idx))
+                    field_object.setPose(Pose2d(self.path_to_reef[idx], Rotation2d.fromDegrees(0)))
 
 
 
@@ -335,13 +341,14 @@ class OI:
             self.face = 6
         @self.driver2.B.whenPressed #face 5
         def _():
-            self.face = 6
+            self.face = 5
         @self.driver2.Y.whenPressed #face 3
         def _():
-            self.face = 6
+            self.face = 3
         @self.driver2.X.whenPressed #face 2
         def _():
-            self.face = 6
+            self.face = 2
+
 
         @self.driver2.POV.RIGHT.whenPressed  # STOP ALL SUBSYSTEMS
         def _():
