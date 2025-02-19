@@ -130,14 +130,13 @@ class OI:
 
                 rotate = -self.driver1.RIGHT_JOY_X()
 
-                if (self.running_path) and (
+                if (self.running_pid_lineup) and (
                     abs(self.driver1.LEFT_JOY_X()) > 0.05
                     or abs(self.driver1.LEFT_JOY_Y()) > 0.05
                     or abs(self.driver1.RIGHT_JOY_X()) > 0.1
                     or abs(self.driver1.RIGHT_JOY_Y()) > 0.1
                 ):
-                    self.robot.scheduler.cancelAll()
-                    self.running_path = False
+                    self.running_pid_lineup = False
 
                 if abs(rotate) >= 0.02:
                     self.cardinal_directing = False
@@ -154,13 +153,7 @@ class OI:
                     self.robot_oriented_angle = (
                         self.robot.poseEstimator.getYaw().degrees()
                     )
-                elif self.running_general_path or self.running_pid_lineup:
-                    if self.running_general_path:
-                        if self.pure_pursuit_controller.getVelocities(self.robot.poseEstimator.curEstPose) == False:
-                            self.running_general_path = False
-                            self.running_pid_lineup = True
-                    
-                    if self.running_pid_lineup:
+                elif self.running_pid_lineup:
                         self.robot.drivetrain.go_to_pose_profiled_pid(self.target_pose)
                 else:
                     # if not self.cardinal_directing:
@@ -246,25 +239,8 @@ class OI:
         def _():
             self.running_pid_lineup = False
             self.robot.poseEstimator.score_intent = False
-
-        #TEMPORARY COMMENT OUT
-        # @self.driver1.RIGHT_TRIGGER_AS_BUTTON.whenHeld  # Run profiled PID to tag
-        # def _():
-        #     self.target_pose = self.robot.poseEstimator.get_path_to_reef(
-        #         self.robot.poseEstimator.calculate_closest_reef_tag()[1],
-        #         self.right_branch,
-        #     )
-        #     path = PathGenerator(self.robot.poseEstimator.curEstPose, self.target_pose)
-        #     self.path_to_reef = path.getPointList()
-        #     self.running_pid_lineup = True
-        #     self.robot.poseEstimator.score_intent = True
-
-        # @self.driver1.RIGHT_TRIGGER_AS_BUTTON.whenReleased  # stop profiled PID
-        # def _():
-        #     self.running_pid_lineup = False
-        #     self.robot.poseEstimator.score_intent = False
-        #     self.robot_oriented_angle = self.robot.poseEstimator.getYaw().degrees()
-            # self.robot.drivetrain.stop() May or may not be needed to stop the robot from tracking the PID
+            self.robot_oriented_angle = self.robot.poseEstimator.getYaw().degrees()
+            self.robot.drivetrain.stop() #May or may not be needed to stop the robot from tracking the PID
 
         @self.driver2.RIGHT_TRIGGER_AS_BUTTON.whenPressed  # right face
         def _():
