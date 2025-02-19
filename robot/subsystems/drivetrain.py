@@ -29,6 +29,7 @@ from phoenix6 import configs
 
 
 import const
+from field_const import FieldConstants
 
 # from leds import LEDs
 # from shooter import Shooter
@@ -48,7 +49,7 @@ from pathplannerlib.path import PathPlannerTrajectory
 from pathplannerlib.path import PathPlannerPath, PathConstraints
 from wpimath.estimator import SwerveDrive4PoseEstimator
 from photoncamera import WrapperedPhotonCamera
-from wpimath.units import degreesToRadians
+from wpimath.units import degreesToRadians, inchesToMeters
 
 
 class Drivetrain(Subsystem):
@@ -72,6 +73,8 @@ class Drivetrain(Subsystem):
 
         ### Field Visualisation - Needs testing ###
         self.previous_chassisspeeds = ChassisSpeeds()
+        # self.curPose = Pose2d(inchesToMeters(235.726), 0.8, Rotation2d.fromDegrees(0))
+        # self.isFirstTick = True
 
     def drive(self, translation: Translation2d, rotation, field_relative, is_open_loop):
         SmartDashboard.putNumber("Swerve/Translation X", translation.x)
@@ -101,6 +104,13 @@ class Drivetrain(Subsystem):
 
         for idx, module in enumerate(self.robot.poseEstimator.modules):
             module.set_desired_state(module_states[idx], is_open_loop)
+        
+        # self.curPose = Pose2d(self.curPose.X() + min(translation.X(), (3.0 * translation.X()) / abs(translation.X()) if translation.X() != 0 else 3.0), self.curPose.Y() + min(translation.Y(), (3.0 * translation.Y()) / abs(translation.Y()) if translation.Y() != 0 else 3.0), Rotation2d.fromDegrees(0))
+        # print(self.curPose)
+        # pose = self.robot.poseEstimator.field.getObject("current pose")
+
+        # pose.setPose(self.curPose)
+
 
     def drive_with_pid(self, translation: Translation2d, target_angle):
         pid_output = self.angle_pid.calculate(self.robot.poseEstimator.getYaw().degrees(), target_angle)  # type: ignore
@@ -130,36 +140,40 @@ class Drivetrain(Subsystem):
             # print(module_states[idx].speed)
             module.set_desired_state(module_states[idx], is_open_loop=False)
 
-    def go_to_pose_profiled_pid(self, target_pose):
-        # Get the current pose
-        current_pose = self.get_pose()
+    def go_to_pose_profiled_pid(self, target_pose : Translation2d):
+        
+        current_pose = self.robot.poseEstimator.curEstPose
 
         # Calculate the control outputs
-        vx = self.x_controller.calculate(current_pose.X(), target_pose.X())
+        vx = self.x_controller.calculate(current_pose.X(), target_pose.X()) # meters / 0.05 seconds
         vy = self.y_controller.calculate(current_pose.Y(), target_pose.Y())
-        omega = self.theta_controller.calculate(
-            current_pose.rotation().degrees(), target_pose.rotation().degrees()
-        )
+        # omega = self.theta_controller.calculate(
+        #     current_pose.rotation().degrees(), target_pose.rotation().degrees()
+        # )
+        omega = 0
+        
 
         # Check if the controllers are at their setpoints
         if (
             self.x_controller.atSetpoint()
             and self.y_controller.atSetpoint()
-            and self.theta_controller.atSetpoint()
+            # and self.theta_controller.atSetpoint()
         ):
-            # Optionally, stop the drivetrain if at setpoint
+            self.robot.oi.running_pid_lineup = False
             self.stop()
             return
+            # Optionally, stop the drivetrain if at setpoint
+            
 
         # Drive the robot using the calculated velocities
-        self.drive(Translation2d(vx, vy), omega, True, False)
+        self.drive(Translation2d(vx, vy), 0, True, False)
 
         # Update SmartDashboard values for debugging
         SmartDashboard.putNumber("t_pose x", target_pose.X())
         SmartDashboard.putNumber("t_pose y", target_pose.Y())
         SmartDashboard.putNumber("vx", vx)
         SmartDashboard.putNumber("vy", vy)
-        SmartDashboard.putNumber("omega", omega)
+        SmartDashboard.putNumber("omega", 0)
 
     def stop(self):
         self.drive(Translation2d(0, 0), 0, False, True)

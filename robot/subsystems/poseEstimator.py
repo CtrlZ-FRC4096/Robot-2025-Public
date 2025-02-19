@@ -333,30 +333,15 @@ class PoseEstimator(Subsystem):
         return [closest_reef_tag, FieldConstants.tag_to_face[closest_reef_tag]]
 
 
-    def get_path_to_reef(self, face: int, right_branch: bool):
+    def get_path_to_reef(self, face: int, right_branch: bool, margin_dist_offset : int, do_side_offset : bool):
         side_offset = inchesToMeters(6.47)  # distance b/w center of face to branch
         dist_offset = (
-            (inchesToMeters(29.5) / 2) + (inchesToMeters(7.25) / 2) + inchesToMeters(6)
+            (inchesToMeters(29.5) / 2) + (inchesToMeters(7.25) / 2) + inchesToMeters(margin_dist_offset)
         )  # robot size + bumper addition + error protection
 
         angle_face = FieldConstants.Reef.centerFaces[face - 1].rotation()
         center_face_pose = FieldConstants.Reef.centerFaces[face - 1]
         center_face_translation = center_face_pose.translation()
-
-        # branch_pose = FieldConstants.Reef.branchPositions[
-        #     (face - 1) * 2 + (0 if right_branch else 1)
-        # ][0].toPose2d()
-        # target_pose = branch_pose.transformBy(Transform2d(dist_offset, 0, 0)).rotateBy(Rotation2d.fromDegrees(-90))
-
-        # offset_face_pose = center_face_pose.transformBy(Transform2d(dist_offset, 0, 0))
-        # angle_to_branch = (
-        #     (angle_face.degrees() + 90) % 360
-        #     if right_branch
-        #     else (angle_face.degrees() - 90) % 360
-        # )
-        # target_pose_2 = offset_face_pose.transformBy(
-        #     Transform2d(side_offset, 0, degreesToRadians(angle_to_branch))
-        # ).rotateBy(Rotation2d.fromDegrees(-90))
 
         center_face_x = (
             center_face_translation.X()
@@ -370,25 +355,31 @@ class PoseEstimator(Subsystem):
             center_face_x + x_offset, center_face_y + y_offset, angle_face
         )
 
-        angle_to_branch = (
-            (angle_face.degrees() + 90) % 360
-            if right_branch
-            else (angle_face.degrees() - 90) % 360
-        )  # angle change needed to do math to get to the branch, right branch needs + 90 degrees (CCW), left_branch needs -90 (CW)
+        if do_side_offset:
+            angle_to_branch = (
+                (angle_face.degrees() + 90) % 360
+                if right_branch
+                else (angle_face.degrees() - 90) % 360
+            )  # angle change needed to do math to get to the branch, right branch needs + 90 degrees (CCW), left_branch needs -90 (CW)
 
-        x_offset_branch = (
-            math.cos(degreesToRadians(angle_to_branch)) * side_offset
-        )  # same as above, extending the pose from the point outside of the reef in the direction of the desired branch
-        y_offset_branch = math.sin(degreesToRadians(angle_to_branch)) * side_offset
+            x_offset_branch = (
+                math.cos(degreesToRadians(angle_to_branch)) * side_offset
+            )  # same as above, extending the pose from the point outside of the reef in the direction of the desired branch
+            y_offset_branch = math.sin(degreesToRadians(angle_to_branch)) * side_offset
 
-        target_pose_3 = Pose2d(
-            target_pose_face.X() + x_offset_branch,
-            target_pose_face.Y() + y_offset_branch,
-            Rotation2d.fromDegrees(
-                angle_face.degrees() - 90
-            ),  # don't know if this + 90 is needed, because our battery is facing forward and we want the camera side (scoring side) to face reef
-        )
-        return target_pose_3
+            target_pose_3 = Pose2d(
+                target_pose_face.X() + x_offset_branch,
+                target_pose_face.Y() + y_offset_branch,
+                Rotation2d.fromDegrees(
+                    angle_face.degrees() - 90
+                ),  # don't know if this + 90 is needed, because our battery is facing forward and we want the camera side (scoring side) to face reef
+            )
+            return target_pose_3
+        else:
+            return target_pose_face
+        
+    def useSingleTag(self):
+        return (self.curEstPoseGlobal - self.tag_layout.getTagPose(self.calculate_closest_reef_tag()[0]).toPose2d()).translation().norm() > 2
 
     def periodic(self):
         allianceColor = DriverStation.getAlliance()
@@ -488,24 +479,20 @@ class PoseEstimator(Subsystem):
         )
 
         SmartDashboard.putBoolean("right branch", self.robot.oi.right_branch)
+        SmartDashboard.putNumber("face to path ", self.robot.oi.face)
+
         single_tag = False
         if self.candidate_pose_OK(possible_pose_global):
             self.curEstPoseGlobal = possible_pose_global
         if self.candidate_pose_OK(possible_pose_single_tag):
             self.curEstPoseSingleTag = possible_pose_single_tag
         if self.score_intent:
-            if (
-                self.curEstPoseGlobal
-                - self.tag_layout.getTagPose(
-                    self.calculate_closest_reef_tag()[0]
-                ).toPose2d()
-            ).translation().norm() > 2:
+            if not self.useSingleTag():
                 self.curEstPose = self.curEstPoseGlobal
                 single_tag = False
             else:
                 self.curEstPose = self.curEstPoseSingleTag
                 single_tag = True
-
         else:
             self.curEstPose = self.curEstPoseGlobal
             single_tag = False
@@ -522,7 +509,7 @@ class PoseEstimator(Subsystem):
         self.poseConverge = True
 
         SmartDashboard.putData("Field", self.field)
-        self.field.setRobotPose(self.poseEst.getEstimatedPosition())
+        # self.field.setRobotPose(self.poseEst.getEstimatedPosition())
         SmartDashboard.putData("Field w/ Single Tag", self.field_for_single_tag)
         self.field_for_single_tag.setRobotPose(
             self.poseEstSingleTag.getEstimatedPosition()
@@ -533,6 +520,8 @@ class PoseEstimator(Subsystem):
         SmartDashboard.putNumber(
             "rotation of target pose: ", self.temp_rotation_check.degrees()
         )
+
+
 
 
         # target_pose = self.get_path_to_reef(3, True)
