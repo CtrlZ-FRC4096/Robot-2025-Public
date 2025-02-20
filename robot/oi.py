@@ -102,7 +102,9 @@ class OI:
         self.face = 1
         self.right_branch = True
         self.running_pid_lineup = False
-        self.target_pose = Pose2d()
+        self.final_lineup_pose = Pose2d()
+        self.score_intent = False
+        self.position_on_source = 2
 
         @self.rumble_button.whenPressed
         def _():
@@ -154,7 +156,7 @@ class OI:
                         self.robot.poseEstimator.getYaw().degrees()
                     )
                 elif self.running_pid_lineup:
-                        self.robot.drivetrain.go_to_pose_profiled_pid(self.target_pose)
+                    self.robot.drivetrain.go_to_pose_profiled_pid(self.final_lineup_pose)
                 else:
                     # if not self.cardinal_directing:
                     #     if self.find_heading:
@@ -222,23 +224,37 @@ class OI:
             if self.can_crash:
                 4096 / 0
 
-        @self.driver1.RIGHT_BUMPER.whenPressed  # Run funnel intake
+        @self.driver1.RIGHT_BUMPER.whenPressed  #flip funnel intake
         def _():
-            self.robot.funnel_intake.is_running = True
+            self.robot.funnel_intake.is_running = not self.robot.funnel_intake.is_running
+
+        @self.driver1.LEFT_TRIGGER_AS_BUTTON.whenHeld #run profiled pid to nearest source
+        def _():
+            self.running_pid_lineup = True
+            self.final_lineup_pose = self.robot.poseEstimator.get_path_to_source(False, self.position_on_source)
+            self.score_intent = True
+
+        @self.driver1.LEFT_TRIGGER_AS_BUTTON.whenReleased #stop pid
+        def _():
+            self.running_pid_lineup = False
+            self.score_intent = False
+            self.position_on_source = 2
+            self.robot_oriented_angle = self.robot.poseEstimator.getYaw().degrees()
+            self.robot.drivetrain.stop()
 
         @self.driver1.RIGHT_TRIGGER_AS_BUTTON.whenHeld  # Run profiled PID to tag
         def _():
-            self.target_pose = self.robot.poseEstimator.get_path_to_reef(
+            self.final_lineup_pose = self.robot.poseEstimator.get_path_to_reef(
                 self.robot.poseEstimator.calculate_closest_reef_tag()[1],
                 self.right_branch,
             )
             self.running_pid_lineup = True
-            self.robot.poseEstimator.score_intent = True
+            self.score_intent = True
 
         @self.driver1.RIGHT_TRIGGER_AS_BUTTON.whenReleased  # stop profiled PID
         def _():
             self.running_pid_lineup = False
-            self.robot.poseEstimator.score_intent = False
+            self.score_intent = False
             self.robot_oriented_angle = self.robot.poseEstimator.getYaw().degrees()
             self.robot.drivetrain.stop() #May or may not be needed to stop the robot from tracking the PID
 
@@ -249,6 +265,14 @@ class OI:
         @self.driver2.LEFT_TRIGGER_AS_BUTTON.whenPressed  # left face
         def _():
             self.right_branch = False
+        
+        @self.driver2.A.whenPressed #position 1 on source
+        def _():
+            self.position_on_source = 1
+        
+        @self.driver2.B.whenPressed #position 3 on source
+        def _():
+            self.position_on_source = 3
 
     def log(self):
         SmartDashboard.putNumber("robot oriented angle", self.robot_oriented_angle)

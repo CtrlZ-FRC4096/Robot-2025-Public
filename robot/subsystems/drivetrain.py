@@ -147,17 +147,16 @@ class Drivetrain(Subsystem):
         # Calculate the control outputs
         vx = self.x_controller.calculate(current_pose.X(), target_pose.X()) # meters / 0.05 seconds
         vy = self.y_controller.calculate(current_pose.Y(), target_pose.Y())
-        # omega = self.theta_controller.calculate(
-        #     current_pose.rotation().degrees(), target_pose.rotation().degrees()
-        # )
-        omega = 0
+        omega = self.theta_controller.calculate(
+            current_pose.rotation().degrees(), target_pose.rotation().degrees()
+        )
         
 
         # Check if the controllers are at their setpoints
         if (
             self.x_controller.atSetpoint()
             and self.y_controller.atSetpoint()
-            # and self.theta_controller.atSetpoint()
+            and self.theta_controller.atSetpoint()
         ):
             self.robot.oi.running_pid_lineup = False
             self.stop()

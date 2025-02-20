@@ -68,6 +68,8 @@ class FunnelIntake(Subsystem):
             #     self.stop()
             #     self.is_running = False
             self.intake()
+        # if self.canrange_1.get_is_detected():
+        #     self.piece_through_intake = True
 
     def log(self):
         pass

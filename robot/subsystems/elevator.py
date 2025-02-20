@@ -12,12 +12,19 @@ from phoenix6 import configs, hardware, controls, signals
 from commands2 import Subsystem
 import wpilib
 
+from wpimath.geometry import (
+    Translation2d,
+    Pose2d,
+    Rotation2d
+)
+from path_gen import PathGenerator
 import const
 
 class Elevator(Subsystem):
     def __init__(self, robot: "Robot"):
         super().__init__()
         self.robot = robot
+        self.path_generator = PathGenerator(Pose2d(), Pose2d(1,1, Rotation2d(0))) #dummy class to check for obstacles
         self.elevator_motor_1 = hardware.TalonFX(const.ELEVATOR_MOTOR_1_CAN_ID, "rio")
         self.elevator_motor_2 = hardware.TalonFX(const.ELEVATOR_MOTOR_2_CAN_ID, "rio")
 
@@ -106,7 +113,12 @@ class Elevator(Subsystem):
         ## If limit switch is hit,
             ## Stop the motors and set the position to 0 or the maximum height
             ## Hopefully this prevents the elevator from breaking
-            
+        
+        if self.robot.poseEstimator.score_intent:
+            if (self.robot.poseEstimator.curEstPose - self.robot.oi.final_lineup_pose).norm() < 2 and\
+                not (self.path_generator.obstacleBetween(self.robot.poseEstimator.curEstPose, self.robot.oi.final_lineup_pose)):
+                #raise elevator
+                pass
         
         pass
 

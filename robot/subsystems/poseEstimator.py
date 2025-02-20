@@ -213,7 +213,6 @@ class PoseEstimator(Subsystem):
         self.last_periodic_accel_x = 0
         self.last_periodic_accel_y = 0
 
-        self.score_intent = False
         self.temp_rotation_check = Rotation2d()
 
         self.tag_layout = AprilTagFieldLayout.loadField(AprilTagField.k2025Reefscape)
@@ -333,7 +332,7 @@ class PoseEstimator(Subsystem):
         return [closest_reef_tag, FieldConstants.tag_to_face[closest_reef_tag]]
 
 
-    def get_path_to_reef(self, face: int, right_branch: bool, margin_dist_offset : int, do_side_offset : bool):
+    def get_path_to_reef(self, face: int, right_branch: bool, margin_dist_offset=6, do_side_offset=True):
         side_offset = inchesToMeters(6.47)  # distance b/w center of face to branch
         dist_offset = (
             (inchesToMeters(29.5) / 2) + (inchesToMeters(7.25) / 2) + inchesToMeters(margin_dist_offset)
@@ -377,7 +376,65 @@ class PoseEstimator(Subsystem):
             return target_pose_3
         else:
             return target_pose_face
-        
+    
+    def calculate_closest_source(self):
+        '''
+        returns list [is_left_source_closest : bool, tag_of_closest_source : 12 | 13]
+        tag 12, right source
+        tag 13 left source
+        FOR BLUE SIDE
+        tag 2, right source
+        tag 1, left source
+        FOR RED SIDE
+        '''
+        curPose = self.curEstPose
+        right_source_tag = 2 if FieldConstants.shouldFlip else 12
+        left_source_tag = 1 if FieldConstants.shouldFlip else 13
+        dist_to_right_source = (FieldConstants.flip_Pose2d(FieldConstants.CoralStation.rightCenterFace).translation() - curPose.translation()).norm()
+        dist_to_left_source = (FieldConstants.flip_Pose2d(FieldConstants.CoralStation.leftCenterFace).translation() - curPose.translation()).norm()
+        left_source_closer = True if dist_to_left_source >= dist_to_right_source else False
+
+        return [left_source_closer, left_source_tag if left_source_closer else right_source_tag]
+
+    def get_path_to_source(self, left_source : bool, place_on_source=2):
+        '''
+        Use calculate_closest source
+        Place on source (default 2):
+        1 - closest towards DS wall
+        2- center source
+        3 - closest to PROCESSOR WALL
+        '''
+        dist_offset = (inchesToMeters(29.5) / 2) + (inchesToMeters(7.25) / 2) + (inchesToMeters(6))
+        side_offset = inchesToMeters(20)
+        if left_source:
+            source_pose = FieldConstants.flip_Pose2d(FieldConstants.CoralStation.leftCenterFace)
+            source_rotation = source_pose.rotation()
+            x_offset = math.cos(source_rotation.radians()) * dist_offset  # offsetting that pose by a set offset that extends the pose as if there's a vector from the center face with angle: angle_face
+            y_offset = math.sin(source_rotation.radians()) * dist_offset
+
+            offset_pose = Pose2d(source_pose.X() + x_offset, source_pose.Y() + y_offset, source_rotation)
+            if place_on_source == 2:
+                return offset_pose
+            elif place_on_source == 1 or place_on_source == 3:
+                x_side_offset = math.cos(degreesToRadians(source_rotation.degrees() + (-1 * 90 if place_on_source == 1 else 90))) * side_offset
+                y_side_offset = math.sin(degreesToRadians(source_rotation.degrees() + (-1 * 90 if place_on_source == 1 else 90))) * side_offset
+                target_pose = Pose2d(offset_pose.X() + x_side_offset, offset_pose.Y() + y_side_offset, source_rotation)
+                return target_pose
+        else:
+            source_pose = FieldConstants.flip_Pose2d(FieldConstants.CoralStation.rightCenterFace)
+            source_rotation = source_pose.rotation()
+            x_offset = math.cos(source_rotation.radians()) * dist_offset  # offsetting that pose by a set offset that extends the pose as if there's a vector from the center face with angle: angle_face
+            y_offset = math.sin(source_rotation.radians()) * dist_offset
+            
+            offset_pose = Pose2d(source_pose.X() + x_offset, source_pose.Y() + y_offset, source_rotation)
+            if place_on_source == 2:
+                return offset_pose
+            elif place_on_source == 1 or place_on_source == 3:
+                x_side_offset = math.cos(degreesToRadians(source_rotation.degrees() + (90 if place_on_source == 1 else -90))) * side_offset
+                y_side_offset = math.sin(degreesToRadians(source_rotation.degrees() + (90 if place_on_source == 1 else -90))) * side_offset
+                target_pose = Pose2d(offset_pose.X() + x_side_offset, offset_pose.Y() + y_side_offset, source_rotation)
+                return target_pose
+
     def useSingleTag(self):
         return (self.curEstPoseGlobal - self.tag_layout.getTagPose(self.calculate_closest_reef_tag()[0]).toPose2d()).translation().norm() > 2
 
@@ -486,7 +543,7 @@ class PoseEstimator(Subsystem):
             self.curEstPoseGlobal = possible_pose_global
         if self.candidate_pose_OK(possible_pose_single_tag):
             self.curEstPoseSingleTag = possible_pose_single_tag
-        if self.score_intent:
+        if self.robot.oi.running_pid_lineup:
             if not self.useSingleTag():
                 self.curEstPose = self.curEstPoseGlobal
                 single_tag = False
