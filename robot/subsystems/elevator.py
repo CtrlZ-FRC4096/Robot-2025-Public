@@ -37,7 +37,7 @@ class Elevator(Subsystem):
         self.elevator_motor_config.slot0.k_s = 0.0
 
         ## Next we will adjust k_p until the elevator moves to the correct position and slightly overshoots/oscillates
-        self.elevator_motor_config.slot0.k_p = 0.0
+        self.elevator_motor_config.slot0.k_p = 2.0
         ## Next we will adjust k_d until the elevator moves to the correct position without overshooting/oscillating
         self.elevator_motor_config.slot0.k_d = 0.0
 
@@ -75,6 +75,8 @@ class Elevator(Subsystem):
         )
         self.elevator_motor_config.current_limits.stator_current_limit = 100
 
+        self.elevator_motor_config.motor_output.inverted = signals.InvertedValue(1)
+
         # We will adjust these values later to get the elevator moving faster
         self.elevator_motor_config.motion_magic.motion_magic_cruise_velocity = 1 # Recalc has us at 16 RPS, but starting slow
         self.elevator_motor_config.motion_magic.motion_magic_acceleration = 10 # Recalc has us at 100 RPS/s^2, but starting slow
@@ -83,7 +85,7 @@ class Elevator(Subsystem):
 
         self.elevator_motor_2.configurator.apply(self.elevator_motor_config)  # type: ignore
 
-        # self.elevator_motor_2.set_control(controls.Follower(const.ELEVATOR_MOTOR_1_CAN_ID, True)) # Set the second motor to follow the first one but inverted
+        self.elevator_motor_2.set_control(controls.Follower(const.ELEVATOR_MOTOR_1_CAN_ID, False)) # Set the second motor to follow the first one but inverted
 
         self.max_height = 100 # need to adjust later
         self.min_height = 0 # need to adjust later
@@ -93,7 +95,6 @@ class Elevator(Subsystem):
         self.gear_ratio = 6.176 # need to adjust if using something else
 
         ## self.request = controls.DynamicMotionMagicTorqueCurrentFOC(0.0) We can use dynamic motion magic to change the cruise velocity and acceleration on the fly, less acceration when the elevator comes down, etc.
-        self.request = controls.MotionMagicTorqueCurrentFOC(0.0)
 
         ## Somewhere here we want to set the position of the motor to the absolute encoder value with some offset for the starting position of the encoder
         self.elevator_motor_1.set_position(0.0)
@@ -106,8 +107,8 @@ class Elevator(Subsystem):
 
     def set_elevator_height(self, height):
         sprocket_motion = height / (math.pi * self.sprocket_diameter * 3) ##some math for height here
-        rotation = sprocket_motion / self.gear_ratio
-        self.elevator_motor_1.set_control(self.request.with_position(rotation))
+        rotation = sprocket_motion * self.gear_ratio
+        self.elevator_motor_1.set_control(controls.MotionMagicTorqueCurrentFOC(rotation))
         # https://v6.docs.ctr-electronics.com/en/2024/docs/api-reference/device-specific/talonfx/motion-magic.html
 
     def elevator_to_top(self):
@@ -116,17 +117,31 @@ class Elevator(Subsystem):
         self.set_elevator_height(0)
 
     def periodic(self):
+        SmartDashboard.putNumber("Current elevator height: ", self.get_height())
         ## If limit switch is hit,
             ## Stop the motors and set the position to 0 or the maximum height
             ## Hopefully this prevents the elevator from breaking
-
+        elevator_pitch_roll_greater_10 = False
+        closer_than_2_meters = False
         if self.robot.oi.score_intent:
             if (self.robot.poseEstimator.curEstPose - self.robot.oi.final_lineup_pose).norm() < 2 and\
                 not (self.path_generator.obstacleBetween(self.robot.poseEstimator.curEstPose, self.robot.oi.final_lineup_pose)):
                 #raise elevator
-                pass
+                closer_than_2_meters = True
+            else:
+                closer_than_2_meters = False
+        else:
+            closer_than_2_meters = False
 
-        pass
+		#bring elevator down if pitch | roll is greater than 10 degrees
+        if self.robot.poseEstimator.gyro.get_pitch().value > 10 and self.robot.poseEstimator.gyro.get_roll().value > 10:
+            elevator_pitch_roll_greater_10 = True
+			# self.set_elevator_height(0)
+        else:
+            elevator_pitch_roll_greater_10 = False
+
+        SmartDashboard.putBoolean("elevator pitch roll >10", elevator_pitch_roll_greater_10)
+        SmartDashboard.putBoolean("closer than 2 meters", closer_than_2_meters)
 
     def log(self):
         pass

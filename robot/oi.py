@@ -260,14 +260,17 @@ class OI:
 
         @self.driver2.POV.UP.whenPressed
         def _():
+            SmartDashboard.putNumber("elevator setpoint", 30)
             self.robot.elevator.set_elevator_height(30)
 
         @self.driver2.POV.DOWN.whenPressed
         def _():
+            SmartDashboard.putNumber("elevator setpoint", 10)
             self.robot.elevator.set_elevator_height(10)
 
         @self.driver2.POV.RIGHT.whenPressed
         def _():
+            SmartDashboard.putNumber("elevator setpoint", 50)
             self.robot.elevator.set_elevator_height(50)
 
         @self.driver2.RIGHT_TRIGGER_AS_BUTTON.whenPressed  # right face

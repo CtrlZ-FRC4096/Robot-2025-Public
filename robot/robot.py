@@ -85,7 +85,7 @@ class Robot(CoroutineRobot):
 
         # Match Stuff
         self.match_time = -1
-        const.IS_SIMULATION = self.isSimulation()
+        # const.IS_SIMULATION = self.isSimulation()
 
         self.has_note = False
 
