@@ -74,12 +74,12 @@ class Elevator(Subsystem):
         self.command_height = 0.0
 
         ## self.request = controls.DynamicMotionMagicTorqueCurrentFOC(0.0) We can use dynamic motion magic to change the cruise velocity and acceleration on the fly, less acceration when the elevator comes down, etc.
-
+        self.request = controls.MotionMagicVoltage(0, enable_foc=True)
         ## Somewhere here we want to set the position of the motor to the absolute encoder value with some offset for the starting position of the encoder
         # self.elevator_motor_1.set_position(0.0)
 
     def stop(self):
-        self.elevator_motor_1.set_control(controls.TorqueCurrentFOC(0.0))
+        self.elevator_motor_1.set_control(controls.PositionVoltage(0.0, enable_foc=True))
 
     def get_height(self):
         rotations = self.elevator_motor_1.get_position().value
@@ -90,7 +90,7 @@ class Elevator(Subsystem):
         self.command_height = height
         sprocket_rotations = height / (math.pi * self.sprocket_diameter * 3) ##some math for height here
         rotation = sprocket_rotations * self.gear_ratio
-        self.elevator_motor_1.set_control(controls.MotionMagicTorqueCurrentFOC(rotation))
+        self.elevator_motor_1.set_control(self.request.with_position(rotation))
         # https://v6.docs.ctr-electronics.com/en/2024/docs/api-reference/device-specific/talonfx/motion-magic.html
 
     def elevator_to_top(self):
