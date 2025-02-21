@@ -42,47 +42,25 @@ class Elevator(Subsystem):
         self.elevator_motor_config.slot0.k_d = 0.0
 
         ## Adjust other stuff if we need it like k_v and k_a for feed forward
-
-
-
-        self.elevator_motor_config.current_limits.supply_current_limit = (
-            80  # I am not sure if this is correct
-        )
-
-        self.elevator_motor_config.torque_current.peak_forward_torque_current = (
-            80  # Up this to 80 for more zip
-        )
+        self.elevator_motor_config.current_limits.supply_current_limit = 80
+        self.elevator_motor_config.torque_current.peak_forward_torque_current = 80
         self.elevator_motor_config.torque_current.peak_reverse_torque_current = -80
         ##Ramps
-        self.elevator_motor_config.closed_loop_ramps.torque_closed_loop_ramp_period = (
-            0.02
-        )
+        self.elevator_motor_config.closed_loop_ramps.torque_closed_loop_ramp_period = 0.02
         self.elevator_motor_config.open_loop_ramps.torque_open_loop_ramp_period = 0.02
-        self.elevator_motor_config.closed_loop_ramps.duty_cycle_closed_loop_ramp_period = (
-            0.02
-        )
-        self.elevator_motor_config.open_loop_ramps.duty_cycle_open_loop_ramp_period = (
-            0.02
-        )
-        self.elevator_motor_config.closed_loop_ramps.voltage_closed_loop_ramp_period = (
-            0.02
-        )
+        self.elevator_motor_config.closed_loop_ramps.duty_cycle_closed_loop_ramp_period = 0.02
+        self.elevator_motor_config.open_loop_ramps.duty_cycle_open_loop_ramp_period = 0.02
+        self.elevator_motor_config.closed_loop_ramps.voltage_closed_loop_ramp_period = 0.02
         self.elevator_motor_config.open_loop_ramps.voltage_open_loop_ramp_period = 0.02
-
         self.elevator_motor_config.current_limits.supply_current_limit_enable = True
-        self.elevator_motor_config.motor_output.neutral_mode = signals.NeutralModeValue(
-            1
-        )
+        self.elevator_motor_config.motor_output.neutral_mode = signals.NeutralModeValue(1)
         self.elevator_motor_config.current_limits.stator_current_limit = 100
-
-        self.elevator_motor_config.motor_output.inverted = signals.InvertedValue(1)
-
+        
         # We will adjust these values later to get the elevator moving faster
-        self.elevator_motor_config.motion_magic.motion_magic_cruise_velocity = 1 # Recalc has us at 16 RPS, but starting slow
-        self.elevator_motor_config.motion_magic.motion_magic_acceleration = 10 # Recalc has us at 100 RPS/s^2, but starting slow
+        self.elevator_motor_config.motion_magic.motion_magic_cruise_velocity = 10 # Recalc has us at 16 RPS, but starting slow
+        self.elevator_motor_config.motion_magic.motion_magic_acceleration = 100 # Recalc has us at 100 RPS/s^2, but starting slow
 
         self.elevator_motor_1.configurator.apply(self.elevator_motor_config)  # type: ignore
-
         self.elevator_motor_2.configurator.apply(self.elevator_motor_config)  # type: ignore
 
         self.elevator_motor_2.set_control(controls.Follower(const.ELEVATOR_MOTOR_1_CAN_ID, False)) # Set the second motor to follow the first one but inverted
@@ -93,21 +71,25 @@ class Elevator(Subsystem):
         ## Use these values to convert rotations to inches and vice versa for motion magic commands
         self.sprocket_diameter = 1.273 # in. for 16t, need to adjust if using something else
         self.gear_ratio = 6.176 # need to adjust if using something else
+        self.command_height = 0.0
 
         ## self.request = controls.DynamicMotionMagicTorqueCurrentFOC(0.0) We can use dynamic motion magic to change the cruise velocity and acceleration on the fly, less acceration when the elevator comes down, etc.
 
         ## Somewhere here we want to set the position of the motor to the absolute encoder value with some offset for the starting position of the encoder
-        self.elevator_motor_1.set_position(0.0)
+        # self.elevator_motor_1.set_position(0.0)
 
     def stop(self):
-        self.elevator_motor_1.set_control(controls.VelocityTorqueCurrentFOC(0.0))
+        self.elevator_motor_1.set_control(controls.TorqueCurrentFOC(0.0))
 
     def get_height(self):
-        return self.elevator_motor_1.get_position().value
+        rotations = self.elevator_motor_1.get_position().value
+        height = rotations / self.gear_ratio * math.pi * self.sprocket_diameter * 3  ## 3 is the mechanical advantage of the elevator
+        return height
 
     def set_elevator_height(self, height):
-        sprocket_motion = height / (math.pi * self.sprocket_diameter * 3) ##some math for height here
-        rotation = sprocket_motion * self.gear_ratio
+        self.command_height = height
+        sprocket_rotations = height / (math.pi * self.sprocket_diameter * 3) ##some math for height here
+        rotation = sprocket_rotations * self.gear_ratio
         self.elevator_motor_1.set_control(controls.MotionMagicTorqueCurrentFOC(rotation))
         # https://v6.docs.ctr-electronics.com/en/2024/docs/api-reference/device-specific/talonfx/motion-magic.html
 
@@ -118,6 +100,7 @@ class Elevator(Subsystem):
 
     def periodic(self):
         SmartDashboard.putNumber("Current elevator height: ", self.get_height())
+        SmartDashboard.putNumber("Commanded elevator height: ", self.command_height)
         ## If limit switch is hit,
             ## Stop the motors and set the position to 0 or the maximum height
             ## Hopefully this prevents the elevator from breaking
