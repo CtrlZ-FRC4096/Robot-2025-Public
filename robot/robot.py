@@ -34,6 +34,7 @@ import ntcore
 import subsystems.drivetrain
 
 # import subsystems.limelight
+import subsystems.elevator
 import subsystems.funnel_intake
 import subsystems.leds
 
@@ -97,12 +98,14 @@ class Robot(CoroutineRobot):
         self.limelight = subsystems.limelight.Limelight_Wrapper()
         self.poseEstimator = subsystems.poseEstimator.PoseEstimator(self)
         self.funnel_intake = subsystems.funnel_intake.FunnelIntake(self)
+        self.elevator = subsystems.elevator.Elevator(self)
 
         self.subsystems = [
             self.drivetrain,
             self.leds,
             self.poseEstimator,
             self.funnel_intake,
+            self.elevator,
         ]
 
         # If everything in self.subsystems is a Subsystem object, then

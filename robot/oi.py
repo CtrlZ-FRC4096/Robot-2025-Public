@@ -258,6 +258,18 @@ class OI:
             self.robot_oriented_angle = self.robot.poseEstimator.getYaw().degrees()
             self.robot.drivetrain.stop() #May or may not be needed to stop the robot from tracking the PID
 
+        @self.driver2.POV.UP.whenPressed
+        def _():
+            self.robot.elevator.set_elevator_height(30)
+
+        @self.driver2.POV.DOWN.whenPressed
+        def _():
+            self.robot.elevator.set_elevator_height(10)
+
+        @self.driver2.POV.RIGHT.whenPressed
+        def _():
+            self.robot.elevator.set_elevator_height(50)
+
         @self.driver2.RIGHT_TRIGGER_AS_BUTTON.whenPressed  # right face
         def _():
             self.right_branch = True
@@ -265,11 +277,11 @@ class OI:
         @self.driver2.LEFT_TRIGGER_AS_BUTTON.whenPressed  # left face
         def _():
             self.right_branch = False
-        
+
         @self.driver2.A.whenPressed #position 1 on source
         def _():
             self.position_on_source = 1
-        
+
         @self.driver2.B.whenPressed #position 3 on source
         def _():
             self.position_on_source = 3
