@@ -114,7 +114,6 @@ class EndEffector(Subsystem):
     def set_end_effector_position(self, position):
         if abs(self.get_position() - position) <= 0.25 or self.command_position >= self.max_extension:
             return
-
         self.command_position = position
         sprocket_rotations = position / (math.pi * self.sprocket_diameter)
         rotation = sprocket_rotations * self.gear_ratio

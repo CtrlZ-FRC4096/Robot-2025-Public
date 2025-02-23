@@ -107,26 +107,32 @@ class Elevator(Subsystem):
             ## Stop the motors and set the position to 0 or the maximum height
             ## Hopefully this prevents the elevator from breaking
         if self.robot.oi.score_intent:
+            """
+            TODO: We need to make sure that this if statement logic is correct.
+            """
             if (self.robot.poseEstimator.curEstPose - self.robot.oi.final_lineup_pose).norm() < 2 and\
                 not (self.path_generator.obstacleBetween(self.robot.poseEstimator.curEstPose, self.robot.oi.final_lineup_pose)):
-                #raise elevator
-                self.in_proximity_to_begin_raising_elevator = True
-                self.robot.end_effector.set_end_effector_position(self.robot.score_state.end_effector_position)
-                self.set_elevator_height(self.robot.score_state.elevator_height)
+                # if we are close to the scoring position and there are no obstacles, begin raising the elevator
+                self.in_proximity_to_begin_raising_elevator = True # just for logging purposes
+
+                self.robot.end_effector.set_end_effector_position(self.robot.score_state.end_effector_position) # set end effector to scoring position
+                self.set_elevator_height(self.robot.score_state.elevator_height) # raise elevator to scoring height
             else:
                 self.in_proximity_to_begin_raising_elevator = False
         elif self.robot.oi.manual_scoring:
-            self.robot.end_effector.set_end_effector_position(self.robot.score_state.end_effector_position)
-            self.set_elevator_height(self.robot.score_state.elevator_height)
+            """
+            If the global position is not accurate, we switch to manual scoring. This is a safety feature.
+            """
+            self.robot.end_effector.set_end_effector_position(self.robot.score_state.end_effector_position) # set end effector to scoring position
+            self.set_elevator_height(self.robot.score_state.elevator_height) # raise elevator to scoring height
         elif self.robot.mechanisms_at_default:
-            self.set_elevator_height(RobotScoringPositions.elevator_intake_height)
+            self.set_elevator_height(RobotScoringPositions.elevator_intake_height) # set elevator to intake height
 
-		#bring elevator down if pitch | roll is greater than 10 degrees
+		# bring elevator down if pitch | roll is greater than 10 degrees
         if self.robot.poseEstimator.gyro.get_pitch().value > 10 and self.robot.poseEstimator.gyro.get_roll().value > 10:
-            self.elevator_pitch_roll_greater_10 = True
+            self.elevator_pitch_roll_greater_10 = True # just for logging purposes
         else:
             self.elevator_pitch_roll_greater_10 = False
-			# self.set_elevator_height(0)
 
     def log(self):
         SmartDashboard.putBoolean("At defaults", self.robot.mechanisms_at_default)
@@ -135,3 +141,10 @@ class Elevator(Subsystem):
         SmartDashboard.putNumber("Commanded elevator height: ", self.command_height)
         SmartDashboard.putBoolean("elevator pitch roll >10", self.elevator_pitch_roll_greater_10)
         SmartDashboard.putBoolean("closer than 2 meters", self.in_proximity_to_begin_raising_elevator)
+
+        # logging variables elevator checks before autonomously scoring
+        within_2_meters = (self.robot.poseEstimator.curEstPose - self.robot.oi.final_lineup_pose).norm() < 2
+        path_clear = not (self.path_generator.obstacleBetween(self.robot.poseEstimator.curEstPose, self.robot.oi.final_lineup_pose))
+        SmartDashboard.putBoolean("in proximity to begin raising elevator", within_2_meters)
+        SmartDashboard.putBoolean("obstacle in between", path_clear)
+        SmartDashboard.putBoolean("both elevator autonomously rainsing conditions met", within_2_meters and path_clear)

@@ -238,7 +238,6 @@ class OI:
         def _():
             self.running_pid_lineup = True
             self.final_lineup_pose = self.robot.poseEstimator.get_path_to_source(False, self.position_on_source)
-            self.score_intent = True
 
         @self.driver1.LEFT_TRIGGER_AS_BUTTON.whenReleased #stop pid
         def _():
