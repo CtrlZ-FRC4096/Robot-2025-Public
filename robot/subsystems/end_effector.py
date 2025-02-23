@@ -102,6 +102,9 @@ class EndEffector(Subsystem):
 
         self.commanded_outtake_motor_speed = 0.0
 
+        self.piece_passing_through_now = False
+        self.piece_passing_through_previous_tick = False
+
     def stop(self):
         # self.end_effector_motor.set_control(controls.PositionVoltage(0.0, enable_foc=True))
         self.outtake_motor.set_control(controls.VelocityTorqueCurrentFOC(0.0))
@@ -131,6 +134,11 @@ class EndEffector(Subsystem):
             self.set_outtake_motor_speed(self.robot.score_state.end_effector_outtake_speed)
         elif self.is_intaking:
             self.set_outtake_motor_speed(47.0) # default outtake speed
+            self.piece_passing_through_previous_tick = self.piece_passing_through_now
+            self.piece_passing_through_now = self.canrange_end_effector.get_is_detected()
+            if not self.piece_passing_through_now and self.piece_passing_through_previous_tick:
+                self.robot.mechanisms_at_default = True
+                self.is_intaking = False
         elif self.robot.mechanisms_at_default:
             self.stop()
             self.set_end_effector_position(RobotScoringPositions.end_effector_travel_position)

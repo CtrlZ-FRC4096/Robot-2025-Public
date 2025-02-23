@@ -74,7 +74,6 @@ class FunnelIntake(Subsystem):
             self.piece_passing_through_previous_tick = self.piece_passing_through_now
             self.piece_passing_through_now = self.canrange_funnel.get_is_detected()
             if not self.piece_passing_through_now and self.piece_passing_through_previous_tick:
-                self.robot.mechanisms_at_default = True
                 self.is_intaking = False
         elif self.robot.mechanisms_at_default:
             self.piece_passing_through = False
