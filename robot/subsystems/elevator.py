@@ -83,6 +83,8 @@ class Elevator(Subsystem):
         # self.height_encoder = wpilib.DutyCycleEncoder(0)
         # self.elevator_motor_1.set_position(self.height_encoder.get())
 
+        self.max_height = 14.0
+
     def stop(self):
         self.elevator_motor_1.set_control(controls.PositionVoltage(0.0, enable_foc=True))
 
@@ -92,18 +94,13 @@ class Elevator(Subsystem):
         return height
 
     def set_elevator_height(self, height):
-        if abs(self.get_height() - height) <= 0.25:
+        if abs(self.get_height() - height) <= 0.25 or self.command_height >= self.max_height:
             return
         self.command_height = height
         sprocket_rotations = height / (math.pi * self.sprocket_diameter * 3) # some math for height here
         rotation = sprocket_rotations * self.gear_ratio
         self.elevator_motor_1.set_control(self.request.with_position(rotation))
         # https://v6.docs.ctr-electronics.com/en/2024/docs/api-reference/device-specific/talonfx/motion-magic.html
-
-    def elevator_to_top(self):
-        self.set_elevator_height(62)
-    def elevator_to_bottom(self):
-        self.set_elevator_height(0)
 
     def periodic(self):
         ## If limit switch is hit,
