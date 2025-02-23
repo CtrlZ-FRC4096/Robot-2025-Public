@@ -13,6 +13,8 @@ from commands2 import Subsystem
 
 import const
 
+from collections import deque
+
 from phoenix6.hardware import CANrange
 from phoenix6.configs import CANcoderConfigurator
 from phoenix6.configs.config_groups import ProximityParamsConfigs
@@ -107,6 +109,8 @@ class EndEffector(Subsystem):
 
         self.max_extension = 9.0
 
+        self.piece_detected = deque(maxlen=3)
+
     def stop(self):
         # self.end_effector_motor.set_control(controls.PositionVoltage(0.0, enable_foc=True))
         self.outtake_motor.set_control(controls.VelocityTorqueCurrentFOC(0.0))
@@ -135,8 +139,9 @@ class EndEffector(Subsystem):
             self.set_outtake_motor_speed(self.robot.score_state.end_effector_outtake_speed)
         elif self.is_intaking:
             self.set_outtake_motor_speed(47.0) # default outtake speed
+            self.piece_detected.append(self.canrange_end_effector.get_is_detected()) # automatically pops oldest when over 3
             self.piece_passing_through_previous_tick = self.piece_passing_through_now
-            self.piece_passing_through_now = self.canrange_end_effector.get_is_detected()
+            self.piece_passing_through_now = all(self.piece_detected)
             if not self.piece_passing_through_now and self.piece_passing_through_previous_tick:
                 self.robot.mechanisms_at_default = True
                 self.is_intaking = False

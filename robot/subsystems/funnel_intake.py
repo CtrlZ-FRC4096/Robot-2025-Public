@@ -13,6 +13,8 @@ from commands2 import Subsystem
 
 import const
 
+from collections import deque
+
 from phoenix6.hardware import CANrange
 from phoenix6.configs import CANcoderConfigurator
 from phoenix6.configs.config_groups import ProximityParamsConfigs
@@ -56,8 +58,8 @@ class FunnelIntake(Subsystem):
         self.canrange_funnel.configurator.apply(self.canrange_funnel_config)
 
         self.commanded_speed = 0.0
-
         self.is_intaking = False
+        self.piece_detected = deque(maxlen=3)
 
     def stop(self):
         self.intake_motor.set_control(controls.VelocityTorqueCurrentFOC(0.0))
@@ -71,8 +73,9 @@ class FunnelIntake(Subsystem):
     def periodic(self):
         if self.is_intaking:
             self.intake(100)
+            self.piece_detected.append(self.canrange_funnel.get_is_detected()) # automatically pops oldest when over 3
             self.piece_passing_through_previous_tick = self.piece_passing_through_now
-            self.piece_passing_through_now = self.canrange_funnel.get_is_detected()
+            self.piece_passing_through_now = all(self.piece_detected)
             if not self.piece_passing_through_now and self.piece_passing_through_previous_tick:
                 self.is_intaking = False
         elif self.robot.mechanisms_at_default:
