@@ -151,6 +151,6 @@ class EndEffector(Subsystem):
         SmartDashboard.putNumber("end effector outtake speed", self.outtake_motor.get_velocity().value)
         SmartDashboard.putNumber("end effector commanded outtake speed", self.commanded_outtake_motor_speed)
         SmartDashboard.putBoolean("robot is at scoring position", self.robot.at_scoring_position)
-        SmartDashboard.putBoolean("end effector canrange detecting piece", self.canrange_end_effector.get_is_detected())
-        SmartDashboard.putNumber("end effector canrange distance", self.canrange_end_effector.get_distance())
+        SmartDashboard.putBoolean("end effector canrange detecting piece", self.canrange_end_effector.get_is_detected().value)
+        SmartDashboard.putNumber("end effector canrange distance", self.canrange_end_effector.get_distance().value)
 
