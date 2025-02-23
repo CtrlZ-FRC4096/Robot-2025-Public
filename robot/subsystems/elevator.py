@@ -88,15 +88,14 @@ class Elevator(Subsystem):
 
     def get_height(self):
         rotations = self.elevator_motor_1.get_position().value
-        height = rotations / self.gear_ratio * math.pi * self.sprocket_diameter * 3  ## 3 is the mechanical advantage of the elevator
+        height = rotations / self.gear_ratio * math.pi * self.sprocket_diameter * 3  # 3 is the mechanical advantage of the elevator
         return height
 
     def set_elevator_height(self, height):
         if abs(self.get_height() - height) <= 0.25:
             return
-
         self.command_height = height
-        sprocket_rotations = height / (math.pi * self.sprocket_diameter * 3) ##some math for height here
+        sprocket_rotations = height / (math.pi * self.sprocket_diameter * 3) # some math for height here
         rotation = sprocket_rotations * self.gear_ratio
         self.elevator_motor_1.set_control(self.request.with_position(rotation))
         # https://v6.docs.ctr-electronics.com/en/2024/docs/api-reference/device-specific/talonfx/motion-magic.html
