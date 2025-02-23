@@ -222,9 +222,17 @@ class OI:
             if self.can_crash:
                 4096 / 0
 
-        @self.driver1.RIGHT_BUMPER.whenPressed  #flip funnel intake
+        @self.driver1.RIGHT_BUMPER.whenPressed  # begin intake process
         def _():
-            self.robot.funnel_intake.is_running = not self.robot.funnel_intake.is_running
+            self.robot.funnel_intake.is_intaking = True
+            self.robot.end_effector.is_intaking = True
+            self.robot.mechanisms_at_default = False
+
+        @self.driver1.LEFT_BUMPER.whenPressed  # manual end to intake process
+        def _():
+            self.robot.funnel_intake.is_intaking = False
+            self.robot.end_effector.is_intaking = False
+            self.robot.mechanisms_at_default = True
 
         @self.driver1.LEFT_TRIGGER_AS_BUTTON.whenHeld #run profiled pid to nearest source
         def _():
@@ -293,11 +301,6 @@ class OI:
         @self.driver2.POV.RIGHT.whenPressed # position 3 on source
         def _():
             self.position_on_source = 3
-
-        @self.driver2.POV.DOWN.whenPressed
-        def _():
-            self.robot.funnel_intake.is_running = True
-            self.robot.end_effector.set_outtake_motor_speed(47.8)
 
     def log(self):
         SmartDashboard.putNumber("robot oriented angle", self.robot_oriented_angle)

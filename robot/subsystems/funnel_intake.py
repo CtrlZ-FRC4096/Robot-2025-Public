@@ -25,7 +25,7 @@ class FunnelIntake(Subsystem):
         self.intake_motor = hardware.TalonFX(const.FUNNEL_INTAKE_MOTOR_CAN_ID, "rio")
 
         funnel_intake_config = configs.TalonFXConfiguration()  # apply config file
-        funnel_intake_config.motor_output.inverted = signals.InvertedValue(0)
+        funnel_intake_config.motor_output.inverted = signals.InvertedValue(1)
         funnel_intake_config.current_limits.supply_current_limit = 40
         funnel_intake_config.current_limits.supply_current_limit_enable = True
         funnel_intake_config.slot0.k_p = const.SWERVE_DRIVE_KP
@@ -42,32 +42,47 @@ class FunnelIntake(Subsystem):
 
         self.intake_motor.configurator.apply(funnel_intake_config)  # type: ignore
 
-        self.is_running = False
         self.canrange_funnel = CANrange(const.FUNNEL_CANRANGE_ID, "rio")
+
+        self.piece_passing_through_now = False
+        self.piece_passing_through_previous_tick = False
 
         self.canrange_funnel_config = configs.CANrangeConfiguration()
         self.canrange_funnel_prox_config = ProximityParamsConfigs()
         self.canrange_funnel_prox_config.proximity_threshold = 0.3048  # 1 foot
-        self.canrange_funnel_prox_config.proximity_hysteresis = 0.0508  # +- 2 inches
+        # self.canrange_funnel_prox_config.proximity_hysteresis = 0.0508  # +- 2 inches
         self.canrange_funnel_config.with_proximity_params(self.canrange_funnel_prox_config)
 
         self.canrange_funnel.configurator.apply(self.canrange_funnel_config)
 
-    def stop(self):
-        self.intake_motor.set_control(controls.VelocityTorqueCurrentFOC(0))
+        self.commanded_speed = 0.0
 
-    def intake(self, speed=-150):
+        self.is_intaking = False
+
+    def stop(self):
+        self.intake_motor.set_control(controls.VelocityTorqueCurrentFOC(0.0))
+
+    def intake(self, speed=150):
+        self.commanded_speed = speed
+        if abs(self.intake_motor.get_velocity().value - self.commanded_speed) <= 0.25:
+            return
         self.intake_motor.set_control(controls.VelocityTorqueCurrentFOC(speed))
 
     def periodic(self):
-        if self.is_running:
-            # if we want to stop the intake if we see a piece
-            # if self.canrange_funnel.get_is_detected():
-            #     self.stop()
-            #     self.is_running = False
-            self.intake()
-        # if self.canrange_1.get_is_detected():
-        #     self.piece_through_intake = True
+        if self.is_intaking:
+            self.intake(100)
+            self.piece_passing_through_previous_tick = self.piece_passing_through_now
+            self.piece_passing_through_now = self.canrange_funnel.get_is_detected()
+            if not self.piece_passing_through_now and self.piece_passing_through_previous_tick:
+                self.robot.mechanisms_at_default = True
+                self.is_intaking = False
+        elif self.robot.mechanisms_at_default:
+            self.piece_passing_through = False
+            self.stop()
 
     def log(self):
-        pass
+        SmartDashboard.putBoolean("funnel is intaking", self.is_intaking)
+        SmartDashboard.putBoolean("piece passing through funnel", self.piece_passing_through_now)
+        SmartDashboard.putNumber("funnel intake speed", self.intake_motor.get_velocity().value)
+        SmartDashboard.putBoolean("funnel canrange detecting piece", self.canrange_funnel.get_is_detected())
+        SmartDashboard.putNumber("funnel canrange distance", self.canrange_funnel.get_distance())

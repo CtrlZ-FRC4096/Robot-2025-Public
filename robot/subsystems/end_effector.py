@@ -67,7 +67,6 @@ class EndEffector(Subsystem):
         self.canrange_end_effector_prox_config = ProximityParamsConfigs()
         # CHANGE PROXIMITY STUFF
         self.canrange_end_effector_prox_config.proximity_threshold = 0.3048  # 1 foot
-        self.canrange_end_effector_prox_config.proximity_hysteresis = 0.0508  # +- 2 inches
         self.canrange_end_effector_config.with_proximity_params(self.canrange_end_effector_prox_config)
 
         self.canrange_end_effector.configurator.apply(self.canrange_end_effector_config)
@@ -99,6 +98,10 @@ class EndEffector(Subsystem):
 
         self.set_end_effector_position(RobotScoringPositions.end_effector_travel_position)
 
+        self.is_intaking = False
+
+        self.commanded_outtake_motor_speed = 0.0
+
     def stop(self):
         # self.end_effector_motor.set_control(controls.PositionVoltage(0.0, enable_foc=True))
         self.outtake_motor.set_control(controls.VelocityTorqueCurrentFOC(0.0))
@@ -118,11 +121,16 @@ class EndEffector(Subsystem):
         return height
 
     def set_outtake_motor_speed(self, speed):
+        self.commanded_outtake_motor_speed = speed
+        if abs(self.outtake_motor.get_velocity().value - self.commanded_outtake_motor_speed) <= 0.25:
+            return
         self.outtake_motor.set_control(controls.VelocityTorqueCurrentFOC(speed))
 
     def periodic(self):
         if self.robot.score_piece or self.robot.at_scoring_position: # manual vs automated
             self.set_outtake_motor_speed(self.robot.score_state.end_effector_outtake_speed)
+        elif self.is_intaking:
+            self.set_outtake_motor_speed(47.0) # default outtake speed
         elif self.robot.mechanisms_at_default:
             self.stop()
             self.set_end_effector_position(RobotScoringPositions.end_effector_travel_position)
@@ -130,5 +138,11 @@ class EndEffector(Subsystem):
 
     def log(self):
         SmartDashboard.putNumber("end effector position (in)", self.get_position())
-
+        SmartDashboard.putNumber("end effector command position (in)", self.command_position)
+        SmartDashboard.putBoolean("end effector is intaking", self.is_intaking)
+        SmartDashboard.putNumber("end effector outtake speed", self.outtake_motor.get_velocity().value)
+        SmartDashboard.putNumber("end effector commanded outtake speed", self.commanded_outtake_motor_speed)
+        SmartDashboard.putBoolean("robot is at scoring position", self.robot.at_scoring_position)
+        SmartDashboard.putBoolean("end effector canrange detecting piece", self.canrange_end_effector.get_is_detected())
+        SmartDashboard.putNumber("end effector canrange distance", self.canrange_end_effector.get_distance())
 
