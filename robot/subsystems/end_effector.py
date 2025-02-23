@@ -109,7 +109,7 @@ class EndEffector(Subsystem):
 
         self.max_extension = 9.0
 
-        self.piece_detected = deque(maxlen=3)
+        self.piece_detected = deque(maxlen=2)
 
     def stop(self):
         # self.end_effector_motor.set_control(controls.PositionVoltage(0.0, enable_foc=True))

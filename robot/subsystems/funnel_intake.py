@@ -59,7 +59,7 @@ class FunnelIntake(Subsystem):
 
         self.commanded_speed = 0.0
         self.is_intaking = False
-        self.piece_detected = deque(maxlen=3)
+        self.piece_detected = deque(maxlen=2)
 
     def stop(self):
         self.intake_motor.set_control(controls.VelocityTorqueCurrentFOC(0.0))
