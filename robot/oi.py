@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from robot import Robot  # type: ignore
 
 from wpilib import SmartDashboard
-
+from robot_scoring_positions import RobotScoringPositions
 import wpilib
 import wpilib.interfaces
 import subsystems.leds
@@ -106,6 +106,8 @@ class OI:
         self.score_intent = False
         self.position_on_source = 2
 
+        self.manual_scoring = False
+
         @self.rumble_button.whenPressed
         def _():
             timer = Timer()
@@ -182,29 +184,25 @@ class OI:
                         self.robot_oriented_angle,
                     )
 
-        @self.driver1.X.whenPressed  # Turn 90 degrees left
+        @self.driver1.X.whenPressed  # Manual elevator raise
         def _():
-            self.cardinal_directing = True
-            self.cardinal = 270
-            self.robot_oriented_angle = 270
+            self.manual_scoring = True
 
-        @self.driver1.B.whenPressed  # Turn 90 degrees right
+        @self.driver1.B.whenHeld # outtake piece
         def _():
-            self.cardinal_directing = True
-            self.cardinal = 90
-            self.robot_oriented_angle = 90
+            self.robot.score_piece = True
+            self.robot.mechanisms_at_default = False
 
-        @self.driver1.Y.whenReleased  # Turn 180 degrees aways
+        @self.driver1.B.whenReleased
         def _():
-            self.cardinal_directing = True
-            self.cardinal = 0
-            self.robot_oriented_angle = 0
+            self.robot.score_piece = False
+            self.robot.mechanisms_at_default = True
+            self.manual_scoring = False
 
-        @self.driver1.A.whenPressed  # Turn 180 degrees towards
+        @self.driver1.Y.whenPressed
         def _():
-            self.cardinal_directing = True
-            self.cardinal = 180
-            self.robot_oriented_angle = 180
+            self.robot.mechanisms_at_default = True
+            self.manual_scoring = False
 
         @self.driver1.POV.DOWN.whenPressed  # Reset Gyro
         def _():
@@ -248,30 +246,33 @@ class OI:
                 self.robot.poseEstimator.calculate_closest_reef_tag()[1],
                 self.right_branch,
             )
+            self.robot.mechanisms_at_default = False
             self.running_pid_lineup = True
             self.score_intent = True
 
         @self.driver1.RIGHT_TRIGGER_AS_BUTTON.whenReleased  # stop profiled PID
         def _():
+            self.robot.mechanisms_at_default = True
             self.running_pid_lineup = False
             self.score_intent = False
             self.robot_oriented_angle = self.robot.poseEstimator.getYaw().degrees()
             self.robot.drivetrain.stop() #May or may not be needed to stop the robot from tracking the PID
 
-        @self.driver2.POV.UP.whenPressed
+        @self.driver2.Y.whenPressed # L4
         def _():
-            SmartDashboard.putNumber("elevator setpoint", 30)
-            self.robot.elevator.set_elevator_height(30)
+            self.robot.score_state = RobotScoringPositions.L4_Scoring
 
-        @self.driver2.POV.DOWN.whenPressed
+        @self.driver2.B.whenPressed #L3
         def _():
-            SmartDashboard.putNumber("elevator setpoint", 10)
-            self.robot.elevator.set_elevator_height(10)
+            self.robot.score_state = RobotScoringPositions.L3_Scoring
 
-        @self.driver2.POV.RIGHT.whenPressed
+        @self.driver2.A.whenPressed # L2
         def _():
-            SmartDashboard.putNumber("elevator setpoint", 50)
-            self.robot.elevator.set_elevator_height(50)
+            self.robot.score_state = RobotScoringPositions.L2_Scoring
+
+        @self.driver2.X.whenPressed # L1
+        def _():
+            self.robot.score_state = RobotScoringPositions.L1_Scoring
 
         @self.driver2.RIGHT_TRIGGER_AS_BUTTON.whenPressed  # right face
         def _():
@@ -281,13 +282,22 @@ class OI:
         def _():
             self.right_branch = False
 
-        @self.driver2.A.whenPressed #position 1 on source
+        @self.driver2.POV.LEFT.whenPressed # position 1 on source
         def _():
             self.position_on_source = 1
 
-        @self.driver2.B.whenPressed #position 3 on source
+        @self.driver2.POV.UP.whenPressed # position 2 on source
+        def _():
+            self.position_on_source = 2
+
+        @self.driver2.POV.RIGHT.whenPressed # position 3 on source
         def _():
             self.position_on_source = 3
+
+        @self.driver2.POV.DOWN.whenPressed
+        def _():
+            self.robot.funnel_intake.is_running = True
+            self.robot.end_effector.set_outtake_motor_speed(47.8)
 
     def log(self):
         SmartDashboard.putNumber("robot oriented angle", self.robot_oriented_angle)

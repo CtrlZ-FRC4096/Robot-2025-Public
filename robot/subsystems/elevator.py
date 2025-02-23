@@ -19,6 +19,7 @@ from wpimath.geometry import (
 )
 from path_gen import PathGenerator
 import const
+from robot_scoring_positions import RobotScoringPositions
 
 class Elevator(Subsystem):
     def __init__(self, robot: "Robot"):
@@ -31,13 +32,13 @@ class Elevator(Subsystem):
         self.elevator_motor_config = configs.TalonFXConfiguration()
 
         ## First we will set everything to zero and then adjust k_g until the elevator is able to hold its position when we command a position
-        self.elevator_motor_config.slot0.k_g = 0.0
+        self.elevator_motor_config.slot0.k_g = 0.45
 
         ## Next we will adjust k_s until the elevator just barely moves when we command a position (check both up and down)
         self.elevator_motor_config.slot0.k_s = 0.0
 
         ## Next we will adjust k_p until the elevator moves to the correct position and slightly overshoots/oscillates
-        self.elevator_motor_config.slot0.k_p = 2.0
+        self.elevator_motor_config.slot0.k_p = 4.0
         ## Next we will adjust k_d until the elevator moves to the correct position without overshooting/oscillating
         self.elevator_motor_config.slot0.k_d = 0.0
 
@@ -55,18 +56,17 @@ class Elevator(Subsystem):
         self.elevator_motor_config.current_limits.supply_current_limit_enable = True
         self.elevator_motor_config.motor_output.neutral_mode = signals.NeutralModeValue(1)
         self.elevator_motor_config.current_limits.stator_current_limit = 100
-        
+
+        self.elevator_motor_config.motor_output.inverted = signals.InvertedValue(1)
+
         # We will adjust these values later to get the elevator moving faster
-        self.elevator_motor_config.motion_magic.motion_magic_cruise_velocity = 10 # Recalc has us at 16 RPS, but starting slow
-        self.elevator_motor_config.motion_magic.motion_magic_acceleration = 100 # Recalc has us at 100 RPS/s^2, but starting slow
+        self.elevator_motor_config.motion_magic.motion_magic_cruise_velocity = 200 # Recalc has us at 16 RPS, but starting slow
+        self.elevator_motor_config.motion_magic.motion_magic_acceleration = 150 # Recalc has us at 100 RPS/s^2, but starting slow
 
         self.elevator_motor_1.configurator.apply(self.elevator_motor_config)  # type: ignore
         self.elevator_motor_2.configurator.apply(self.elevator_motor_config)  # type: ignore
 
         self.elevator_motor_2.set_control(controls.Follower(const.ELEVATOR_MOTOR_1_CAN_ID, False)) # Set the second motor to follow the first one but inverted
-
-        self.max_height = 100 # need to adjust later
-        self.min_height = 0 # need to adjust later
 
         ## Use these values to convert rotations to inches and vice versa for motion magic commands
         self.sprocket_diameter = 1.273 # in. for 16t, need to adjust if using something else
@@ -77,6 +77,11 @@ class Elevator(Subsystem):
         self.request = controls.MotionMagicVoltage(0, enable_foc=True)
         ## Somewhere here we want to set the position of the motor to the absolute encoder value with some offset for the starting position of the encoder
         # self.elevator_motor_1.set_position(0.0)
+        self.elevator_pitch_roll_greater_10 = False
+        self.in_proximity_to_begin_raising_elevator = False
+
+        # self.height_encoder = wpilib.DutyCycleEncoder(0)
+        # self.elevator_motor_1.set_position(self.height_encoder.get())
 
     def stop(self):
         self.elevator_motor_1.set_control(controls.PositionVoltage(0.0, enable_foc=True))
@@ -87,6 +92,9 @@ class Elevator(Subsystem):
         return height
 
     def set_elevator_height(self, height):
+        if abs(self.get_height() - height) <= 0.25:
+            return
+
         self.command_height = height
         sprocket_rotations = height / (math.pi * self.sprocket_diameter * 3) ##some math for height here
         rotation = sprocket_rotations * self.gear_ratio
@@ -99,32 +107,35 @@ class Elevator(Subsystem):
         self.set_elevator_height(0)
 
     def periodic(self):
-        SmartDashboard.putNumber("Current elevator height: ", self.get_height())
-        SmartDashboard.putNumber("Commanded elevator height: ", self.command_height)
         ## If limit switch is hit,
             ## Stop the motors and set the position to 0 or the maximum height
             ## Hopefully this prevents the elevator from breaking
-        elevator_pitch_roll_greater_10 = False
-        closer_than_2_meters = False
         if self.robot.oi.score_intent:
             if (self.robot.poseEstimator.curEstPose - self.robot.oi.final_lineup_pose).norm() < 2 and\
                 not (self.path_generator.obstacleBetween(self.robot.poseEstimator.curEstPose, self.robot.oi.final_lineup_pose)):
                 #raise elevator
-                closer_than_2_meters = True
+                self.in_proximity_to_begin_raising_elevator = True
+                self.robot.end_effector.set_end_effector_position(self.robot.score_state.end_effector_position)
+                self.set_elevator_height(self.robot.score_state.elevator_height)
             else:
-                closer_than_2_meters = False
-        else:
-            closer_than_2_meters = False
+                self.in_proximity_to_begin_raising_elevator = False
+        elif self.robot.oi.manual_scoring:
+            self.robot.end_effector.set_end_effector_position(self.robot.score_state.end_effector_position)
+            self.set_elevator_height(self.robot.score_state.elevator_height)
+        elif self.robot.mechanisms_at_default:
+            self.set_elevator_height(RobotScoringPositions.elevator_intake_height)
 
 		#bring elevator down if pitch | roll is greater than 10 degrees
         if self.robot.poseEstimator.gyro.get_pitch().value > 10 and self.robot.poseEstimator.gyro.get_roll().value > 10:
-            elevator_pitch_roll_greater_10 = True
-			# self.set_elevator_height(0)
+            self.elevator_pitch_roll_greater_10 = True
         else:
-            elevator_pitch_roll_greater_10 = False
-
-        SmartDashboard.putBoolean("elevator pitch roll >10", elevator_pitch_roll_greater_10)
-        SmartDashboard.putBoolean("closer than 2 meters", closer_than_2_meters)
+            self.elevator_pitch_roll_greater_10 = False
+			# self.set_elevator_height(0)
 
     def log(self):
-        pass
+        SmartDashboard.putBoolean("At defaults", self.robot.mechanisms_at_default)
+        SmartDashboard.putBoolean("Score intent", self.robot.oi.score_intent)
+        SmartDashboard.putNumber("Current elevator height: ", self.get_height())
+        SmartDashboard.putNumber("Commanded elevator height: ", self.command_height)
+        SmartDashboard.putBoolean("elevator pitch roll >10", self.elevator_pitch_roll_greater_10)
+        SmartDashboard.putBoolean("closer than 2 meters", self.in_proximity_to_begin_raising_elevator)

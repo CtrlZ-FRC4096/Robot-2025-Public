@@ -35,6 +35,7 @@ import subsystems.drivetrain
 
 # import subsystems.limelight
 import subsystems.elevator
+import subsystems.end_effector
 import subsystems.funnel_intake
 import subsystems.leds
 
@@ -56,6 +57,8 @@ from pathplannerlib.controller import PPHolonomicDriveController
 from wpimath.geometry import Rotation2d
 
 from field_const import FieldConstants
+
+from robot_scoring_positions import RobotScoringPositions
 
 
 log = logging.getLogger("robot")
@@ -99,6 +102,7 @@ class Robot(CoroutineRobot):
         self.poseEstimator = subsystems.poseEstimator.PoseEstimator(self)
         self.funnel_intake = subsystems.funnel_intake.FunnelIntake(self)
         self.elevator = subsystems.elevator.Elevator(self)
+        self.end_effector = subsystems.end_effector.EndEffector(self)
 
         self.subsystems = [
             self.drivetrain,
@@ -106,6 +110,7 @@ class Robot(CoroutineRobot):
             self.poseEstimator,
             self.funnel_intake,
             self.elevator,
+            self.end_effector
         ]
 
         # If everything in self.subsystems is a Subsystem object, then
@@ -120,6 +125,13 @@ class Robot(CoroutineRobot):
         ### OTHER ###
         self.driverstation = wpilib.DriverStation
         self.oi = oi.OI(self)
+
+		### STATE MACHINE ###
+        self.score_state = RobotScoringPositions.L4_Scoring # defaulting to L4
+        self.at_scoring_position = False
+
+        self.score_piece = False
+        self.mechanisms_at_default = True
 
         self.match_time = -1
         ### FIELD LOGGING ###

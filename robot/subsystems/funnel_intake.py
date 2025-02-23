@@ -27,8 +27,6 @@ class FunnelIntake(Subsystem):
         funnel_intake_config = configs.TalonFXConfiguration()  # apply config file
         funnel_intake_config.motor_output.inverted = signals.InvertedValue(0)
         funnel_intake_config.current_limits.supply_current_limit = 40
-        funnel_intake_config.current_limits.supply_current_threshold = 0
-        funnel_intake_config.current_limits.supply_time_threshold = 0
         funnel_intake_config.current_limits.supply_current_limit_enable = True
         funnel_intake_config.slot0.k_p = const.SWERVE_DRIVE_KP
         funnel_intake_config.slot0.k_i = const.SWERVE_DRIVE_KI
