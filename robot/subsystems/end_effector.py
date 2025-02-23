@@ -105,12 +105,14 @@ class EndEffector(Subsystem):
         self.piece_passing_through_now = False
         self.piece_passing_through_previous_tick = False
 
+        self.max_extension = 9.0
+
     def stop(self):
         # self.end_effector_motor.set_control(controls.PositionVoltage(0.0, enable_foc=True))
         self.outtake_motor.set_control(controls.VelocityTorqueCurrentFOC(0.0))
 
     def set_end_effector_position(self, position):
-        if abs(self.get_position() - position) <= 0.25:
+        if abs(self.get_position() - position) <= 0.25 or self.command_position >= self.max_extension:
             return
 
         self.command_position = position
