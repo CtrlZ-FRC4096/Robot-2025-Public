@@ -135,8 +135,6 @@ class Elevator(Subsystem):
             self.elevator_pitch_roll_greater_10 = False
 
     def log(self):
-        SmartDashboard.putBoolean("At defaults", self.robot.mechanisms_at_default)
-        SmartDashboard.putBoolean("Score intent", self.robot.oi.score_intent)
         SmartDashboard.putNumber("Current elevator height: ", self.get_height())
         SmartDashboard.putNumber("Commanded elevator height: ", self.command_height)
         SmartDashboard.putBoolean("elevator pitch roll >10", self.elevator_pitch_roll_greater_10)

@@ -217,6 +217,12 @@ class Robot(CoroutineRobot):
         """
         Logs some info to shuffleboard, and standard output
         """
+        wpilib.SmartDashboard.putNumber("Score state", self.score_state.number)
+        wpilib.SmartDashboard.putBoolean("Score piece", self.score_piece)
+        wpilib.SmartDashboard.putBoolean("Mechanisms at default", self.mechanisms_at_default)
+        wpilib.SmartDashboard.putBoolean("At scoring position", self.at_scoring_position)
+        wpilib.SmartDashboard.putBoolean("OI Score Intent", self.oi.score_intent)
+
         for s in self.subsystems:
             s.log()
 

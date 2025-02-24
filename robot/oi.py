@@ -303,3 +303,5 @@ class OI:
 
     def log(self):
         SmartDashboard.putNumber("robot oriented angle", self.robot_oriented_angle)
+        SmartDashboard.putNumber("position on source", self.position_on_source)
+        SmartDashboard.putBoolean("right branch", self.right_branch)
