@@ -37,6 +37,16 @@ class Coroutines:
         )
 
         @commandify
+        def score_piece():
+            yield
+            robot.mechanisms_at_default = False
+            robot.score_piece = True
+
+        self.score_piece = (
+            score_piece()
+        )
+
+        @commandify
         def score_L4():
             yield
             robot.mechanisms_at_default = False
@@ -86,6 +96,7 @@ class Coroutines:
             robot.mechanisms_at_default = False
             robot.funnel_intake.is_intaking = True
             robot.end_effector.is_intaking = True
+            yield from robot.wait(0.25)
         
         self.intake_coral = (
             intake_coral()
