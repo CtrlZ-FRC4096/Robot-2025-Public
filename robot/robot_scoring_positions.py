@@ -2,7 +2,7 @@ class RobotScoringPositions:
 	elevator_raise_threshold = 2 # meters needed to be closer than to reef to raise elevator
 	end_effector_travel_position = 8.0
 	elevator_intake_height = 0.2
-	end_effector_intake_position = 
+	end_effector_intake_position = 3.0
 	class L1_Scoring:
 		elevator_height = 7.18
 		end_effector_outtake_speed = 85
