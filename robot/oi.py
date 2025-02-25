@@ -238,13 +238,13 @@ class OI:
         @self.driver1.LEFT_TRIGGER_AS_BUTTON.whenHeld #run profiled pid to nearest source
         def _():
             self.running_pid_lineup = True
+            self.score_intent = False
             self.final_lineup_pose = self.robot.poseEstimator.get_path_to_source(False, self.position_on_source)
 
         @self.driver1.LEFT_TRIGGER_AS_BUTTON.whenReleased #stop pid
         def _():
             self.running_pid_lineup = False
             self.score_intent = False
-            self.position_on_source = 2
             self.robot_oriented_angle = self.robot.poseEstimator.getYaw().degrees()
             self.robot.drivetrain.stop()
 

@@ -139,7 +139,7 @@ class EndEffector(Subsystem):
         if self.robot.score_piece or self.robot.at_scoring_position: # manual vs automated
             self.set_outtake_motor_speed(self.robot.score_state.end_effector_outtake_speed)
         elif self.is_intaking:
-            self.set_end_effector_position(RobotScoringPositions.)
+            self.set_end_effector_position(RobotScoringPositions.end_effector_intake_position)
             self.set_outtake_motor_speed(47.0) # default outtake speed
             self.piece_detected.append(self.canrange_end_effector.get_is_detected()) # automatically pops oldest when over 3
             self.piece_passing_through_previous_tick = self.piece_passing_through_now
@@ -147,6 +147,7 @@ class EndEffector(Subsystem):
             if not self.piece_passing_through_now and self.piece_passing_through_previous_tick:
                 self.robot.mechanisms_at_default = True
                 self.is_intaking = False
+                self.robot.has_coral = True
         elif self.robot.mechanisms_at_default:
             self.stop()
             self.set_end_effector_position(RobotScoringPositions.end_effector_travel_position)

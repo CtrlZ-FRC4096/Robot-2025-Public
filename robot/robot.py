@@ -90,7 +90,7 @@ class Robot(CoroutineRobot):
         self.match_time = -1
         # const.IS_SIMULATION = self.isSimulation()
 
-        self.has_note = False
+        self.has_coral = False
 
         # Command scheduler
         self.scheduler = CommandScheduler.getInstance()
@@ -211,6 +211,13 @@ class Robot(CoroutineRobot):
         self.in_autonomous_mode = False
 
         while True:
+            yield
+    
+    ### WAIT FUNCTION ###
+    def wait(self, time):
+        timer = Timer()
+        timer.start()
+        while not timer.hasElapsed(time):
             yield
 
     def log(self):

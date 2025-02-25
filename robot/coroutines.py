@@ -16,6 +16,7 @@ from wpilib import Timer
 
 from wpilibextra.coroutine import commandify
 import oi
+from robot_scoring_positions import RobotScoringPositions
 
 
 class Coroutines:
@@ -24,16 +25,57 @@ class Coroutines:
     """
 
     def __init__(self, robot: "Robot"):
-        self.auto_drive_lock = False
-        self.auto_note_lock = False
+        @commandify
+        def reset_robot_after_scoring():
+            yield
+            yield from robot.wait(0.25) # wait so that robot can fully outtake piece (we can adjust this time later)
+            robot.mechanisms_at_default = True
+            robot.oi.score_intent = False
+        
+        self.reset_robot_after_scoring = (
+            reset_robot_after_scoring()
+        )
 
+        @commandify
+        def score_L4():
+            yield
+            robot.mechanisms_at_default = False
+            robot.score_state = RobotScoringPositions.L4_Scoring
+            robot.oi.score_intent = True
+        
+        self.score_L4 = (
+            score_L4()
+        )
 
-        # Example for when we begin working on autonomous mode
-        # @commandify(requirements=[robot.ground_intake, robot.over_bumper_intake])
-        # def ground_intake_back_passthrough_command():
-        #     yield
-        #     robot.ground_intake.back_passthrough()
+        @commandify
+        def score_L3():
+            yield
+            robot.mechanisms_at_default = False
+            robot.score_state = RobotScoringPositions.L3_Scoring
+            robot.oi.score_intent = True
 
-        # self.ground_intake_back_passthrough_command = (
-        #     ground_intake_back_passthrough_command()
-        # )
+        self.score_L3 = (
+            score_L3()
+        )
+        
+        @commandify
+        def score_L2():
+            yield
+            robot.mechanisms_at_default = False
+            robot.score_state = RobotScoringPositions.L2_Scoring
+            robot.oi.score_intent = True
+        
+        self.score_L2 = (
+            score_L2()
+        )
+        
+        @commandify
+        def score_L1():
+            yield
+            robot.mechanisms_at_default = False
+            robot.score_state = RobotScoringPositions.L1_Scoring
+            robot.oi.score_intent = True
+
+        self.score_L1 = (
+            score_L1()
+        )
