@@ -79,3 +79,14 @@ class Coroutines:
         self.score_L1 = (
             score_L1()
         )
+
+        @commandify
+        def intake_coral():
+            yield
+            robot.mechanisms_at_default = False
+            robot.funnel_intake.is_intaking = True
+            robot.end_effector.is_intaking = True
+        
+        self.intake_coral = (
+            intake_coral()
+        )
