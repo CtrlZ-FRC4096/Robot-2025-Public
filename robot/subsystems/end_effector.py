@@ -27,7 +27,7 @@ class EndEffector(Subsystem):
         self.end_effector_motor = hardware.TalonFX(const.END_EFFECTOR_MOTOR_CAN_ID, "rio")
 
         self.end_effector_config = configs.TalonFXConfiguration()  # apply config file
-        self.end_effector_config.motor_output.inverted = signals.InvertedValue(1)
+        self.end_effector_config.motor_output.inverted = signals.InvertedValue(0)
         self.end_effector_config.current_limits.supply_current_limit = 40
         self.end_effector_config.current_limits.supply_current_limit_enable = True
 
@@ -35,10 +35,10 @@ class EndEffector(Subsystem):
         self.end_effector_config.slot0.k_g = 0.45
 
         ## Next we will adjust k_s until the elevator just barely moves when we command a position (check both up and down)
-        self.end_effector_config.slot0.k_s = 0.0
+        self.end_effector_config.slot0.k_s = 0.5
 
         ## Next we will adjust k_p until the elevator moves to the correct position and slightly overshoots/oscillates
-        self.end_effector_config.slot0.k_p = 2.0
+        self.end_effector_config.slot0.k_p = 4.0
         ## Next we will adjust k_d until the elevator moves to the correct position without overshooting/oscillating
         self.end_effector_config.slot0.k_d = 0.0
 
@@ -57,8 +57,8 @@ class EndEffector(Subsystem):
         self.end_effector_config.motor_output.neutral_mode = signals.NeutralModeValue(1)
         self.end_effector_config.current_limits.stator_current_limit = 100
 
-        self.end_effector_config.motion_magic.motion_magic_cruise_velocity = 200 # Recalc has us at 16 RPS, but starting slow
-        self.end_effector_config.motion_magic.motion_magic_acceleration = 150 # Recalc has us at 100 RPS/s^2, but starting slow
+        self.end_effector_config.motion_magic.motion_magic_cruise_velocity = 100 # Recalc has us at 16 RPS, but starting slow
+        self.end_effector_config.motion_magic.motion_magic_acceleration = 100 # Recalc has us at 100 RPS/s^2, but starting slow
 
         self.end_effector_motor.configurator.apply(self.end_effector_config)
         self.isRunning = False
@@ -74,7 +74,7 @@ class EndEffector(Subsystem):
         self.canrange_end_effector.configurator.apply(self.canrange_end_effector_config)
 
         self.sprocket_diameter = 1.790 # in.
-        self.gear_ratio = 2.25 # need to adjust if using something else
+        self.gear_ratio = 4.0 # need to adjust if using something else
         self.command_position = 0.0
 
         ## self.request = controls.DynamicMotionMagicTorqueCurrentFOC(0.0) We can use dynamic motion magic to change the cruise velocity and acceleration on the fly, less acceration when the elevator comes down, etc.
@@ -113,10 +113,11 @@ class EndEffector(Subsystem):
 
     def stop(self):
         # self.end_effector_motor.set_control(controls.PositionVoltage(0.0, enable_foc=True))
-        self.outtake_motor.set_control(controls.VelocityTorqueCurrentFOC(0.0))
+        # self.outtake_motor.set_control(controls.VelocityTorqueCurrentFOC(0.0))
+        pass
 
     def set_end_effector_position(self, position):
-        if abs(self.get_position() - position) <= 0.25 or self.command_position >= self.max_extension:
+        if (abs(self.get_position() - position) <= 0.25):
             return
         self.command_position = position
         sprocket_rotations = position / (math.pi * self.sprocket_diameter)
@@ -130,14 +131,15 @@ class EndEffector(Subsystem):
 
     def set_outtake_motor_speed(self, speed):
         self.commanded_outtake_motor_speed = speed
-        if abs(self.outtake_motor.get_velocity().value - self.commanded_outtake_motor_speed) <= 0.25:
-            return
+        # if abs(self.outtake_motor.get_velocity().value - self.commanded_outtake_motor_speed) <= 0.25:
+        #     return
         self.outtake_motor.set_control(controls.VelocityTorqueCurrentFOC(speed))
 
     def periodic(self):
         if self.robot.score_piece or self.robot.at_scoring_position: # manual vs automated
             self.set_outtake_motor_speed(self.robot.score_state.end_effector_outtake_speed)
         elif self.is_intaking:
+            self.set_end_effector_position(RobotScoringPositions.)
             self.set_outtake_motor_speed(47.0) # default outtake speed
             self.piece_detected.append(self.canrange_end_effector.get_is_detected()) # automatically pops oldest when over 3
             self.piece_passing_through_previous_tick = self.piece_passing_through_now

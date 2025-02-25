@@ -60,8 +60,8 @@ class Elevator(Subsystem):
         self.elevator_motor_config.motor_output.inverted = signals.InvertedValue(1)
 
         # We will adjust these values later to get the elevator moving faster
-        self.elevator_motor_config.motion_magic.motion_magic_cruise_velocity = 200 # Recalc has us at 16 RPS, but starting slow
-        self.elevator_motor_config.motion_magic.motion_magic_acceleration = 150 # Recalc has us at 100 RPS/s^2, but starting slow
+        self.elevator_motor_config.motion_magic.motion_magic_cruise_velocity = 100 # Recalc has us at 16 RPS, but starting slow
+        self.elevator_motor_config.motion_magic.motion_magic_acceleration = 100 # Recalc has us at 100 RPS/s^2, but starting slow
 
         self.elevator_motor_1.configurator.apply(self.elevator_motor_config)  # type: ignore
         self.elevator_motor_2.configurator.apply(self.elevator_motor_config)  # type: ignore
@@ -83,10 +83,12 @@ class Elevator(Subsystem):
         # self.height_encoder = wpilib.DutyCycleEncoder(0)
         # self.elevator_motor_1.set_position(self.height_encoder.get())
 
-        self.max_height = 14.0
+        self.max_height = 65.0
+        self.set_elevator_height(RobotScoringPositions.elevator_intake_height)
 
     def stop(self):
-        self.elevator_motor_1.set_control(controls.PositionVoltage(0.0, enable_foc=True))
+        # self.elevator_motor_1.set_control(controls.PositionVoltage(0.0, enable_foc=True))
+        pass
 
     def get_height(self):
         rotations = self.elevator_motor_1.get_position().value
@@ -110,8 +112,7 @@ class Elevator(Subsystem):
             """
             TODO: We need to make sure that this if statement logic is correct.
             """
-            if (self.robot.poseEstimator.curEstPose - self.robot.oi.final_lineup_pose).norm() < 2 and\
-                not (self.path_generator.obstacleBetween(self.robot.poseEstimator.curEstPose, self.robot.oi.final_lineup_pose)):
+            if (self.robot.poseEstimator.curEstPose.translation() - self.robot.oi.final_lineup_pose.translation()).norm() < 2:
                 # if we are close to the scoring position and there are no obstacles, begin raising the elevator
                 self.in_proximity_to_begin_raising_elevator = True # just for logging purposes
 
@@ -141,8 +142,8 @@ class Elevator(Subsystem):
         SmartDashboard.putBoolean("closer than 2 meters", self.in_proximity_to_begin_raising_elevator)
 
         # logging variables elevator checks before autonomously scoring
-        within_2_meters = (self.robot.poseEstimator.curEstPose - self.robot.oi.final_lineup_pose).norm() < 2
-        path_clear = not (self.path_generator.obstacleBetween(self.robot.poseEstimator.curEstPose, self.robot.oi.final_lineup_pose))
+        within_2_meters = (self.robot.poseEstimator.curEstPose.translation() - self.robot.oi.final_lineup_pose.translation()).norm() < 2
+        # path_clear = not (self.path_generator.obstacleBetween(self.robot.poseEstimator.curEstPose, self.robot.oi.final_lineup_pose))
         SmartDashboard.putBoolean("in proximity to begin raising elevator", within_2_meters)
-        SmartDashboard.putBoolean("obstacle in between", path_clear)
-        SmartDashboard.putBoolean("both elevator autonomously rainsing conditions met", within_2_meters and path_clear)
+        # SmartDashboard.putBoolean("obstacle in between", path_clear)
+        # SmartDashboard.putBoolean("both elevator autonomously rainsing conditions met", within_2_meters and path_clear)

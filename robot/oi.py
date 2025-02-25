@@ -187,11 +187,12 @@ class OI:
         @self.driver1.X.whenPressed  # Manual elevator raise
         def _():
             self.manual_scoring = True
+            self.robot.mechanisms_at_default = False
 
         @self.driver1.B.whenHeld # outtake piece
         def _():
-            self.robot.score_piece = True
             self.robot.mechanisms_at_default = False
+            self.robot.score_piece = True
 
         @self.driver1.B.whenReleased
         def _():
@@ -300,6 +301,21 @@ class OI:
         @self.driver2.POV.RIGHT.whenPressed # position 3 on source
         def _():
             self.position_on_source = 3
+
+        @self.driver1.BACK.whenPressed
+        def _():
+            self.robot.mechanisms_at_default = True
+            self.score_intent = False
+            self.manual_scoring = False
+            self.running_pid_lineup = False
+            self.robot.funnel_intake.is_intaking = False
+            self.robot.end_effector.is_intaking = False
+
+        # @self.driver2.POV.DOWN.whenPressed
+        # def _():
+        #     self.robot.mechanisms_at_default = False
+        #     self.robot.elevator.set_elevator_height(56.0)
+
 
     def log(self):
         SmartDashboard.putNumber("robot oriented angle", self.robot_oriented_angle)
