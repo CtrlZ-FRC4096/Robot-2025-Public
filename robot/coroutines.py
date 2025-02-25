@@ -96,7 +96,7 @@ class Coroutines:
             robot.mechanisms_at_default = False
             robot.funnel_intake.is_intaking = True
             robot.end_effector.is_intaking = True
-            yield from robot.wait(0.25)
+            yield from robot.wait(1.0) # wait for coral to be intaken
         
         self.intake_coral = (
             intake_coral()
