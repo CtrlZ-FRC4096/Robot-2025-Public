@@ -61,13 +61,13 @@ class Drivetrain(Subsystem):
         self.angle_pid.enableContinuousInput(0, 360)
         self.angle_pid.setTolerance(0.5)  # Set position tolerance to 0.5 degrees
 
-        self.x_controller = PIDController(1.7, 0.0, 0.0)
-        self.y_controller = PIDController(1.7, 0.0, 0.0)
-        self.theta_controller = PIDController(0.11, 0.0, 0.001)
+        self.x_controller = PIDController(1.85, 0.0, 0.0)
+        self.y_controller = PIDController(1.85, 0.0, 0.0)
+        self.theta_controller = PIDController(0.12, 0.0, 0.001)
 
         ## Need to check these tolerances
-        self.x_controller.setTolerance(0.03, 0.01)
-        self.y_controller.setTolerance(0.03, 0.01)
+        self.x_controller.setTolerance(0.05, 0.01)
+        self.y_controller.setTolerance(0.05, 0.01)
         self.theta_controller.enableContinuousInput(0, 360)
         self.theta_controller.setTolerance(1.0, 0.01)
 
