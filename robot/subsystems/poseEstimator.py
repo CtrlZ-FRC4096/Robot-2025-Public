@@ -332,8 +332,9 @@ class PoseEstimator(Subsystem):
         return [closest_reef_tag, FieldConstants.tag_to_face[closest_reef_tag]]
 
 
-    def get_path_to_reef(self, face: int, right_branch: bool, margin_dist_offset=0.0, do_side_offset=True):
-        side_offset = inchesToMeters(6.47)  # distance b/w center of face to branch
+    def get_path_to_reef(self, face: int, right_branch: bool, margin_dist_offset=0.0, do_side_offset=True, do_manip_offset=True):
+        manip_offset = 3
+        side_offset = (inchesToMeters(6.47) if not do_manip_offset else (inchesToMeters(6.47 + manip_offset) if right_branch else inchesToMeters(6.47 - manip_offset)))  # distance b/w center of face to branch
         dist_offset = (
             (inchesToMeters(29.5) / 2) + (inchesToMeters(7.25) / 2) + inchesToMeters(margin_dist_offset)
         )  # robot size + bumper addition + error protection
@@ -344,11 +345,11 @@ class PoseEstimator(Subsystem):
 
 		## Offset face for manipulator
 
-        manip_distance = 3
+        # manip_distance = 38
         center_face_x = (
-            center_face_translation.X() + inchesToMeters(manip_distance)*math.sin(angle_face.radians())
+            center_face_translation.X() #+ inchesToMeters(manip_distance)*math.sin(angle_face.radians())
         )  # pose of center face (this is directly on the side of the reef)
-        center_face_y = center_face_translation.Y() + inchesToMeters(manip_distance)*math.cos(angle_face.radians())
+        center_face_y = center_face_translation.Y() #+ inchesToMeters(manip_distance)*math.cos(angle_face.radians())
         x_offset = (
             math.cos(angle_face.radians()) * dist_offset
         )  # offsetting that pose by a set offset that extends the pose as if there's a vector from the center face with angle: angle_face

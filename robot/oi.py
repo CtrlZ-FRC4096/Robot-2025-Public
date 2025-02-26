@@ -254,6 +254,7 @@ class OI:
             self.final_lineup_pose = self.robot.poseEstimator.get_path_to_reef(
                 self.robot.poseEstimator.calculate_closest_reef_tag()[1],
                 self.right_branch,
+                do_manip_offset=True
             )
             self.robot.mechanisms_at_default = False
             self.running_pid_lineup = True
