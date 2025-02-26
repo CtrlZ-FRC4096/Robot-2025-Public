@@ -429,7 +429,7 @@ class PoseEstimator(Subsystem):
             x_offset = math.cos(source_rotation.radians()) * dist_offset  # offsetting that pose by a set offset that extends the pose as if there's a vector from the center face with angle: angle_face
             y_offset = math.sin(source_rotation.radians()) * dist_offset
 
-            offset_pose = Pose2d(source_pose.X() + x_offset, source_pose.Y() + y_offset, source_rotation)
+            offset_pose = Pose2d(source_pose.X() + x_offset, source_pose.Y() + y_offset, source_rotation + Rotation2d.fromDegrees(90))
             if place_on_source == 2:
                 return offset_pose
             elif place_on_source == 1 or place_on_source == 3:
