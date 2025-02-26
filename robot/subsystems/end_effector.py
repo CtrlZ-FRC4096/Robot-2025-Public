@@ -110,7 +110,7 @@ class EndEffector(Subsystem):
 
         self.max_extension = 9.0
 
-        deque_length = 3
+        deque_length = 2
         self.piece_detected = deque(maxlen=deque_length)
         for i in range(deque_length):
             self.piece_detected.append(False)
@@ -147,9 +147,8 @@ class EndEffector(Subsystem):
         elif self.is_intaking:
             self.set_end_effector_position(RobotScoringPositions.end_effector_intake_position)
             self.set_outtake_motor_speed(15.0) # default outtake speed
-            self.piece_detected.append(self.canrange_end_effector.get_is_detected().value) # automatically pops oldest when over 3
-            self.piece_passing_through_now = all(self.piece_detected)
-            if self.piece_passing_through_now:
+            self.piece_detected.appendleft(self.canrange_end_effector.get_is_detected().value)
+            if all(self.piece_detected):
                 self.robot.mechanisms_at_default = True
                 self.is_intaking = False
                 self.robot.funnel_intake.is_intaking = False
