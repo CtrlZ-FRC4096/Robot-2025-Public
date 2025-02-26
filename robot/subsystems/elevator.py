@@ -38,7 +38,7 @@ class Elevator(Subsystem):
         self.elevator_motor_config.slot0.k_s = 0.0
 
         ## Next we will adjust k_p until the elevator moves to the correct position and slightly overshoots/oscillates
-        self.elevator_motor_config.slot0.k_p = 4.0
+        self.elevator_motor_config.slot0.k_p = 7.0
         ## Next we will adjust k_d until the elevator moves to the correct position without overshooting/oscillating
         self.elevator_motor_config.slot0.k_d = 0.0
 
@@ -80,8 +80,8 @@ class Elevator(Subsystem):
         self.elevator_pitch_roll_greater_10 = False
         self.in_proximity_to_begin_raising_elevator = False
 
-        # self.height_encoder = wpilib.DutyCycleEncoder(0)
-        # self.elevator_motor_1.set_position(self.height_encoder.get())
+        self.height_encoder = wpilib.DutyCycleEncoder(1)
+        self.elevator_motor_1.set_position(0.0)
 
         self.max_height = 65.0
         self.set_elevator_height(RobotScoringPositions.elevator_intake_height)
@@ -96,7 +96,7 @@ class Elevator(Subsystem):
         return height
 
     def set_elevator_height(self, height):
-        if abs(self.get_height() - height) <= 0.25 or self.command_height >= self.max_height:
+        if abs(self.get_height() - height) <= 0.02 or self.command_height >= self.max_height:
             return
         self.command_height = height
         sprocket_rotations = height / (math.pi * self.sprocket_diameter * 3) # some math for height here
@@ -140,6 +140,7 @@ class Elevator(Subsystem):
         SmartDashboard.putNumber("Commanded elevator height: ", self.command_height)
         SmartDashboard.putBoolean("elevator pitch roll >10", self.elevator_pitch_roll_greater_10)
         SmartDashboard.putBoolean("closer than 2 meters", self.in_proximity_to_begin_raising_elevator)
+        SmartDashboard.putNumber("elevator height encoder", self.height_encoder.get())
 
         # logging variables elevator checks before autonomously scoring
         within_2_meters = (self.robot.poseEstimator.curEstPose.translation() - self.robot.oi.final_lineup_pose.translation()).norm() < 2

@@ -38,7 +38,7 @@ class EndEffector(Subsystem):
         self.end_effector_config.slot0.k_s = 0.5
 
         ## Next we will adjust k_p until the elevator moves to the correct position and slightly overshoots/oscillates
-        self.end_effector_config.slot0.k_p = 4.0
+        self.end_effector_config.slot0.k_p = 8.0
         ## Next we will adjust k_d until the elevator moves to the correct position without overshooting/oscillating
         self.end_effector_config.slot0.k_d = 0.0
 
@@ -68,7 +68,7 @@ class EndEffector(Subsystem):
         self.canrange_end_effector_config = configs.CANrangeConfiguration()
         self.canrange_end_effector_prox_config = ProximityParamsConfigs()
         # CHANGE PROXIMITY STUFF
-        self.canrange_end_effector_prox_config.proximity_threshold = 0.3048  # 1 foot
+        self.canrange_end_effector_prox_config.proximity_threshold = 0.05
         self.canrange_end_effector_config.with_proximity_params(self.canrange_end_effector_prox_config)
 
         self.canrange_end_effector.configurator.apply(self.canrange_end_effector_config)
@@ -85,10 +85,11 @@ class EndEffector(Subsystem):
         self.outtake_motor_config.motor_output.inverted = signals.InvertedValue(0)
         self.outtake_motor_config.current_limits.supply_current_limit = 40
         self.outtake_motor_config.current_limits.supply_current_limit_enable = True
-        self.outtake_motor_config.slot0.k_p = const.SWERVE_DRIVE_KP
-        self.outtake_motor_config.slot0.k_i = const.SWERVE_DRIVE_KI
-        self.outtake_motor_config.slot0.k_d = const.SWERVE_DRIVE_KD
-        self.outtake_motor_config.slot0.k_v = const.SWERVE_DRIVE_KF
+        self.outtake_motor_config.slot0.k_p = 2.0
+        self.outtake_motor_config.slot0.k_i = 0.0
+        self.outtake_motor_config.slot0.k_d = 0.0
+        self.outtake_motor_config.slot0.k_s = 3.5
+        self.outtake_motor_config.slot0.k_v = 0.24
 
         self.outtake_motor_config.closed_loop_ramps.torque_closed_loop_ramp_period = 0.02
         self.outtake_motor_config.open_loop_ramps.torque_open_loop_ramp_period = 0.02
@@ -109,12 +110,17 @@ class EndEffector(Subsystem):
 
         self.max_extension = 9.0
 
-        self.piece_detected = deque(maxlen=2)
+        deque_length = 3
+        self.piece_detected = deque(maxlen=deque_length)
+        for i in range(deque_length):
+            self.piece_detected.append(False)
+
+        self.end_effector_motor.set_position(0.0)
 
     def stop(self):
         # self.end_effector_motor.set_control(controls.PositionVoltage(0.0, enable_foc=True))
-        # self.outtake_motor.set_control(controls.VelocityTorqueCurrentFOC(0.0))
-        pass
+        self.outtake_motor.set_control(controls.VelocityTorqueCurrentFOC(0.0))
+        self.outtake_motor.set_control(controls.StaticBrake())
 
     def set_end_effector_position(self, position):
         if (abs(self.get_position() - position) <= 0.25):
@@ -140,13 +146,15 @@ class EndEffector(Subsystem):
             self.set_outtake_motor_speed(self.robot.score_state.end_effector_outtake_speed)
         elif self.is_intaking:
             self.set_end_effector_position(RobotScoringPositions.end_effector_intake_position)
-            self.set_outtake_motor_speed(47.0) # default outtake speed
-            self.piece_detected.append(self.canrange_end_effector.get_is_detected()) # automatically pops oldest when over 3
-            self.piece_passing_through_previous_tick = self.piece_passing_through_now
+            self.set_outtake_motor_speed(15.0) # default outtake speed
+            self.piece_detected.append(self.canrange_end_effector.get_is_detected().value) # automatically pops oldest when over 3
             self.piece_passing_through_now = all(self.piece_detected)
-            if not self.piece_passing_through_now and self.piece_passing_through_previous_tick:
+            if self.piece_passing_through_now:
                 self.robot.mechanisms_at_default = True
                 self.is_intaking = False
+                self.robot.funnel_intake.is_intaking = False
+                self.robot.funnel_intake.stop()
+                self.stop()
                 self.robot.has_coral = True
         elif self.robot.mechanisms_at_default:
             self.stop()

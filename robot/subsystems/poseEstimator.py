@@ -332,7 +332,7 @@ class PoseEstimator(Subsystem):
         return [closest_reef_tag, FieldConstants.tag_to_face[closest_reef_tag]]
 
 
-    def get_path_to_reef(self, face: int, right_branch: bool, margin_dist_offset=6, do_side_offset=True):
+    def get_path_to_reef(self, face: int, right_branch: bool, margin_dist_offset=0.0, do_side_offset=True):
         side_offset = inchesToMeters(6.47)  # distance b/w center of face to branch
         dist_offset = (
             (inchesToMeters(29.5) / 2) + (inchesToMeters(7.25) / 2) + inchesToMeters(margin_dist_offset)
@@ -342,14 +342,17 @@ class PoseEstimator(Subsystem):
         center_face_pose = FieldConstants.Reef.centerFaces[face - 1]
         center_face_translation = center_face_pose.translation()
 
+		## Offset face for manipulator
+
+        manip_distance = 3
         center_face_x = (
-            center_face_translation.X()
+            center_face_translation.X() + inchesToMeters(manip_distance)*math.sin(angle_face.radians())
         )  # pose of center face (this is directly on the side of the reef)
-        center_face_y = center_face_translation.Y()
+        center_face_y = center_face_translation.Y() + inchesToMeters(manip_distance)*math.cos(angle_face.radians())
         x_offset = (
             math.cos(angle_face.radians()) * dist_offset
         )  # offsetting that pose by a set offset that extends the pose as if there's a vector from the center face with angle: angle_face
-        y_offset = math.sin(angle_face.radians()) * dist_offset
+        y_offset = math.sin(angle_face.radians()) * (dist_offset)
         target_pose_face = Pose2d(
             center_face_x + x_offset, center_face_y + y_offset, angle_face
         )
@@ -376,7 +379,7 @@ class PoseEstimator(Subsystem):
             return target_pose_3
         else:
             return target_pose_face
-    
+
     def calculate_closest_source(self):
         '''
         returns list [is_left_source_closest : bool, tag_of_closest_source : 12 | 13]
@@ -396,7 +399,7 @@ class PoseEstimator(Subsystem):
 
         return [left_source_closer, left_source_tag if left_source_closer else right_source_tag]
 
-    def get_path_to_source(self, left_source : bool, place_on_source=2):
+    def get_path_to_source(self, left_source : bool, place_on_source=1):
         '''
         Use calculate_closest source
         Place on source (default 2):
@@ -404,10 +407,24 @@ class PoseEstimator(Subsystem):
         2- center source
         3 - closest to PROCESSOR WALL
         '''
-        dist_offset = (inchesToMeters(29.5) / 2) + (inchesToMeters(7.25) / 2) + (inchesToMeters(6))
-        side_offset = inchesToMeters(20)
+        dist_offset = (inchesToMeters(29.5) / 2) + (inchesToMeters(7.25) / 2) + (inchesToMeters(2.5))
+        side_offset = inchesToMeters(28)
         if left_source:
             source_pose = FieldConstants.flip_Pose2d(FieldConstants.CoralStation.leftCenterFace)
+            source_rotation = source_pose.rotation()
+            x_offset = math.cos(source_rotation.radians()) * dist_offset  # offsetting that pose by a set offset that extends the pose as if there's a vector from the center face with angle: angle_face
+            y_offset = math.sin(source_rotation.radians()) * dist_offset
+
+            offset_pose = Pose2d(source_pose.X() + x_offset, source_pose.Y() + y_offset, source_rotation.rotateBy(Rotation2d.fromDegrees(90)))
+            if place_on_source == 2:
+                return offset_pose
+            elif place_on_source == 1 or place_on_source == 3:
+                x_side_offset = math.cos(degreesToRadians(source_rotation.degrees() + (-1 * 90 if place_on_source == 1 else 90))) * side_offset
+                y_side_offset = math.sin(degreesToRadians(source_rotation.degrees() + (-1 * 90 if place_on_source == 1 else 90))) * side_offset
+                target_pose = Pose2d(offset_pose.X() + x_side_offset, offset_pose.Y() + y_side_offset, source_rotation.rotateBy(Rotation2d.fromDegrees(90)))
+                return target_pose
+        else:
+            source_pose = FieldConstants.flip_Pose2d(FieldConstants.CoralStation.rightCenterFace)
             source_rotation = source_pose.rotation()
             x_offset = math.cos(source_rotation.radians()) * dist_offset  # offsetting that pose by a set offset that extends the pose as if there's a vector from the center face with angle: angle_face
             y_offset = math.sin(source_rotation.radians()) * dist_offset
@@ -416,23 +433,9 @@ class PoseEstimator(Subsystem):
             if place_on_source == 2:
                 return offset_pose
             elif place_on_source == 1 or place_on_source == 3:
-                x_side_offset = math.cos(degreesToRadians(source_rotation.degrees() + (-1 * 90 if place_on_source == 1 else 90))) * side_offset
-                y_side_offset = math.sin(degreesToRadians(source_rotation.degrees() + (-1 * 90 if place_on_source == 1 else 90))) * side_offset
-                target_pose = Pose2d(offset_pose.X() + x_side_offset, offset_pose.Y() + y_side_offset, source_rotation)
-                return target_pose
-        else:
-            source_pose = FieldConstants.flip_Pose2d(FieldConstants.CoralStation.rightCenterFace)
-            source_rotation = source_pose.rotation()
-            x_offset = math.cos(source_rotation.radians()) * dist_offset  # offsetting that pose by a set offset that extends the pose as if there's a vector from the center face with angle: angle_face
-            y_offset = math.sin(source_rotation.radians()) * dist_offset
-            
-            offset_pose = Pose2d(source_pose.X() + x_offset, source_pose.Y() + y_offset, source_rotation)
-            if place_on_source == 2:
-                return offset_pose
-            elif place_on_source == 1 or place_on_source == 3:
                 x_side_offset = math.cos(degreesToRadians(source_rotation.degrees() + (90 if place_on_source == 1 else -90))) * side_offset
                 y_side_offset = math.sin(degreesToRadians(source_rotation.degrees() + (90 if place_on_source == 1 else -90))) * side_offset
-                target_pose = Pose2d(offset_pose.X() + x_side_offset, offset_pose.Y() + y_side_offset, source_rotation)
+                target_pose = Pose2d(offset_pose.X() + x_side_offset, offset_pose.Y() + y_side_offset, source_rotation.rotateBy(Rotation2d.fromDegrees(90)))
                 return target_pose
 
     def useSingleTag(self):
@@ -566,7 +569,7 @@ class PoseEstimator(Subsystem):
         self.poseConverge = True
 
         SmartDashboard.putData("Field", self.field)
-        # self.field.setRobotPose(self.poseEst.getEstimatedPosition())
+        self.field.setRobotPose(self.poseEst.getEstimatedPosition())
         SmartDashboard.putData("Field w/ Single Tag", self.field_for_single_tag)
         self.field_for_single_tag.setRobotPose(
             self.poseEstSingleTag.getEstimatedPosition()

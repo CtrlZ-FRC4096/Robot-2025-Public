@@ -61,15 +61,15 @@ class Drivetrain(Subsystem):
         self.angle_pid.enableContinuousInput(0, 360)
         self.angle_pid.setTolerance(0.5)  # Set position tolerance to 0.5 degrees
 
-        self.x_controller = PIDController(1.5, 0.0, 0.0)
-        self.y_controller = PIDController(1.5, 0.0, 0.0)
-        self.theta_controller = PIDController(0.075, 0.0, 0.001)
+        self.x_controller = PIDController(1.7, 0.0, 0.0)
+        self.y_controller = PIDController(1.7, 0.0, 0.0)
+        self.theta_controller = PIDController(0.11, 0.0, 0.001)
 
         ## Need to check these tolerances
-        self.x_controller.setTolerance(0.01, 0.01)
-        self.y_controller.setTolerance(0.01, 0.01)
+        self.x_controller.setTolerance(0.03, 0.01)
+        self.y_controller.setTolerance(0.03, 0.01)
         self.theta_controller.enableContinuousInput(0, 360)
-        self.theta_controller.setTolerance(0.01, 0.01)
+        self.theta_controller.setTolerance(1.0, 0.01)
 
         ### Field Visualisation - Needs testing ###
         self.previous_chassisspeeds = ChassisSpeeds()
@@ -166,7 +166,7 @@ class Drivetrain(Subsystem):
 
 
         # Drive the robot using the calculated velocities
-        self.drive(Translation2d(vx, vy), 0, True, False)
+        self.drive(Translation2d(vx, vy), omega, True, False)
 
         # Update SmartDashboard values for debugging
         SmartDashboard.putNumber("t_pose x", target_pose.X())

@@ -93,7 +93,7 @@ class OI:
         self.cardinal_directing = False
         self.robot_oriented_angle = self.robot.poseEstimator.getYaw().degrees()
 
-        self.rumble_button = Button(lambda: self.robot.has_note)
+        self.rumble_button = Button(lambda: self.robot.has_coral)
         self.can_crash = False
 
         self.find_heading = True
@@ -134,13 +134,14 @@ class OI:
 
                 rotate = -self.driver1.RIGHT_JOY_X()
 
-                if (self.running_pid_lineup) and (
-                    abs(self.driver1.LEFT_JOY_X()) > 0.05
-                    or abs(self.driver1.LEFT_JOY_Y()) > 0.05
-                    or abs(self.driver1.RIGHT_JOY_X()) > 0.1
-                    or abs(self.driver1.RIGHT_JOY_Y()) > 0.1
-                ):
-                    self.running_pid_lineup = False
+                # Cancel drive with pid if robot is moving manually
+                # if (self.running_pid_lineup) and (
+                #     abs(self.driver1.LEFT_JOY_X()) > 0.05
+                #     or abs(self.driver1.LEFT_JOY_Y()) > 0.05
+                #     or abs(self.driver1.RIGHT_JOY_X()) > 0.1
+                #     or abs(self.driver1.RIGHT_JOY_Y()) > 0.1
+                # ):
+                #     self.running_pid_lineup = False
 
                 if abs(rotate) >= 0.02:
                     self.cardinal_directing = False
@@ -225,9 +226,9 @@ class OI:
 
         @self.driver1.RIGHT_BUMPER.whenPressed  # begin intake process
         def _():
+            self.robot.mechanisms_at_default = False
             self.robot.funnel_intake.is_intaking = True
             self.robot.end_effector.is_intaking = True
-            self.robot.mechanisms_at_default = False
 
         @self.driver1.LEFT_BUMPER.whenPressed  # manual end to intake process
         def _():
@@ -263,7 +264,9 @@ class OI:
             self.robot.mechanisms_at_default = True
             self.running_pid_lineup = False
             self.score_intent = False
+            self.robot.at_scoring_position = False
             self.robot_oriented_angle = self.robot.poseEstimator.getYaw().degrees()
+            self.robot.end_effector.stop()
             self.robot.drivetrain.stop() #May or may not be needed to stop the robot from tracking the PID
 
         @self.driver2.Y.whenPressed # L4
