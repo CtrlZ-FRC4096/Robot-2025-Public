@@ -208,6 +208,11 @@ class Robot(CoroutineRobot):
     def teleop_mode(self):
         self.leds.set_mode(self.leds.MODE_ODOMETRY)
         self.scheduler.cancelAll()
+        self.mechanisms_at_default = True
+        self.funnel_intake.is_intaking = False
+        self.end_effector.is_intaking = False
+        self.running_pid_lineup = False
+        self.oi.score_intent = False
         self.in_autonomous_mode = False
 
         while True:

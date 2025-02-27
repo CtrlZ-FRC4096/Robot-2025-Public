@@ -112,7 +112,7 @@ class Elevator(Subsystem):
             """
             TODO: We need to make sure that this if statement logic is correct.
             """
-            if (self.robot.poseEstimator.curEstPose.translation() - self.robot.oi.final_lineup_pose.translation()).norm() < 2:
+            if (self.robot.poseEstimator.curEstPose.translation() - self.robot.oi.final_lineup_pose.translation()).norm() < RobotScoringPositions.elevator_raise_threshold:
                 # if we are close to the scoring position and there are no obstacles, begin raising the elevator
                 self.in_proximity_to_begin_raising_elevator = True # just for logging purposes
 

@@ -39,8 +39,18 @@ class Coroutines:
         @commandify
         def score_piece():
             yield
+            robot.funnel_intake.is_intaking = False
+            robot.end_effector.is_intaking = False
+            robot.at_scoring_position = False
+            robot.score_piece = False
+            self.final_lineup_pose = self.robot.poseEstimator.get_path_to_reef(
+                self.robot.poseEstimator.calculate_closest_reef_tag()[1],
+                self.right_branch,
+                do_manip_offset=True
+            )
             robot.mechanisms_at_default = False
-            robot.score_piece = True
+            robot.oi.running_pid_lineup = True
+            robot.oi.score_intent = True
 
         self.score_piece = (
             score_piece()
@@ -90,14 +100,46 @@ class Coroutines:
             score_L1()
         )
 
+        @commandify # position 1 on source
+        def set_position_to_1_on_source():
+            yield
+            robot.oi.position_on_source = 1
+
+        self.set_position_to_1_on_source = (
+            set_position_to_1_on_source()
+        )
+
+        @commandify # position 2 on source
+        def set_position_to_2_on_source():
+            yield
+            robot.oi.position_on_source = 2
+        
+        self.set_position_to_2_on_source = (    
+            set_position_to_2_on_source()
+        )
+
+        @commandify # position 3 on source
+        def set_position_to_3_on_source():
+            yield
+            robot.oi.position_on_source = 3
+
+        self.set_position_to_3_on_source = (
+            set_position_to_3_on_source()
+        )
+
         @commandify
         def intake_coral():
             yield
             robot.mechanisms_at_default = False
+            robot.at_scoring_position = False
+            robot.score_piece = False
             robot.funnel_intake.is_intaking = True
             robot.end_effector.is_intaking = True
-            yield from robot.wait(1.0) # wait for coral to be intaken
+            robot.oi.running_pid_lineup = True
+            robot.oi.score_intent = False
+            robot.oi.final_lineup_pose = self.robot.poseEstimator.get_path_to_source(False, robot.oi.position_on_source)
         
         self.intake_coral = (
             intake_coral()
         )
+
