@@ -16,12 +16,12 @@
     },
     {
       "anchor": {
-        "x": 5.197216475637336,
-        "y": 2.8652989437705583
+        "x": 5.8333806818181815,
+        "y": 4.17
       },
       "prevControl": {
-        "x": 6.938293778268915,
-        "y": 1.4698614823190772
+        "x": 7.574457984449765,
+        "y": 2.774562538548519
       },
       "nextControl": null,
       "isLocked": false,
@@ -42,7 +42,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -150.0
+    "rotation": -90.0
   },
   "reversed": false,
   "folder": "3 Piece Auto",

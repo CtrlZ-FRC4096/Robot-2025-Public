@@ -332,8 +332,8 @@ class PoseEstimator(Subsystem):
         return [closest_reef_tag, FieldConstants.tag_to_face[closest_reef_tag]]
 
 
-    def get_path_to_reef(self, face: int, right_branch: bool, margin_dist_offset=0.0, do_side_offset=True, do_manip_offset=True):
-        manip_offset = 3
+    def get_path_to_reef(self, face: int, right_branch: bool, margin_dist_offset=0.02, do_side_offset=True, do_manip_offset=True):
+        manip_offset = 1.75
         side_offset = (inchesToMeters(6.47) if not do_manip_offset else (inchesToMeters(6.47 + manip_offset) if right_branch else inchesToMeters(6.47 - manip_offset)))  # distance b/w center of face to branch
         dist_offset = (
             (inchesToMeters(29.5) / 2) + (inchesToMeters(7.25) / 2) + inchesToMeters(margin_dist_offset)
@@ -408,8 +408,8 @@ class PoseEstimator(Subsystem):
         2- center source
         3 - closest to PROCESSOR WALL
         '''
-        dist_offset = (inchesToMeters(29.5) / 2) + (inchesToMeters(7.25) / 2) + (inchesToMeters(2.5))
-        side_offset = inchesToMeters(28)
+        dist_offset = (inchesToMeters(29.5) / 2) + (inchesToMeters(7.25) / 2) + (inchesToMeters(3))
+        side_offset = inchesToMeters(24)
         if left_source:
             source_pose = FieldConstants.flip_Pose2d(FieldConstants.CoralStation.leftCenterFace)
             source_rotation = source_pose.rotation()
@@ -570,7 +570,7 @@ class PoseEstimator(Subsystem):
         self.poseConverge = True
 
         SmartDashboard.putData("Field", self.field)
-        self.field.setRobotPose(self.poseEst.getEstimatedPosition())
+        self.field.setRobotPose(self.robot.oi.final_lineup_pose)
         SmartDashboard.putData("Field w/ Single Tag", self.field_for_single_tag)
         self.field_for_single_tag.setRobotPose(
             self.poseEstSingleTag.getEstimatedPosition()

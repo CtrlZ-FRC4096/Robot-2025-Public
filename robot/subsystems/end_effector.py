@@ -68,7 +68,7 @@ class EndEffector(Subsystem):
         self.canrange_end_effector_config = configs.CANrangeConfiguration()
         self.canrange_end_effector_prox_config = ProximityParamsConfigs()
         # CHANGE PROXIMITY STUFF
-        self.canrange_end_effector_prox_config.proximity_threshold = 0.05
+        self.canrange_end_effector_prox_config.proximity_threshold = 0.08
         self.canrange_end_effector_config.with_proximity_params(self.canrange_end_effector_prox_config)
 
         self.canrange_end_effector.configurator.apply(self.canrange_end_effector_config)
@@ -110,7 +110,7 @@ class EndEffector(Subsystem):
 
         self.max_extension = 9.0
 
-        deque_length = 2
+        deque_length = 1
         self.piece_detected = deque(maxlen=deque_length)
         for i in range(deque_length):
             self.piece_detected.append(False)
@@ -144,6 +144,7 @@ class EndEffector(Subsystem):
     def periodic(self):
         if self.robot.score_piece or self.robot.at_scoring_position: # manual vs automated
             self.set_outtake_motor_speed(self.robot.score_state.end_effector_outtake_speed)
+            self.robot.has_coral = False
         elif self.is_intaking:
             self.set_end_effector_position(RobotScoringPositions.end_effector_intake_position)
             self.set_outtake_motor_speed(15.0) # default outtake speed

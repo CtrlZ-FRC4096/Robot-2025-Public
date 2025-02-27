@@ -61,15 +61,16 @@ class Drivetrain(Subsystem):
         self.angle_pid.enableContinuousInput(0, 360)
         self.angle_pid.setTolerance(0.5)  # Set position tolerance to 0.5 degrees
 
-        self.x_controller = PIDController(1.85, 0.0, 0.0)
-        self.y_controller = PIDController(1.85, 0.0, 0.0)
-        self.theta_controller = PIDController(0.12, 0.0, 0.001)
+        self.x_controller = PIDController(2.1, 0.005, 0.0)
+        self.y_controller = PIDController(2.1, 0.005, 0.0)
+        self.theta_controller = PIDController(0.06, 0.01, 0.0003)
+
 
         ## Need to check these tolerances
-        self.x_controller.setTolerance(0.05, 0.01)
-        self.y_controller.setTolerance(0.05, 0.01)
+        self.x_controller.setTolerance(0.02, 0.01)
+        self.y_controller.setTolerance(0.02, 0.01)
         self.theta_controller.enableContinuousInput(0, 360)
-        self.theta_controller.setTolerance(1.0, 0.01)
+        self.theta_controller.setTolerance(1.5, 0.01)
 
         ### Field Visualisation - Needs testing ###
         self.previous_chassisspeeds = ChassisSpeeds()
@@ -158,10 +159,10 @@ class Drivetrain(Subsystem):
             and self.y_controller.atSetpoint()
             and self.theta_controller.atSetpoint()
         ):
-            self.robot.oi.running_pid_lineup = False
-            self.robot.at_scoring_position = True
-            self.stop()
-            return
+            # self.robot.oi.running_pid_lineup = False
+            if self.robot.oi.score_intent:
+                self.robot.at_scoring_position = True
+            # self.stop()
             # Optionally, stop the drivetrain if at setpoint
 
 

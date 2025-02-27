@@ -229,6 +229,9 @@ class OI:
             self.robot.mechanisms_at_default = False
             self.robot.funnel_intake.is_intaking = True
             self.robot.end_effector.is_intaking = True
+            self.robot.at_scoring_position = False
+            self.score_intent = False
+            self.robot.score_piece = False
 
         @self.driver1.LEFT_BUMPER.whenPressed  # manual end to intake process
         def _():
@@ -238,12 +241,20 @@ class OI:
 
         @self.driver1.LEFT_TRIGGER_AS_BUTTON.whenHeld #run profiled pid to nearest source
         def _():
+            self.robot.mechanisms_at_default = False
+            self.robot.at_scoring_position = False
+            self.robot.score_piece = False
+            self.robot.funnel_intake.is_intaking = True
+            self.robot.end_effector.is_intaking = True
             self.running_pid_lineup = True
             self.score_intent = False
             self.final_lineup_pose = self.robot.poseEstimator.get_path_to_source(False, self.position_on_source)
 
         @self.driver1.LEFT_TRIGGER_AS_BUTTON.whenReleased #stop pid
         def _():
+            self.robot.mechanisms_at_default = True
+            self.robot.funnel_intake.is_intaking = False
+            self.robot.end_effector.is_intaking = False
             self.running_pid_lineup = False
             self.score_intent = False
             self.robot_oriented_angle = self.robot.poseEstimator.getYaw().degrees()
@@ -251,6 +262,10 @@ class OI:
 
         @self.driver1.RIGHT_TRIGGER_AS_BUTTON.whenHeld  # Run profiled PID to tag
         def _():
+            self.robot.funnel_intake.is_intaking = False
+            self.robot.end_effector.is_intaking = False
+            self.robot.at_scoring_position = False
+            self.robot.score_piece = False
             self.final_lineup_pose = self.robot.poseEstimator.get_path_to_reef(
                 self.robot.poseEstimator.calculate_closest_reef_tag()[1],
                 self.right_branch,
@@ -315,6 +330,7 @@ class OI:
             self.robot.funnel_intake.is_intaking = False
             self.robot.end_effector.is_intaking = False
 
+
         # @self.driver2.POV.DOWN.whenPressed
         # def _():
         #     self.robot.mechanisms_at_default = False
@@ -325,3 +341,5 @@ class OI:
         SmartDashboard.putNumber("robot oriented angle", self.robot_oriented_angle)
         SmartDashboard.putNumber("position on source", self.position_on_source)
         SmartDashboard.putBoolean("right branch", self.right_branch)
+        SmartDashboard.putNumber("final lineup x", self.final_lineup_pose.X())
+        SmartDashboard.putNumber("final lineup y", self.final_lineup_pose.Y())
