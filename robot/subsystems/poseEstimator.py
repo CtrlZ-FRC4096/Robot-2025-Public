@@ -216,7 +216,7 @@ class PoseEstimator(Subsystem):
         self.temp_rotation_check = Rotation2d()
 
         self.tag_layout = AprilTagFieldLayout.loadField(AprilTagField.k2025Reefscape)
-
+            
     def stop(self):
         print("sike this aint stoppin")
 
@@ -339,17 +339,14 @@ class PoseEstimator(Subsystem):
             (inchesToMeters(29.5) / 2) + (inchesToMeters(7.25) / 2) + inchesToMeters(margin_dist_offset)
         )  # robot size + bumper addition + error protection
 
-        angle_face = FieldConstants.Reef.centerFaces[face - 1].rotation()
-        center_face_pose = FieldConstants.Reef.centerFaces[face - 1]
-        center_face_translation = center_face_pose.translation()
-
-		## Offset face for manipulator
+        center_face_pose = FieldConstants.flip_Pose2d(FieldConstants.Reef.centerFaces[face - 1])
+        angle_face = center_face_pose.rotation()
 
         # manip_distance = 38
         center_face_x = (
-            center_face_translation.X() #+ inchesToMeters(manip_distance)*math.sin(angle_face.radians())
+            center_face_pose.X() #+ inchesToMeters(manip_distance)*math.sin(angle_face.radians())
         )  # pose of center face (this is directly on the side of the reef)
-        center_face_y = center_face_translation.Y() #+ inchesToMeters(manip_distance)*math.cos(angle_face.radians())
+        center_face_y = center_face_pose.Y() #+ inchesToMeters(manip_distance)*math.cos(angle_face.radians())
         x_offset = (
             math.cos(angle_face.radians()) * dist_offset
         )  # offsetting that pose by a set offset that extends the pose as if there's a vector from the center face with angle: angle_face
