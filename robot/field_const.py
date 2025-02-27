@@ -16,6 +16,7 @@ from wpimath.kinematics import SwerveDrive4Kinematics
 from wpimath.units import inchesToMeters, degreesToRadians
 
 from wpilib import DriverStation
+from robotpy_apriltag import AprilTagField, AprilTagFieldLayout
 
 
 class FieldConstants:
@@ -30,7 +31,7 @@ class FieldConstants:
     fieldWidth = inchesToMeters(317)
     startingLineX = inchesToMeters(299.438)  # Measured from the inside of starting line
     algaeDiameter = inchesToMeters(16)
-    shouldFlip = DriverStation.getAlliance == DriverStation.Alliance.kRed
+    shouldFlip = DriverStation.getAlliance() == DriverStation.Alliance.kRed
     reef_tags = {6, 7, 8, 9, 10, 11} if shouldFlip else {17, 18, 19, 20, 21, 22}
     face_to_tag = (
         {1: 7, 2: 6, 3: 11, 4: 10, 5: 9, 6: 8}
@@ -122,40 +123,17 @@ class FieldConstants:
 
     class Reef:
         center = Translation2d(inchesToMeters(176.746), inchesToMeters(158.501))
+        tag_map = AprilTagFieldLayout.loadField(AprilTagField.k2025Reefscape)
         faceToZoneLine = inchesToMeters(
             12
         )  # Side of the reef to the inside of the reef zone line
         centerFaces = [
-            Pose2d(
-                inchesToMeters(144.003),
-                inchesToMeters(158.500),
-                Rotation2d.fromDegrees(180),
-            ),
-            Pose2d(
-                inchesToMeters(160.373),
-                inchesToMeters(186.857),
-                Rotation2d.fromDegrees(120),
-            ),
-            Pose2d(
-                inchesToMeters(193.116),
-                inchesToMeters(186.858),
-                Rotation2d.fromDegrees(60),
-            ),
-            Pose2d(
-                inchesToMeters(209.489),
-                inchesToMeters(158.502),
-                Rotation2d.fromDegrees(0),
-            ),
-            Pose2d(
-                inchesToMeters(193.118),
-                inchesToMeters(130.145),
-                Rotation2d.fromDegrees(-60),
-            ),
-            Pose2d(
-                inchesToMeters(160.375),
-                inchesToMeters(130.144),
-                Rotation2d.fromDegrees(-120),
-            ),
+            tag_map.getTagPose(18).toPose2d(),
+            tag_map.getTagPose(19).toPose2d(),
+            tag_map.getTagPose(20).toPose2d(),
+            tag_map.getTagPose(21).toPose2d(),
+            tag_map.getTagPose(22).toPose2d(),
+            tag_map.getTagPose(17).toPose2d(),
         ]  # Starting facing the driver station in clockwise order
         branchPositions = []
 
