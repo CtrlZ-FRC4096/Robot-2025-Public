@@ -29,11 +29,35 @@ class Coroutines:
         def reset_robot_after_scoring():
             yield
             yield from robot.wait(0.25) # wait so that robot can fully outtake piece (we can adjust this time later)
-            robot.mechanisms_at_default = True
+            self.robot.mechanisms_at_default = True
+            robot.oi.running_pid_lineup = False
             robot.oi.score_intent = False
+            robot.at_scoring_position = False
+            robot.oi.robot_oriented_angle = self.robot.poseEstimator.getYaw().degrees()
+            robot.end_effector.stop()
+            robot.drivetrain.stop()
+
         
         self.reset_robot_after_scoring = (
             reset_robot_after_scoring()
+        )
+
+        @commandify
+        def score_left_branch():
+            yield
+            robot.oi.right_branch = False
+        
+        self.score_left_branch = (
+            score_left_branch()
+        )
+
+        @commandify
+        def score_right_branch():
+            yield
+            robot.oi.right_branch = True
+
+        self.score_right_branch = (
+            score_right_branch()
         )
 
         @commandify
@@ -130,6 +154,7 @@ class Coroutines:
         @commandify
         def intake_coral():
             yield
+            robot.oi.final_lineup_pose = self.robot.poseEstimator.get_path_to_source(False, robot.oi.position_on_source)
             robot.mechanisms_at_default = False
             robot.at_scoring_position = False
             robot.score_piece = False
@@ -137,7 +162,6 @@ class Coroutines:
             robot.end_effector.is_intaking = True
             robot.oi.running_pid_lineup = True
             robot.oi.score_intent = False
-            robot.oi.final_lineup_pose = self.robot.poseEstimator.get_path_to_source(False, robot.oi.position_on_source)
         
         self.intake_coral = (
             intake_coral()

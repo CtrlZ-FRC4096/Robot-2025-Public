@@ -5,15 +5,21 @@
     "data": {
       "commands": [
         {
+          "type": "path",
+          "data": {
+            "pathName": "3P_1"
+          }
+        },
+        {
           "type": "named",
           "data": {
             "name": "score_L4"
           }
         },
         {
-          "type": "path",
+          "type": "named",
           "data": {
-            "pathName": "3P_1"
+            "name": "score_left_branch"
           }
         },
         {
@@ -41,15 +47,21 @@
           }
         },
         {
+          "type": "path",
+          "data": {
+            "pathName": "3P_3"
+          }
+        },
+        {
           "type": "named",
           "data": {
             "name": "score_L4"
           }
         },
         {
-          "type": "path",
+          "type": "named",
           "data": {
-            "pathName": "3P_3"
+            "name": "score_right_branch"
           }
         },
         {
@@ -77,15 +89,21 @@
           }
         },
         {
+          "type": "path",
+          "data": {
+            "pathName": "3P_5"
+          }
+        },
+        {
           "type": "named",
           "data": {
             "name": "score_L4"
           }
         },
         {
-          "type": "path",
+          "type": "named",
           "data": {
-            "pathName": "3P_5"
+            "name": "score_left_branch"
           }
         },
         {
