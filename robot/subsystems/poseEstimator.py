@@ -185,27 +185,27 @@ class PoseEstimator(Subsystem):
 
         # # Update with positionon robot
         ROBOT_TO_CAM3 = Transform3d(
-            Translation3d(0.347, 0.287, 0.432),  # X  # Y  # Z
+            Translation3d(0.359, 0.282, 0.432),  # X  # Y  # Z
             Rotation3d(
-                0.0, 0.0, np.deg2rad(-90.0)
+                0.0, 0.0, np.deg2rad(105.0)
             ),  # Roll  # Pitch  # Yaw
         )
 
         # # Update with positionon robot
-        # ROBOT_TO_CAM4 = Transform3d(
-        #     Translation3d(0.045, -0.286, 0.588),  # X  # Y  # Z
-        #     Rotation3d(
-        #         0 * (math.pi / 180),
-        #         -10.0 * (math.pi / 180),
-        #         -24.62 * (math.pi / 180),
-        #     ),  # Roll  # Pitch  # Yaw
-        # )
+        ROBOT_TO_CAM4 = Transform3d(
+            Translation3d(-0.302, 0.232, 0.771),  # X  # Y  # Z
+            Rotation3d(
+                0.0,
+                0.0,
+                np.deg2rad(75.0),
+            ),  # Roll  # Pitch  # Yaw
+        )
 
         self.cams = [
             WrapperedPhotonCamera("camera_1", ROBOT_TO_CAM1),
             WrapperedPhotonCamera("camera_2", ROBOT_TO_CAM2),
             WrapperedPhotonCamera("camera_3", ROBOT_TO_CAM3),
-            # WrapperedPhotonCamera("Camera4", ROBOT_TO_CAM4),
+            WrapperedPhotonCamera("camera_4", ROBOT_TO_CAM4),
         ]
 
         self.poseConverge = True
