@@ -10,25 +10,14 @@
       "/SmartDashboard/PID Controller for going to reef, y": "PIDController"
     }
   },
-  "NetworkTables Info": {
-    "visible": true
-  },
-  "Plot": {
-    "Plot <0>": {
-      "plots": [
-        {
-          "backgroundColor": [
-            0.0,
-            0.0,
-            0.0,
-            0.8500000238418579
-          ],
-          "height": 326
-        }
-      ],
-      "window": {
-        "visible": false
+  "NetworkTables": {
+    "transitory": {
+      "SmartDashboard": {
+        "open": true
       }
     }
+  },
+  "NetworkTables Info": {
+    "visible": true
   }
 }
