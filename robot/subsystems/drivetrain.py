@@ -176,6 +176,35 @@ class Drivetrain(Subsystem):
         SmartDashboard.putNumber("vy", vy)
         SmartDashboard.putNumber("omega", 0)
 
+    def go_to_pose_profiled_pid_ghost(self, final_target_pose : Translation2d):
+        current_pose = self.robot.poseEstimator.curEstPose
+
+        # **Dynamically shift the pose based on current position**
+        shift_factor = 0.4  # Adjust this value to control shifting effect
+        shift_x = math.copysign(shift_factor, final_target_pose.X() - current_pose.X())  
+        shift_y = math.copysign(shift_factor, final_target_pose.Y() - current_pose.Y())
+
+        # Compute **intermediate shifted target**
+        dynamic_target = Translation2d(
+            final_target_pose.X() + shift_x,
+            final_target_pose.Y() + shift_y
+        )
+
+        # **PID-controlled movement towards dynamic target**
+        vx = self.x_controller.calculate(current_pose.X(), dynamic_target.X())
+        vy = self.y_controller.calculate(current_pose.Y(), dynamic_target.Y())
+        omega = self.theta_controller.calculate(
+            current_pose.rotation().degrees(), final_target_pose.rotation().degrees()
+        )
+
+        # Check if we reached the setpoint
+        if self.x_controller.atSetpoint() and self.y_controller.atSetpoint() and self.theta_controller.atSetpoint():
+            if self.robot.oi.score_intent:
+                self.robot.at_scoring_position = True
+
+        # **Drive towards dynamic pose instead of final target**
+        self.drive(Translation2d(vx, vy), omega, True, False)
+
     def stop(self):
         self.drive(Translation2d(0, 0), 0, False, True)
 
