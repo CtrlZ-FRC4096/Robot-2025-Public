@@ -12,7 +12,7 @@ import wpilib.simulation
 
 from pyfrc.physics.core import PhysicsInterface
 from pyfrc.physics import motor_cfgs
-from pyfrc.physics.drivetrains import four_motor_swerve_drivetrain
+from pyfrc.physics.drivetrains import four_motor_swerve_drivetrain, FourMotorDrivetrain
 from pyfrc.physics.units import units
 
 import typing
@@ -26,35 +26,35 @@ class PhysicsEngine:
     Simulates a 4-wheel robot using Tank Drive joystick control
     """
 
-    def __init__(self, physics_controller: PhysicsInterface, robot: "Robot"):
+    def __init__(self, physics_controller: PhysicsInterface, robot: "Robot"): # type: ignore
         """
         :param physics_controller: `pyfrc.physics.core.Physics` object
                                    to communicate simulation effects to
         :param robot: your robot object
         """
-
+        self.robot = robot
         self.physics_controller = physics_controller
 
         # Initialize Motors
-        # self.lf_motor = wpilib.simulation.DutyCycleSim(robot.drivetrain.lf_motor.getChannel())
-        # self.lr_motor = wpilib.simulation.PWMSim(2)
+        self.lf_motor = wpilib.simulation.DutyCycleSim(robot.drivetrain.lf_motor.getChannel())
+        self.lr_motor = wpilib.simulation.PWMSim(2)
 
         # Initialize Motors and sensors
-        # self.gyro = wpilib.simulation.AnalogGyroSim(robot.gyro)
+        self.gyro = wpilib.simulation.AnalogGyroSim(robot.poseEstimator.gyro)
 
         # Change these parameters to fit your robot!
         bumper_width = 3.25 * units.inch
 
-        # self.drivetrain = four_motor_swerve_drivetrain(
-        #     motor_cfgs.MOTOR_CFG_CIM,           # motor configuration
-        #     110 * units.lbs,                    # robot mass
-        #     10.71,                              # drivetrain gear ratio
-        #     2,                                  # motors per side
-        #     22 * units.inch,                    # robot wheelbase
-        #     23 * units.inch + bumper_width * 2, # robot width
-        #     32 * units.inch + bumper_width * 2, # robot length
-        #     6 * units.inch,                     # wheel diameter
-        # )
+        self.drivetrain = four_motor_swerve_drivetrain(
+            motor_cfgs.MOTOR_CFG_CIM,           # motor configuration
+            110 * units.lbs,                    # robot mass
+            10.71,                              # drivetrain gear ratio
+            2,                                  # motors per side
+            22 * units.inch,                    # robot wheelbase
+            23 * units.inch + bumper_width * 2, # robot width
+            32 * units.inch + bumper_width * 2, # robot length
+            6 * units.inch,                     # wheel diameter
+        )
 
     def update_sim(self, now: float, tm_diff: float) -> None:
         """
@@ -67,13 +67,13 @@ class PhysicsEngine:
         """
 
         # Simulate the drivetrain (only front motors used because read should be in sync)
-        # lf_motor = self.lf_motor.getSpeed()
-        # rf_motor = self.rf_motor.getSpeed()
+        lf_motor = self.lf_motor.get()
+        rf_motor = self.lr_motor.getSpeed()
 
-        # transform = self.drivetrain.calculate(lf_motor, rf_motor, tm_diff)
-        # pose = self.physics_controller.move_robot(transform)
+        transform = self.drivetrain.calculate(lf_motor, rf_motor, tm_diff)
+        pose = self.physics_controller.move_robot(transform)
 
         # Update the sensor simulation
         # -> FRC gyros are positive clockwise, but the returned pose is positive
         #    counter-clockwise
-        # self.gyro.setAngle(-pose.rotation().degrees())
+        self.gyro.setAngle(-pose.rotation().degrees())
