@@ -119,7 +119,7 @@ class SwerveModule:
         swerve_drive_motor_config = configs.TalonFXConfiguration()
         # self.drive_motor.configurator.apply(swerve_drive_motor_config)  # type: ignore
         swerve_drive_motor_config.slot0.k_p = 2.2  # 2.2
-        swerve_drive_motor_config.slot0.k_s = 3.8
+        swerve_drive_motor_config.slot0.k_s = 5.6
         swerve_drive_motor_config.slot0.k_v = 0.24  # 0.24
         ## Feed Forward
         # swerve_drive_motor_config.slot0.k_v = const.SWERVE_DRIVE_KV
@@ -127,7 +127,7 @@ class SwerveModule:
         swerve_drive_motor_config.current_limits.supply_current_limit = (
             80  # I am not sure if this is correct
         )
-        swerve_drive_motor_config.current_limits.supply_current_threshold = (
+        swerve_drive_motor_config.current_limits.supply_current_limit = (
             80  # change back to 40
         )
 

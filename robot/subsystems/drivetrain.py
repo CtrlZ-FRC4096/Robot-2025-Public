@@ -61,16 +61,16 @@ class Drivetrain(Subsystem):
         self.angle_pid.enableContinuousInput(0, 360)
         self.angle_pid.setTolerance(0.5)  # Set position tolerance to 0.5 degrees
 
-        self.x_controller = PIDController(2.1, 0.005, 0.0)
-        self.y_controller = PIDController(2.1, 0.005, 0.0)
-        self.theta_controller = PIDController(0.06, 0.01, 0.0003)
+        self.x_controller = PIDController(2.0, 0.0, 0.015)
+        self.y_controller = PIDController(2.0, 0.00, 0.015)
+        self.theta_controller = PIDController(0.07, 0.01, 0.0015)
 
 
         ## Need to check these tolerances
-        self.x_controller.setTolerance(0.02, 0.01)
-        self.y_controller.setTolerance(0.02, 0.01)
+        self.x_controller.setTolerance(0.02, 0.1)
+        self.y_controller.setTolerance(0.02, 0.1)
         self.theta_controller.enableContinuousInput(0, 360)
-        self.theta_controller.setTolerance(1.5, 0.01)
+        self.theta_controller.setTolerance(2.0, 0.1)
 
         ### Field Visualisation - Needs testing ###
         self.previous_chassisspeeds = ChassisSpeeds()

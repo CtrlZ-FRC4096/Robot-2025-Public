@@ -184,12 +184,12 @@ class PoseEstimator(Subsystem):
         )
 
         # # Update with positionon robot
-        # ROBOT_TO_CAM3 = Transform3d(
-        #     Translation3d(-0.2764, 0.2805, 0.2949),  # X  # Y  # Z
-        #     Rotation3d(
-        #         0.0, 31.32 * (math.pi / 180), 180.0 * (math.pi / 180)
-        #     ),  # Roll  # Pitch  # Yaw
-        # )
+        ROBOT_TO_CAM3 = Transform3d(
+            Translation3d(0.347, 0.287, 0.432),  # X  # Y  # Z
+            Rotation3d(
+                0.0, 0.0, np.deg2rad(-90.0)
+            ),  # Roll  # Pitch  # Yaw
+        )
 
         # # Update with positionon robot
         # ROBOT_TO_CAM4 = Transform3d(
@@ -204,7 +204,7 @@ class PoseEstimator(Subsystem):
         self.cams = [
             WrapperedPhotonCamera("camera_1", ROBOT_TO_CAM1),
             WrapperedPhotonCamera("camera_2", ROBOT_TO_CAM2),
-            # WrapperedPhotonCamera("Camera3", ROBOT_TO_CAM3),
+            WrapperedPhotonCamera("camera_3", ROBOT_TO_CAM3),
             # WrapperedPhotonCamera("Camera4", ROBOT_TO_CAM4),
         ]
 
@@ -216,7 +216,7 @@ class PoseEstimator(Subsystem):
         self.temp_rotation_check = Rotation2d()
 
         self.tag_layout = AprilTagFieldLayout.loadField(AprilTagField.k2025Reefscape)
-            
+
     def stop(self):
         print("sike this aint stoppin")
 
@@ -285,7 +285,10 @@ class PoseEstimator(Subsystem):
         self.max_trans_speed = max(self.swerve_states_translation_magnitudes)
         self.min_trans_speed = min(self.swerve_states_translation_magnitudes)
 
-        return self.max_trans_speed / self.min_trans_speed
+        if self.min_trans_speed > 0.0:
+            return self.max_trans_speed / self.min_trans_speed
+        else:
+            return
 
     def get_jerk_val(self):
         cur_accel_x = self.gyro.get_acceleration_x().value
@@ -332,8 +335,9 @@ class PoseEstimator(Subsystem):
         return [closest_reef_tag, FieldConstants.tag_to_face[closest_reef_tag]]
 
 
-    def get_path_to_reef(self, face: int, right_branch: bool, margin_dist_offset=0.02, do_side_offset=True, do_manip_offset=True):
+    def get_path_to_reef(self, face: int, right_branch: bool, margin_dist_offset=0.05, do_side_offset=True, do_manip_offset=True):
         manip_offset = 1.75
+
         side_offset = (inchesToMeters(6.47) if not do_manip_offset else (inchesToMeters(6.47 + manip_offset) if right_branch else inchesToMeters(6.47 - manip_offset)))  # distance b/w center of face to branch
         dist_offset = (
             (inchesToMeters(29.5) / 2) + (inchesToMeters(7.25) / 2) + inchesToMeters(margin_dist_offset)
@@ -376,7 +380,7 @@ class PoseEstimator(Subsystem):
             )
             return target_pose_3
         else:
-            return target_pose_face
+            return 0.0
 
     def calculate_closest_source(self):
         '''
@@ -405,7 +409,7 @@ class PoseEstimator(Subsystem):
         2- center source
         3 - closest to PROCESSOR WALL
         '''
-        dist_offset = (inchesToMeters(29.5) / 2) + (inchesToMeters(7.25) / 2) + (inchesToMeters(3))
+        dist_offset = (inchesToMeters(29.5) / 2) + (inchesToMeters(7.25) / 2) + (inchesToMeters(5))
         side_offset = inchesToMeters(24)
         if left_source:
             source_pose = FieldConstants.flip_Pose2d(FieldConstants.CoralStation.leftCenterFace)
@@ -627,4 +631,4 @@ class PoseEstimator(Subsystem):
             )
 
     def log(self):
-        pass
+        SmartDashboard.putNumber("gyro voltage", self.gyro.get_supply_voltage().value)
