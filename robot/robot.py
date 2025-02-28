@@ -34,6 +34,9 @@ import ntcore
 import subsystems.drivetrain
 
 # import subsystems.limelight
+import subsystems.elevator
+import subsystems.end_effector
+import subsystems.funnel_intake
 import subsystems.leds
 
 import subsystems.limelight
@@ -54,6 +57,8 @@ from pathplannerlib.controller import PPHolonomicDriveController
 from wpimath.geometry import Rotation2d
 
 from field_const import FieldConstants
+
+from robot_scoring_positions import RobotScoringPositions
 
 
 log = logging.getLogger("robot")
@@ -83,9 +88,9 @@ class Robot(CoroutineRobot):
 
         # Match Stuff
         self.match_time = -1
-        const.IS_SIMULATION = self.isSimulation()
+        # const.IS_SIMULATION = self.isSimulation()
 
-        self.has_note = False
+        self.has_coral = False
 
         # Command scheduler
         self.scheduler = CommandScheduler.getInstance()
@@ -95,11 +100,17 @@ class Robot(CoroutineRobot):
         self.leds = subsystems.leds.LEDs(self)
         self.limelight = subsystems.limelight.Limelight_Wrapper()
         self.poseEstimator = subsystems.poseEstimator.PoseEstimator(self)
+        self.funnel_intake = subsystems.funnel_intake.FunnelIntake(self)
+        self.elevator = subsystems.elevator.Elevator(self)
+        self.end_effector = subsystems.end_effector.EndEffector(self)
 
         self.subsystems = [
             self.drivetrain,
             self.leds,
             self.poseEstimator,
+            self.funnel_intake,
+            self.elevator,
+            self.end_effector
         ]
 
         # If everything in self.subsystems is a Subsystem object, then
@@ -114,6 +125,13 @@ class Robot(CoroutineRobot):
         ### OTHER ###
         self.driverstation = wpilib.DriverStation
         self.oi = oi.OI(self)
+
+		### STATE MACHINE ###
+        self.score_state = RobotScoringPositions.L4_Scoring # defaulting to L4
+        self.at_scoring_position = False
+
+        self.score_piece = False
+        self.mechanisms_at_default = True
 
         self.match_time = -1
         ### FIELD LOGGING ###
@@ -190,20 +208,33 @@ class Robot(CoroutineRobot):
     def teleop_mode(self):
         self.leds.set_mode(self.leds.MODE_ODOMETRY)
         self.scheduler.cancelAll()
+        self.mechanisms_at_default = True
+        self.funnel_intake.is_intaking = False
+        self.end_effector.is_intaking = False
+        self.running_pid_lineup = False
+        self.oi.score_intent = False
         self.in_autonomous_mode = False
 
         while True:
             yield
-
-    ### MISC ###
-
-    def stop_all_subsystems(self):  # Update as we add more subsystems
-        self.funnel_intake.is_running = False
+    
+    ### WAIT FUNCTION ###
+    def wait(self, time):
+        timer = Timer()
+        timer.start()
+        while not timer.hasElapsed(time):
+            yield
 
     def log(self):
         """
         Logs some info to shuffleboard, and standard output
         """
+        wpilib.SmartDashboard.putNumber("Score state", self.score_state.number)
+        wpilib.SmartDashboard.putBoolean("Score piece", self.score_piece)
+        wpilib.SmartDashboard.putBoolean("Mechanisms at default", self.mechanisms_at_default)
+        wpilib.SmartDashboard.putBoolean("At scoring position", self.at_scoring_position)
+        wpilib.SmartDashboard.putBoolean("OI Score Intent", self.oi.score_intent)
+
         for s in self.subsystems:
             s.log()
 

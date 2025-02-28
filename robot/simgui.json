@@ -4,7 +4,17 @@
       "/FMSInfo": "FMSInfo",
       "/SmartDashboard/Field": "Field2d",
       "/SmartDashboard/Field w/ Single Tag": "Field2d",
-      "/SmartDashboard/PID Controller (Drivetrain)": "PIDController"
+      "/SmartDashboard/PID Controller (Drivetrain)": "PIDController",
+      "/SmartDashboard/PID Controller for going to reef, theta": "PIDController",
+      "/SmartDashboard/PID Controller for going to reef, x": "PIDController",
+      "/SmartDashboard/PID Controller for going to reef, y": "PIDController"
+    }
+  },
+  "NetworkTables": {
+    "transitory": {
+      "SmartDashboard": {
+        "open": true
+      }
     }
   },
   "NetworkTables Info": {

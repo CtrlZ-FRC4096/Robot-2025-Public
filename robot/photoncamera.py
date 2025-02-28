@@ -1,5 +1,5 @@
 import wpilib
-from wpimath.units import feetToMeters
+from wpimath.units import feetToMeters, inchesToMeters
 from photonlibpy.photonCamera import (
     PhotonCamera,
     setVersionCheckEnabled,
@@ -13,6 +13,7 @@ from wpimath.geometry import (
     Rotation2d,
     Rotation3d,
     Transform3d,
+    Transform2d,
 )
 
 import const
@@ -50,14 +51,21 @@ class WrapperedPhotonCamera:
 
         self.timeoutSec = 1.0
         self.poseEstimates = []
-        self.robotToCam = robotToCam
+        self.robotToCam: Transform3d = robotToCam
         self.counter = 0
+        self.tag_map = AprilTagFieldLayout.loadField(AprilTagField.k2025Reefscape)
 
     @staticmethod
     def tgt_corner_to_list(target):
         return [target.x, target.y]
 
-    def update(self, prevEstPose: Pose2d, allianceColor: str):
+    def update(
+        self,
+        prevEstPose: Pose2d,
+        prevEstPoseSingleTag: Pose2d,
+        allianceColor: str,
+        yaw: Rotation2d,
+    ):
         # self.counter += 1
         self.poseEstimates = []
         self.tagPositions = []
@@ -80,12 +88,11 @@ class WrapperedPhotonCamera:
         # latency = res.getLatencyMillis()
         # obsTime = wpilib.Timer.getFPGATimestamp() - latency
 
-        obsTime = res.getTimestampSeconds()
+        self.obsTime = res.getTimestampSeconds()
 
         ## MultiTag code
-        tag_map = AprilTagFieldLayout.loadField(AprilTagField.k2025Reefscape)
         photon_pose_estimator = photonPoseEstimator.PhotonPoseEstimator(
-            tag_map,
+            self.tag_map,
             photonPoseEstimator.PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
             self.cam,
             self.robotToCam,
@@ -97,11 +104,11 @@ class WrapperedPhotonCamera:
             robot_pose = vision_est.estimatedPose.toPose2d()
 
             # if ((robot_pose.x > -0.5) and (robot_pose.x < const.FIELD_LENGTH_METERS + 0.5) and (robot_pose.y > -0.5) and (robot_pose.y < const.FIELD_WIDTH_METERS + 0.5)): # Check if the robot is on the field
-            self.poseEstimates.append(CameraPoseObservation(obsTime, robot_pose))
+            self.poseEstimates.append(CameraPoseObservation(self.obsTime, robot_pose))
             for target in res.getTargets():
                 tgtID = target.getFiducialId()
 
-                tagFieldPose = tag_map.getTagPose(tgtID)
+                tagFieldPose = self.tag_map.getTagPose(tgtID)
                 self.tagAmbiguity.append(target.getPoseAmbiguity())
                 self.tagPositions.append(tagFieldPose)
 
@@ -114,8 +121,6 @@ class WrapperedPhotonCamera:
         # We want to select the best possible pose per target
         # We should also filter out targets that are too far away, and poses which
         # don't make sense.
-
-        tag_map = AprilTagFieldLayout.loadField(AprilTagField.k2025Reefscape)
 
         for target in res.getTargets():
 
@@ -136,7 +141,7 @@ class WrapperedPhotonCamera:
                 22,
             ]:  # Only use reef IDs, everything else is not great
 
-                tagFieldPose = tag_map.getTagPose(tgtID)
+                tagFieldPose = self.tag_map.getTagPose(tgtID)
 
                 # corners = np.ndarray(
                 #     [[[corner.x, corner.y] for corner in target.getDetectedCorners()]]
@@ -155,8 +160,9 @@ class WrapperedPhotonCamera:
                     # self.cam.getDistortionCoefficients(),
                     self.cameraIntrinsMatrix,
                     self.cameraDistortVector,
+                    None,
+                    self.cameraIntrinsMatrix,
                 )  # Return list of n corners, for fiducials this is counter clockwise starting from the top left corner of the tag.
-                # print(corners_undistorted)
                 corners = np.zeros((4, 2))
                 for index, corner in enumerate(
                     corners_undistorted
@@ -171,33 +177,104 @@ class WrapperedPhotonCamera:
                 target_x_angle = np.mean(corners[:, 0])
                 target_y_angle = np.mean(corners[:, 1])
 
-                distance = (
-                    target.getBestCameraToTarget().translation().norm()
-                )  # distance from camera to target in meters
+                # print("targ x: ", target_x_angle)
+                # print("target y: ", target_y_angle)
 
-                # Calculate the position of the target to the camera  in the camera coordinate system (meters)
-                # Use spherical coordinates to calculate the x, y, and z distances
-                z_dist = distance * math.cos((math.pi / 2) - target_y_angle)
-                y_dist = (
-                    distance
-                    * math.sin(target_x_angle)
-                    * math.sin((math.pi / 2) - target_y_angle)
+                # z_dist = tag_map.getTagPose(tgtID).Z() - inchesToMeters(4.87)
+
+                distance_3d = target.getBestCameraToTarget().translation().norm()
+
+                distance_2d_to_tag = distance_3d * math.cos(
+                    (-1 * self.robotToCam.rotation().Y()) - target_y_angle
+                )  # cosine is even so we don't need to negate both
+
+                # print(distance_2d_to_tag)
+
+                # Calculate the rotation of the camera to the tag. The rotation of the robot + rotation of the camera - the angle of the target
+                cam_to_tag_rotation = Rotation2d(
+                    prevEstPoseSingleTag.rotation().radians()
+                    + self.robotToCam.rotation().Z()
+                    - target_x_angle
                 )
-                x_dist = (
-                    distance
-                    * math.cos(target_x_angle)
-                    * math.sin((math.pi / 2) - target_y_angle)
+
+                # Calculate the translation of the camera to the tag. We take the position of the tag, transform by the distance to the tag, in the direction of the camera
+                field_to_camera_translation = (
+                    Pose2d(
+                        tagFieldPose.toPose2d().translation(),
+                        Rotation2d(cam_to_tag_rotation.radians() + math.pi),
+                    )
+                    .transformBy(
+                        Transform2d(
+                            Translation2d(distance_2d_to_tag, 0.0), Rotation2d()
+                        )
+                    )
+                    .translation()
                 )
 
-                camToTarget = Transform3d(
-                    Translation3d(x_dist, y_dist, z_dist), Rotation3d()
-                )  # Create a Pose3d object with the calculated x, y, and z distances, and no rotation
+                # Calculate the pose of the robot. We take the position of the camera to the tag and transform it by the robot to camera transform
+                robot_pose = Pose2d(
+                    field_to_camera_translation,
+                    Rotation2d(
+                        prevEstPoseSingleTag.rotation().radians()
+                        + self.robotToCam.rotation().Z()
+                    ),
+                ).transformBy(
+                    Transform2d(
+                        Pose2d(
+                            self.robotToCam.X(),
+                            self.robotToCam.Y(),
+                            self.robotToCam.rotation().Z(),
+                        ),
+                        Pose2d(),
+                    )
+                )
+                #     Transform2d(-self.robotToCam.X(), self.robotToCam.Y(), Rotation2d()) ##Throwing a negative on the cam y seemed to work, I hate this
+                # )
+                # Use previous angle (gyro) at the time for robot rotation
+                robot_pose = Pose2d(
+                    robot_pose.translation(), prevEstPoseSingleTag.rotation()
+                )
+                # print(robot_pose)
+                # z_dist / (math.tan(self.robotToCam.rotation().Y() + target_y_angle))
+                # absolute_angle = yaw.radians() + target_x_angle
 
-                # Calculate the position of the robot on the field in the field coordinate system (meters) from the tag pose and the camera to target transform
-                fieldPose = self._toFieldPose(tagFieldPose, camToTarget)
+                # x_dist = distance_2d * math.cos(absolute_angle)
+                # y_dist = distance_2d * math.sin(absolute_angle)
 
-                self.poseSingleTag.append([fieldPose, tgtID])
+                # distance = (
+                #     target.getBestCameraToTarget().translation().norm()
+                # )  # distance from camera to target in meters
+                # print("distance: ", distance)
+                # # Calculate the position of the target to the camera  in the camera coordinate system (meters)
+                # # Use spherical coordinates to calculate the x, y, and z distances
+                # z_dist = -1 * distance * math.cos((math.pi / 2) - target_y_angle)
+                # y_dist = -1 * (
+                #     distance
+                #     * math.sin(target_x_angle)
+                #     * math.sin((math.pi / 2) - target_y_angle)
+                # )
+                # x_dist = (
+                #     distance
+                #     * math.cos(target_x_angle)
+                #     * math.sin((math.pi / 2) - target_y_angle)
+                # )
+                # print("x dist: ", x_dist)
+                # print("y dist: ", y_dist)
+                # print("z dist: ", z_dist)
+
+                # camToTarget = Transform3d(
+                #     Translation3d(x_dist, y_dist, z_dist), Rotation3d()
+                # )  # Create a Pose3d object with the calculated x, y, and z distances, and no rotation
+
+                # # Calculate the position of the robot on the field in the field coordinate system (meters) from the tag pose and the camera to target transform
+                # fieldPose = self._toFieldPose(tagFieldPose, camToTarget)
+                # # print(fieldPose)
+
+                self.poseSingleTag.append(robot_pose)
                 self.singleTagIDs.append(tgtID)
+
+    def getObsTime(self):
+        return self.obsTime
 
     def getTagIds(self):
         return self.tag_ids
@@ -217,7 +294,7 @@ class WrapperedPhotonCamera:
     def getSingleTagIDs(self):
         return self.singleTagIDs
 
-    def _toFieldPose(self, tgtPose, camToTarget):
+    def _toFieldPose(self, tgtPose: Pose3d, camToTarget: Transform3d):
         camPose = tgtPose.transformBy(camToTarget.inverse())
         return camPose.transformBy(self.robotToCam.inverse()).toPose2d()
 

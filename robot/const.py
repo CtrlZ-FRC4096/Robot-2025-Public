@@ -174,8 +174,15 @@ THETA_KP = 0.2  # 1.9 #0.232  # * 2.866 * 5.0
 THETA_KI = 0.0  # 0.07  # 0.0625  # * 2.866 * 5.0
 THETA_KD = 0.001  # 0.01
 
-CANRANGE_1_CAN_ID = 14
-INTAKE_MOTOR_CAN_ID = 15
+FUNNEL_CANRANGE_ID = 14
+FUNNEL_INTAKE_MOTOR_CAN_ID = 15
+
+ELEVATOR_MOTOR_1_CAN_ID = 16
+ELEVATOR_MOTOR_2_CAN_ID = 17
+
+END_EFFECTOR_MOTOR_CAN_ID = 18
+END_EFFECTOR_CANRANGE_ID = 19
+END_EFFECTOR_OUTTAKE_MOTOR_CAN_ID = 20
 
 COLLISION_JERK_MAX = 50
 SKIDDING_RATIO_MAX = 10
@@ -193,6 +200,12 @@ CAM_DICT = {
 			[0.0, 912.0, 407.29],
 			[0.0, 0.0, 1.0]], dtype=np.float64),
     ),
+	"camera_3": (
+        np.array([0.048, -0.073, 0.001, 0.0, 0.008, -0.002, 0.003, 0.0], dtype=np.float64),
+        np.array([[911.76, 0.0, 629.69],
+			[0.0, 912.0, 407.29],
+			[0.0, 0.0, 1.0]], dtype=np.float64),
+    )
 }
 
 JENNY = 8675_309999999

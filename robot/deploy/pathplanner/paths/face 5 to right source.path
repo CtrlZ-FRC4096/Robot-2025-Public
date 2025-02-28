@@ -45,7 +45,7 @@
     "rotation": -35.0
   },
   "reversed": false,
-  "folder": null,
+  "folder": "4 Piece Auto Test (No Commands)",
   "idealStartingState": {
     "velocity": 0,
     "rotation": -59.99999999999999

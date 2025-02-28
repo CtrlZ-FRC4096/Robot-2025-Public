@@ -1,155 +1,208 @@
-
-
 from typing import TYPE_CHECKING
 
 import math
 from enum import Enum
 
-from wpimath.geometry import Rotation2d, Rotation3d, Translation2d, Translation3d, Pose2d, Pose3d, Transform2d
+from wpimath.geometry import (
+    Rotation2d,
+    Rotation3d,
+    Translation2d,
+    Translation3d,
+    Pose2d,
+    Pose3d,
+    Transform2d,
+)
 from wpimath.kinematics import SwerveDrive4Kinematics
 from wpimath.units import inchesToMeters, degreesToRadians
 
 from wpilib import DriverStation
+from robotpy_apriltag import AprilTagField, AprilTagFieldLayout
 
-class FieldConstants():
+
+class FieldConstants:
     """
     These are field constants and positions from the blue alliance side.
     (0,0): When standing at the blue driver stations, (0,0) is to the right and back (is the extension of Driver Station wall and processor wall)
     Y-axis: across the width of field
     X-axis: down the length
     """
+
     fieldLength = inchesToMeters(690.876)
     fieldWidth = inchesToMeters(317)
-    startingLineX = inchesToMeters(299.438) #Measured from the inside of starting line
+    startingLineX = inchesToMeters(299.438)  # Measured from the inside of starting line
     algaeDiameter = inchesToMeters(16)
-    shouldFlip = DriverStation.getAlliance == DriverStation.Alliance.kRed
+    shouldFlip = DriverStation.getAlliance() == DriverStation.Alliance.kRed
     reef_tags = {6, 7, 8, 9, 10, 11} if shouldFlip else {17, 18, 19, 20, 21, 22}
+    face_to_tag = (
+        {1: 7, 2: 6, 3: 11, 4: 10, 5: 9, 6: 8}
+        if shouldFlip
+        else {1: 18, 2: 19, 3: 20, 4: 21, 5: 22, 6: 17}
+    )
+    tag_to_face = (
+        {7: 1, 6: 2, 11: 3, 10: 4, 9: 5, 8: 6}
+        if shouldFlip
+        else {18: 1, 19: 2, 20: 3, 21: 4, 22: 5, 17: 6}
+    )
 
     @staticmethod
     def flip_X_coord(x):
         return FieldConstants.fieldLength - x if FieldConstants.shouldFlip else x
-    
+
     @staticmethod
     def flip_Y_coord(y):
         return FieldConstants.fieldWidth - y if FieldConstants.shouldFlip else y
+
     @staticmethod
-    def flip_Translation2d (translation):
-        return Translation2d(FieldConstants.flip_X_coord(translation.X()), FieldConstants.flip_Y_coord(translation.Y())) if FieldConstants.shouldFlip else translation
+    def flip_Translation2d(translation):
+        return (
+            Translation2d(
+                FieldConstants.flip_X_coord(translation.X()),
+                FieldConstants.flip_Y_coord(translation.Y()),
+            )
+            if FieldConstants.shouldFlip
+            else translation
+        )
+
     @staticmethod
     def flip_Rotation2d(rotation):
-        return rotation.rotateBy(Rotation2d.fromDegrees(180)) if FieldConstants.shouldFlip else rotation
+        return (
+            rotation.rotateBy(Rotation2d.fromDegrees(180))
+            if FieldConstants.shouldFlip
+            else rotation
+        )
+
     @staticmethod
     def flip_Pose2d(pose):
-        return Pose2d(FieldConstants.flip_Translation2d(pose.translation()), FieldConstants.flip_Rotation2d(pose.rotation())) if FieldConstants.shouldFlip else pose
+        return (
+            Pose2d(
+                FieldConstants.flip_Translation2d(pose.translation()),
+                FieldConstants.flip_Rotation2d(pose.rotation()),
+            )
+            if FieldConstants.shouldFlip
+            else pose
+        )
 
-    class Processor():
+    class Processor:
         centerFace = Pose2d(inchesToMeters(235.726), 0, Rotation2d.fromDegrees(90))
-    
-    class Barge():
-        farCage = Translation2d(inchesToMeters(345.428), inchesToMeters(286.779)) # cage closest to the middle
-        middleCage = Translation2d(inchesToMeters(345.428), inchesToMeters(242.855))
-        closeCage = Translation2d(inchesToMeters(345.428), inchesToMeters(199.947)) #cage closest to outside wall
 
-        #from floor to bottom of cage
+    class Barge:
+        farCage = Translation2d(
+            inchesToMeters(345.428), inchesToMeters(286.779)
+        )  # cage closest to the middle
+        middleCage = Translation2d(inchesToMeters(345.428), inchesToMeters(242.855))
+        closeCage = Translation2d(
+            inchesToMeters(345.428), inchesToMeters(199.947)
+        )  # cage closest to outside wall
+
+        # from floor to bottom of cage
         deepHeight = inchesToMeters(3.125)
         shallowHeight = inchesToMeters(30.125)
-        
-    class CoralStation():
+
+    class CoralStation:
         leftCenterFace = Pose2d(
-            inchesToMeters(33.526), 
+            inchesToMeters(33.526),
             inchesToMeters(291.176),
-            Rotation2d.fromDegrees(90 - 144.011)
+            Rotation2d.fromDegrees(90 - 144.011),
         )
         rightCenterFace = Pose2d(
-            inchesToMeters(33.526), 
+            inchesToMeters(33.526),
             inchesToMeters(25.824),
-            Rotation2d.fromDegrees(144.011 - 90)
+            Rotation2d.fromDegrees(144.011 - 90),
         )
-        #from floor to bottom of cage
-        deepHeight = inchesToMeters(3.125)
-        shallowHeight = inchesToMeters(30.125)
-        
-    class CoralStation():
-        leftCenterFace = Pose2d(
-            inchesToMeters(33.526), 
-            inchesToMeters(291.176),
-            Rotation2d.fromDegrees(90 - 144.011)
-        )
-        rightCenterFace = Pose2d(
-            inchesToMeters(33.526), 
-            inchesToMeters(25.824),
-            Rotation2d.fromDegrees(144.011 - 90)
-        )
+
 
     class ReefHeight(Enum):
         L4 = (inchesToMeters(72), -90)
-        L3 = (inchesToMeters(47.625),-35)
-        L2 = (inchesToMeters(31.875),-35)
-        L1 = (inchesToMeters(18),0)
+        L3 = (inchesToMeters(47.625), -35)
+        L2 = (inchesToMeters(31.875), -35)
+        L1 = (inchesToMeters(18), 0)
 
         def __init__(self, height, pitch):
             self.height = height
             self.pitch = pitch
-            
 
-    class Reef():
+    class Reef:
         center = Translation2d(inchesToMeters(176.746), inchesToMeters(158.501))
-        faceToZoneLine = inchesToMeters(12) # Side of the reef to the inside of the reef zone line
-        centerFaces = [Pose2d(inchesToMeters(144.003), inchesToMeters(158.500), Rotation2d.fromDegrees(180)),
-                    Pose2d(inchesToMeters(160.373), inchesToMeters(186.857), Rotation2d.fromDegrees(120)),
-                    Pose2d(inchesToMeters(193.116), inchesToMeters(186.858), Rotation2d.fromDegrees(60)),
-                    Pose2d(inchesToMeters(209.489), inchesToMeters(158.502), Rotation2d.fromDegrees(0)),
-                    Pose2d(inchesToMeters(193.118), inchesToMeters(130.145), Rotation2d.fromDegrees(-60)),
-                    Pose2d(inchesToMeters(160.375),inchesToMeters(130.144),Rotation2d.fromDegrees(-120))
-                    ]# Starting facing the driver station in clockwise order
+        tag_map = AprilTagFieldLayout.loadField(AprilTagField.k2025Reefscape)
+        faceToZoneLine = inchesToMeters(
+            12
+        )  # Side of the reef to the inside of the reef zone line
+        centerFaces = [
+            tag_map.getTagPose(18).toPose2d(),
+            tag_map.getTagPose(19).toPose2d(),
+            tag_map.getTagPose(20).toPose2d(),
+            tag_map.getTagPose(21).toPose2d(),
+            tag_map.getTagPose(22).toPose2d(),
+            tag_map.getTagPose(17).toPose2d(),
+        ]  # Starting facing the driver station in clockwise order
         branchPositions = []
-        
+
         for face in range(6):
-            #Right and left determined from standing outside of the reef looking at the face (not from looking from the inside of reef).
+            # Right and left determined from standing outside of the reef looking at the face (not from looking from the inside of reef).
             fillRight = []
             fillLeft = []
-            for level in [(inchesToMeters(72), -90), (inchesToMeters(47.625), -35), (inchesToMeters(31.875), -35), (inchesToMeters(18), 0)]:
-                poseDirection = Pose2d(center, Rotation2d.fromDegrees(180 - (60 * face)))
+            for level in [
+                (inchesToMeters(72), -90),
+                (inchesToMeters(47.625), -35),
+                (inchesToMeters(31.875), -35),
+                (inchesToMeters(18), 0),
+            ]:
+                poseDirection = Pose2d(
+                    center, Rotation2d.fromDegrees(180 - (60 * face))
+                )
                 adjustX = inchesToMeters(30.738)
                 adjustY = inchesToMeters(6.469)
-                
-                fillRight.append(level)
-                fillRight.append(Pose3d(
+
+                fillRight.append(
+                    Pose3d(
                         Translation3d(
-                            poseDirection.transformBy(Transform2d(adjustX, adjustY, Rotation2d())).X(),
-                            poseDirection.transformBy(Transform2d(adjustX, adjustY, Rotation2d())).Y(),
-                            level[0]
+                            poseDirection.transformBy(
+                                Transform2d(adjustX, adjustY, Rotation2d())
+                            ).X(),
+                            poseDirection.transformBy(
+                                Transform2d(adjustX, adjustY, Rotation2d())
+                            ).Y(),
+                            level[0],
                         ),
                         Rotation3d(
                             0,
                             degreesToRadians(level[1]),
-                            poseDirection.rotation().radians()
-                        )
-                    ))
-                fillLeft.append(level)
-                fillLeft.append(Pose3d(
+                            poseDirection.rotation().radians(),
+                        ),
+                    )
+                )
+                fillLeft.append(
+                    Pose3d(
                         Translation3d(
-                            poseDirection.transformBy(Transform2d(adjustX, -adjustY, Rotation2d())).X(),
-                            poseDirection.transformBy(Transform2d(adjustX, -adjustY, Rotation2d())).Y(),
-                            level[0]
+                            poseDirection.transformBy(
+                                Transform2d(adjustX, -adjustY, Rotation2d())
+                            ).X(),
+                            poseDirection.transformBy(
+                                Transform2d(adjustX, -adjustY, Rotation2d())
+                            ).Y(),
+                            level[0],
                         ),
                         Rotation3d(
                             0,
                             degreesToRadians(level[1]),
-                            poseDirection.rotation().radians()
-                        )
-                    ))
-        
+                            poseDirection.rotation().radians(),
+                        ),
+                    )
+                )
+
             branchPositions.append(fillRight)
             branchPositions.append(fillLeft)
 
-    class StagingPositions():
-        '''Positions of the starting algae and coral on top of each other'''
-        #standing at driver station facing away
-        leftIceCream  = Translation2d(inchesToMeters(48), inchesToMeters(230.5))
+    class StagingPositions:
+        """Positions of the starting algae and coral on top of each other"""
+
+        # standing at driver station facing away
+        leftIceCream = Translation2d(inchesToMeters(48), inchesToMeters(230.5))
         middleIceCream = Translation2d(inchesToMeters(48), inchesToMeters(158.5))
         rightIceCream = Translation2d(inchesToMeters(48), inchesToMeters(86.5))
-#TEST PRINTING FIELD CONST VALUES
+
+
+# TEST PRINTING FIELD CONST VALUES
 
 
 ## A bunch of constants to test
@@ -161,8 +214,12 @@ class FieldConstants():
 # print(range(len(FieldConstants.Reef.branchPositions)))
 # print(len(FieldConstants.Reef.branchPositions))
 # print(FieldConstants.Reef.branchPositions)
-#print(FieldConstants.Reef.branchPositions)
+# print(FieldConstants.Reef.branchPositions)
+# print(FieldConstants.Reef.centerFaces)
 
+# #array of elements that are lists of pose3d's for one sector (twelfth (face + right or left branch)) goes top branch to bottom
+# # right, left, right, left, ...
+# print(FieldConstants.Reef.branchPositions)
 # for idx in range(len(FieldConstants.Reef.branchPositions)):
 #     for level in range(4):
 #         reefHeightLevels = {
@@ -172,13 +229,13 @@ class FieldConstants():
 #              FieldConstants.ReefHeight.L1 : "1"
 #         }
 #         for reef_height, lvl in reefHeightLevels.items():
-#              if math.isclose(FieldConstants.Reef.branchPositions[idx][level*2][0], reef_height.height, abs_tol=1e-6):
+#              if math.isclose(FieldConstants.Reef.branchPositions[idx][level].Z(), reef_height.height, abs_tol=1e-6):
 #                 branch_level = lvl
-             
+
 #         print("Face", ((idx // 2) + 1),
 #             ", right-branch" if idx % 2 else ", left-branch",
 #             ", L" + branch_level,
-#             "Pitch:", FieldConstants.Reef.branchPositions[idx][level * 2][1],
-#             "\n Pose3d: \n", FieldConstants.Reef.branchPositions[idx][(level*2) + 1],
+#             "Pitch:", FieldConstants.Reef.branchPositions[idx][level].rotation().Y(),
+#             "\n Pose3d: \n", FieldConstants.Reef.branchPositions[idx][level],
 #             end="\n\n"
 #             )
