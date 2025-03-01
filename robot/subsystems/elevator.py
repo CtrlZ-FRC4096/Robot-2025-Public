@@ -117,7 +117,7 @@ class Elevator(Subsystem):
                 self.in_proximity_to_begin_raising_elevator = True # just for logging purposes
 
                 self.robot.end_effector.set_end_effector_position(self.robot.score_state.end_effector_position) # set end effector to scoring position
-                if abs(self.robot.end_effector.command_position - self.robot.end_effector.get_position()) <= 0.25:
+                if self.robot.end_effector.get_position() >= 8.2:
                     self.set_elevator_height(self.robot.score_state.elevator_height) # raise elevator to scoring height
             else:
                 self.in_proximity_to_begin_raising_elevator = False
@@ -126,10 +126,11 @@ class Elevator(Subsystem):
             If the global position is not accurate, we switch to manual scoring. This is a safety feature.
             """
             self.robot.end_effector.set_end_effector_position(self.robot.score_state.end_effector_position) # set end effector to scoring position
-            if abs(self.robot.end_effector.command_position - self.robot.end_effector.get_position()) <= 0.25:
+            if self.robot.end_effector.get_position() >= 8.2:
                 self.set_elevator_height(self.robot.score_state.elevator_height) # raise elevator to scoring height
         elif self.robot.mechanisms_at_default:
-            self.set_elevator_height(RobotScoringPositions.elevator_intake_height) # set elevator to intake height
+            if self.robot.end_effector.get_position() >= 8.2:
+                self.set_elevator_height(RobotScoringPositions.elevator_intake_height) # set elevator to intake height
 
 		# bring elevator down if pitch | roll is greater than 10 degrees
         if self.robot.poseEstimator.gyro.get_pitch().value > 10 and self.robot.poseEstimator.gyro.get_roll().value > 10:

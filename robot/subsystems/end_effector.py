@@ -158,7 +158,7 @@ class EndEffector(Subsystem):
                 self.robot.has_coral = True
         elif self.robot.mechanisms_at_default:
             self.stop()
-            if abs(self.robot.elevator.command_height - self.robot.elevator.get_height()) <= 0.25:
+            if self.robot.elevator.get_height() <= 4.0:
                 self.set_end_effector_position(RobotScoringPositions.end_effector_travel_position)
 
 
