@@ -142,7 +142,7 @@ class EndEffector(Subsystem):
         self.outtake_motor.set_control(controls.VelocityTorqueCurrentFOC(speed))
 
     def periodic(self):
-        if self.robot.score_piece or self.robot.at_scoring_position: # manual vs automated
+        if self.robot.score_piece or (self.robot.at_scoring_position and abs(self.robot.elevator.command_height-self.robot.elevator.get_height()) <= 0.2): # manual vs automated
             self.set_outtake_motor_speed(self.robot.score_state.end_effector_outtake_speed)
             self.robot.has_coral = False
         elif self.is_intaking:

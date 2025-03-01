@@ -187,7 +187,7 @@ class PoseEstimator(Subsystem):
         ROBOT_TO_CAM3 = Transform3d(
             Translation3d(0.359, 0.282, 0.432),  # X  # Y  # Z
             Rotation3d(
-                0.0, 0.0, np.deg2rad(105.0)
+                0.0, 0.0, np.deg2rad(-105.0)
             ),  # Roll  # Pitch  # Yaw
         )
 
@@ -205,7 +205,7 @@ class PoseEstimator(Subsystem):
             WrapperedPhotonCamera("camera_1", ROBOT_TO_CAM1),
             WrapperedPhotonCamera("camera_2", ROBOT_TO_CAM2),
             WrapperedPhotonCamera("camera_3", ROBOT_TO_CAM3),
-            WrapperedPhotonCamera("camera_4", ROBOT_TO_CAM4),
+            # WrapperedPhotonCamera("camera_4", ROBOT_TO_CAM4),
         ]
 
         self.poseConverge = True
@@ -397,9 +397,13 @@ class PoseEstimator(Subsystem):
         left_source_tag = 1 if FieldConstants.shouldFlip else 13
         dist_to_right_source = (FieldConstants.flip_Pose2d(FieldConstants.CoralStation.rightCenterFace).translation() - curPose.translation()).norm()
         dist_to_left_source = (FieldConstants.flip_Pose2d(FieldConstants.CoralStation.leftCenterFace).translation() - curPose.translation()).norm()
-        left_source_closer = True if dist_to_left_source >= dist_to_right_source else False
+        left_source_closer = True if (dist_to_left_source <= dist_to_right_source) else False
+        SmartDashboard.putBoolean("left source closer", left_source_closer)
+        SmartDashboard.putNumber("dist to right source", dist_to_right_source)
+        SmartDashboard.putNumber("dist to left source", dist_to_left_source)
+        proper_tag = left_source_tag if left_source_closer else right_source_tag
 
-        return [left_source_closer, left_source_tag if left_source_closer else right_source_tag]
+        return [left_source_closer, proper_tag]
 
     def get_path_to_source(self, left_source : bool, place_on_source=1):
         '''
@@ -409,7 +413,7 @@ class PoseEstimator(Subsystem):
         2- center source
         3 - closest to PROCESSOR WALL
         '''
-        dist_offset = (inchesToMeters(29.5) / 2) + (inchesToMeters(7.25) / 2) + (inchesToMeters(5))
+        dist_offset = (inchesToMeters(29.5) / 2) + (inchesToMeters(7.25) / 2) + (inchesToMeters(0.5))
         side_offset = inchesToMeters(24)
         if left_source:
             source_pose = FieldConstants.flip_Pose2d(FieldConstants.CoralStation.leftCenterFace)

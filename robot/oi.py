@@ -201,10 +201,15 @@ class OI:
             self.robot.mechanisms_at_default = True
             self.manual_scoring = False
 
-        @self.driver1.Y.whenPressed
+        @self.driver1.Y.whenHeld
         def _():
-            self.robot.mechanisms_at_default = True
-            self.manual_scoring = False
+            # self.robot.mechanisms_at_default = True
+            # self.manual_scoring = False
+            self.robot.score_piece = True
+
+        @self.driver1.Y.whenReleased
+        def _():
+            self.robot.score_piece = False
 
         @self.driver1.POV.DOWN.whenPressed  # Reset Gyro
         def _():
@@ -248,7 +253,7 @@ class OI:
             self.robot.end_effector.is_intaking = True
             self.running_pid_lineup = True
             self.score_intent = False
-            self.final_lineup_pose = self.robot.poseEstimator.get_path_to_source(False, self.position_on_source)
+            self.final_lineup_pose = self.robot.poseEstimator.get_path_to_source(self.robot.poseEstimator.calculate_closest_source()[0], self.position_on_source)
 
         @self.driver1.LEFT_TRIGGER_AS_BUTTON.whenReleased #stop pid
         def _():

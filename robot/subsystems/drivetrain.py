@@ -61,14 +61,14 @@ class Drivetrain(Subsystem):
         self.angle_pid.enableContinuousInput(0, 360)
         self.angle_pid.setTolerance(0.5)  # Set position tolerance to 0.5 degrees
 
-        self.x_controller = PIDController(2.0, 0.0, 0.015)
-        self.y_controller = PIDController(2.0, 0.00, 0.015)
+        self.x_controller = PIDController(2.0, 0.01, 0.015)
+        self.y_controller = PIDController(2.0, 0.01, 0.015)
         self.theta_controller = PIDController(0.07, 0.01, 0.0015)
 
 
         ## Need to check these tolerances
-        self.x_controller.setTolerance(0.02, 0.1)
-        self.y_controller.setTolerance(0.02, 0.1)
+        self.x_controller.setTolerance(0.025, 0.1)
+        self.y_controller.setTolerance(0.025, 0.1)
         self.theta_controller.enableContinuousInput(0, 360)
         self.theta_controller.setTolerance(2.0, 0.1)
 
@@ -181,7 +181,7 @@ class Drivetrain(Subsystem):
 
         # **Dynamically shift the pose based on current position**
         shift_factor = 0.4  # Adjust this value to control shifting effect
-        shift_x = math.copysign(shift_factor, final_target_pose.X() - current_pose.X())  
+        shift_x = math.copysign(shift_factor, final_target_pose.X() - current_pose.X())
         shift_y = math.copysign(shift_factor, final_target_pose.Y() - current_pose.Y())
 
         # Compute **intermediate shifted target**

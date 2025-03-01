@@ -176,7 +176,7 @@ class Robot(CoroutineRobot):
         )
 
         ## Need to change this and redeloy
-        self.path = PathPlannerAuto("4 piece auto test")  # centerline steal 2nd match
+        self.path = PathPlannerAuto("3 Piece Auto")  # centerline steal 2nd match
 
         self.in_autonomous_mode = False
 
@@ -217,7 +217,7 @@ class Robot(CoroutineRobot):
 
         while True:
             yield
-    
+
     ### WAIT FUNCTION ###
     def wait(self, time):
         timer = Timer()

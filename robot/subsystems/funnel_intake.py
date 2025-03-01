@@ -75,7 +75,7 @@ class FunnelIntake(Subsystem):
 
     def periodic(self):
         if self.is_intaking:
-            self.intake(120)
+            self.intake(100)
             # self.piece_detected.appendleft(self.canrange_funnel.get_is_detected().value) # automatically pops oldest when over 3
             # self.piece_passing_through_previous_tick = self.piece_passing_through_now
             # self.piece_passing_through_now = all(self.piece_detected)
