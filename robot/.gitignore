@@ -184,4 +184,9 @@ poetry.toml
 # LSP config files
 pyrightconfig.json
 
+# Robotpy SIM files
+simgui-ds.json
+simgui-window.json
+simgui.json
+
 # End of https://www.toptal.com/developers/gitignore/api/python
