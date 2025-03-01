@@ -108,6 +108,8 @@ class OI:
 
         self.manual_scoring = False
 
+        self.intent_to_auto_drive = False
+
         @self.rumble_button.whenPressed
         def _():
             timer = Timer()
@@ -129,19 +131,28 @@ class OI:
                 forward_back = -square(self.driver1.LEFT_JOY_Y())
                 left_right = -square(self.driver1.LEFT_JOY_X())
                 if not self.driver1.RIGHT_TRIGGER_AS_BUTTON():  # boost
-                    forward_back *= 0.8
-                    left_right *= 0.8
+                    forward_back *= 1.0
+                    left_right *= 1.0
 
                 rotate = -self.driver1.RIGHT_JOY_X()
 
                 # Cancel drive with pid if robot is moving manually
-                # if (self.running_pid_lineup) and (
-                #     abs(self.driver1.LEFT_JOY_X()) > 0.05
-                #     or abs(self.driver1.LEFT_JOY_Y()) > 0.05
-                #     or abs(self.driver1.RIGHT_JOY_X()) > 0.1
-                #     or abs(self.driver1.RIGHT_JOY_Y()) > 0.1
-                # ):
-                #     self.running_pid_lineup = False
+                if (self.intent_to_auto_drive) and not (
+                    abs(self.driver1.LEFT_JOY_X()) > 0.05
+                    or abs(self.driver1.LEFT_JOY_Y()) > 0.05
+                    or abs(self.driver1.RIGHT_JOY_X()) > 0.1
+                    or abs(self.driver1.RIGHT_JOY_Y()) > 0.1
+                ):
+                    self.running_pid_lineup = True
+                elif (self.intent_to_auto_drive) and (
+                    abs(self.driver1.LEFT_JOY_X()) > 0.05
+                    or abs(self.driver1.LEFT_JOY_Y()) > 0.05
+                    or abs(self.driver1.RIGHT_JOY_X()) > 0.1
+                    or abs(self.driver1.RIGHT_JOY_Y()) > 0.1
+                ):
+                    self.running_pid_lineup = False
+                    forward_back *= 0.2
+                    left_right *= 0.2
 
                 if abs(rotate) >= 0.02:
                     self.cardinal_directing = False
@@ -252,6 +263,7 @@ class OI:
             self.robot.funnel_intake.is_intaking = True
             self.robot.end_effector.is_intaking = True
             self.running_pid_lineup = True
+            self.intent_to_auto_drive = True
             self.score_intent = False
             self.final_lineup_pose = self.robot.poseEstimator.get_path_to_source(self.robot.poseEstimator.calculate_closest_source()[0], self.position_on_source)
 
@@ -261,6 +273,7 @@ class OI:
             self.robot.funnel_intake.is_intaking = False
             self.robot.end_effector.is_intaking = False
             self.running_pid_lineup = False
+            self.intent_to_auto_drive = False
             self.score_intent = False
             self.robot_oriented_angle = self.robot.poseEstimator.getYaw().degrees()
             self.robot.drivetrain.stop()
@@ -278,10 +291,12 @@ class OI:
             )
             self.robot.mechanisms_at_default = False
             self.running_pid_lineup = True
+            self.intent_to_auto_drive = True
             self.score_intent = True
 
         @self.driver1.RIGHT_TRIGGER_AS_BUTTON.whenReleased  # stop profiled PID
         def _():
+            self.intent_to_auto_drive = False
             self.robot.mechanisms_at_default = True
             self.running_pid_lineup = False
             self.score_intent = False
