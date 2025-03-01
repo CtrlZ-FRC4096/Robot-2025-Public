@@ -19,7 +19,7 @@ class RobotScoringPositions:
 		end_effector_position = 10.0
 		number = 3
 	class L4_Scoring:
-		elevator_height = 60.5
-		end_effector_outtake_speed = 50.0
+		elevator_height = 61.0
+		end_effector_outtake_speed = 42.0
 		end_effector_position = 10.0
 		number = 4
