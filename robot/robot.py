@@ -50,7 +50,7 @@ import inspect
 import autoroutines
 
 from pathplannerlib.path import PathPlannerPath
-from pathplannerlib.auto import AutoBuilder, PathPlannerAuto, NamedCommands
+from pathplannerlib.auto import AutoBuilder, PathPlannerAuto, NamedCommands, FollowPathCommand
 from pathplannerlib.config import PIDConstants, RobotConfig
 from pathplannerlib.controller import PPHolonomicDriveController
 
@@ -133,6 +133,8 @@ class Robot(CoroutineRobot):
         self.score_piece = False
         self.mechanisms_at_default = True
 
+        self.pathplanner_config = RobotConfig.fromGUISettings()
+
         self.match_time = -1
         ### FIELD LOGGING ###
         self.field = Field2d()
@@ -153,15 +155,20 @@ class Robot(CoroutineRobot):
             self.leds.periodicX()
             pass
 
-        config = RobotConfig.fromGUISettings()
+        self.in_autonomous_mode = False
 
-        AutoBuilder.configure(
-            self.drivetrain.get_pose,  # Robot pose supplier
-            self.drivetrain.reset_odometry,  # Method to reset odometry (will be called if your auto has a starting pose)
-            self.drivetrain.get_robot_relative_speeds,  # ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
-            lambda speeds, feedforwards: self.drivetrain.drive_robot_relative(
-                speeds
-            ),  # Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds. Also outputs individual module feedforwards
+        while True:
+            yield
+            self.scheduler.run()
+
+    def followPathCommand(self, pathName: str):
+        path = PathPlannerPath.fromPathFile(pathName)
+
+        return FollowPathCommand(
+            path,
+            self.drivetrain.get_pose, # Robot pose supplier
+            self.drivetrain.get_robot_relative_speeds, # ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
+            self.drivetrain.drive_robot_relative, # Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds, AND feedforwards
             PPHolonomicDriveController(  # PPHolonomicController is the built in path following controller for holonomic drive trains
                 PIDConstants(
                     const.X_KP, const.X_KI, const.X_KD
@@ -170,19 +177,10 @@ class Robot(CoroutineRobot):
                     const.THETA_KP, const.THETA_KI, const.THETA_KD
                 ),  # Rotation PID constants
             ),
-            config,  # The robot configuration
-            self.drivetrain.shouldFlipPath,  # Supplier to control path flipping based on alliance color
-            self.drivetrain,  # Reference to this subsystem to set requirements
+            self.pathplanner_config, # The robot configuration
+            self.drivetrain.shouldFlipPath, # Supplier to control path flipping based on alliance color
+            self.drivetrain # Reference to this subsystem to set requirements
         )
-
-        ## Need to change this and redeloy
-        self.path = PathPlannerAuto("3 Piece Auto")  # centerline steal 2nd match
-
-        self.in_autonomous_mode = False
-
-        while True:
-            yield
-            self.scheduler.run()
 
     ### DISABLED ###
 
@@ -200,7 +198,8 @@ class Robot(CoroutineRobot):
     def autonomous_mode(self):
         self.scheduler.cancelAll()
         self.in_autonomous_mode = True
-        self.scheduler.schedule(self.path.schedule())
+
+        # self.scheduler.schedule(self.path.schedule())
 
         # self.scheduler.schedule(self.auto_chooser.getSelected()(self))
 
