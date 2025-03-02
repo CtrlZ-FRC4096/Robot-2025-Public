@@ -108,7 +108,7 @@ class EndEffector(Subsystem):
         self.piece_passing_through_now = False
         self.piece_passing_through_previous_tick = False
 
-        self.max_extension = 9.0
+        self.max_extension = 10.5
 
         deque_length = 1
         self.piece_detected = deque(maxlen=deque_length)
@@ -123,7 +123,7 @@ class EndEffector(Subsystem):
         self.outtake_motor.set_control(controls.StaticBrake())
 
     def set_end_effector_position(self, position):
-        if (abs(self.get_position() - position) <= 0.25):
+        if (abs(self.get_position() - position) <= 0.02) or (position >= self.max_extension):
             return
         self.command_position = position
         sprocket_rotations = position / (math.pi * self.sprocket_diameter)

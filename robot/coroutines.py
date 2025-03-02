@@ -28,7 +28,6 @@ class Coroutines:
         @commandify
         def reset_robot_after_scoring():
             yield
-            yield from robot.wait(5.0) # wait so that robot can fully outtake piece (we can adjust this time later)
             robot.mechanisms_at_default = True
             robot.oi.running_pid_lineup = False
             robot.oi.score_intent = False
@@ -162,9 +161,24 @@ class Coroutines:
             robot.end_effector.is_intaking = True
             robot.oi.running_pid_lineup = True
             robot.oi.score_intent = False
-            yield from robot.wait(1.5)
 
         self.intake_coral = (
             intake_coral()
+        )
+
+        @commandify
+        def reset_robot_after_intaking():
+            yield
+            robot.mechanisms_at_default = True
+            robot.funnel_intake.is_intaking = False
+            robot.end_effector.is_intaking = False
+            robot.oi.running_pid_lineup = False
+            robot.oi.intent_to_auto_drive = False
+            robot.oi.score_intent = False
+            robot.oi.robot_oriented_angle = robot.poseEstimator.getYaw().degrees()
+            robot.drivetrain.stop()
+
+        self.reset_robot_after_intaking = (
+            reset_robot_after_intaking()
         )
 

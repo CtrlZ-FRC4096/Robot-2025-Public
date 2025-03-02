@@ -145,14 +145,14 @@ class OI:
                         self.robot.end_effector.set_end_effector_position(RobotScoringPositions.end_effector_travel_position)
 
                 # Cancel drive with pid if robot is moving manually
-                if (self.intent_to_auto_drive) and not (
+                if (not self.robot.in_autonomous_mode) and (self.intent_to_auto_drive) and not (
                     abs(self.driver1.LEFT_JOY_X()) > 0.05
                     or abs(self.driver1.LEFT_JOY_Y()) > 0.05
                     or abs(self.driver1.RIGHT_JOY_X()) > 0.1
                     or abs(self.driver1.RIGHT_JOY_Y()) > 0.1
                 ):
                     self.running_pid_lineup = True
-                elif (self.intent_to_auto_drive) and (
+                elif (not self.robot.in_autonomous_mode) and (self.intent_to_auto_drive) and (
                     abs(self.driver1.LEFT_JOY_X()) > 0.05
                     or abs(self.driver1.LEFT_JOY_Y()) > 0.05
                     or abs(self.driver1.RIGHT_JOY_X()) > 0.1
