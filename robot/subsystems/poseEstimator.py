@@ -169,7 +169,7 @@ class PoseEstimator(Subsystem):
 
         # test position of camera 1 on front right module
         ROBOT_TO_CAM1 = Transform3d(
-            Translation3d(-0.290, -0.295, 0.1699),  # X  # Y  # Z
+            Translation3d(-0.287, -0.3004, 0.214),  # X  # Y  # Z
             Rotation3d(
                 0.0, np.deg2rad(-10.0), np.deg2rad(20.0 - 90.0)
             ),  # Roll  # Pitch  # Yaw
@@ -177,7 +177,7 @@ class PoseEstimator(Subsystem):
 
         # Update with positionon robot
         ROBOT_TO_CAM2 = Transform3d(
-            Translation3d(0.290, -0.295, 0.1699),  # X  # Y  # Z
+            Translation3d(0.287, -0.3004, 0.214),  # X  # Y  # Z
             Rotation3d(
                 0.0, np.deg2rad(-10.0), np.deg2rad(-20.0 - 90)
             ),  # Roll  # Pitch  # Yaw
