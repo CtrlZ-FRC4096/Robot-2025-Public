@@ -31,6 +31,17 @@ class AutoRoutines:
     def __init__(self, robot: "Robot"):
         self.robot = robot
 
+    def four_piece_auto_test(self):
+        return SequentialCommandGroup(
+            self.robot.followPathCommand("Starting line to face 5"),
+            self.robot.followPathCommand("face 5 to right source"),
+            self.robot.followPathCommand("right source to face 6"),
+            self.robot.followPathCommand("face 6 to right source"),
+            self.robot.followPathCommand("right source to face 1"),
+            self.robot.followPathCommand("face 1 to right source"),
+            self.robot.followPathCommand("right source to face 6"),
+        )
+
     def three_piece_auto(self):
         return SequentialCommandGroup(
             self.robot.followPathCommand("3P_1"),
