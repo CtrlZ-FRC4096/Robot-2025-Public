@@ -128,7 +128,7 @@ class Drivetrain(Subsystem):
         # print(in_motion)
 
     def drive_robot_relative(
-        self, chassis_speeds: ChassisSpeeds
+        self, chassis_speeds: ChassisSpeeds, feedfoward=None
     ):  # only use for pathplannerlib
         chassis_speeds.omega = -chassis_speeds.omega
         module_states = const.SWERVE_KINEMATICS.toSwerveModuleStates(chassis_speeds)

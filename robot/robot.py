@@ -150,8 +150,8 @@ class Robot(CoroutineRobot):
 
         self.autoroutines = autoroutines.AutoRoutines(self)
         self.auto_chooser = wpilib.SendableChooser()
-        self.auto_chooser.setDefaultOption("3 Piece Auto", self.autoroutines.three_piece_auto)
-        self.auto_chooser.addOption("4 Piece Auto Test", self.autoroutines.four_piece_auto_test)
+        self.auto_chooser.setDefaultOption("3 Piece Auto", lambda: self.autoroutines.three_piece_auto())
+        self.auto_chooser.addOption("4 Piece Auto Test", lambda: self.autoroutines.four_piece_auto_test())
         wpilib.SmartDashboard.putData("Auto Mode", self.auto_chooser)
 
         DataLogManager.start()
@@ -211,7 +211,7 @@ class Robot(CoroutineRobot):
         self.scheduler.cancelAll()
         self.in_autonomous_mode = True
 
-        self.scheduler.schedule(self.auto_chooser.getSelected())
+        self.scheduler.schedule(self.auto_chooser.getSelected()())
 
     ### TELEOPERATED ###
     def teleop_mode(self):
