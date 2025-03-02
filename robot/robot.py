@@ -59,6 +59,12 @@ from wpimath.geometry import Rotation2d
 from field_const import FieldConstants
 
 from robot_scoring_positions import RobotScoringPositions
+from commands2 import (
+    Command,
+    ParallelCommandGroup,
+    ParallelRaceGroup,
+    SequentialCommandGroup,
+)
 
 
 log = logging.getLogger("robot")
@@ -142,6 +148,8 @@ class Robot(CoroutineRobot):
         ### LOGGING ###
         self.remote_shell = RemoteShell(self)
 
+        self.autoroutines = autoroutines.AutoRoutines(self)
+
         DataLogManager.start()
         DriverStation.startDataLog(DataLogManager.getLog())
 
@@ -181,7 +189,7 @@ class Robot(CoroutineRobot):
             self.drivetrain.shouldFlipPath, # Supplier to control path flipping based on alliance color
             self.drivetrain # Reference to this subsystem to set requirements
         )
-
+    
     ### DISABLED ###
 
     def disabled_mode(self):
