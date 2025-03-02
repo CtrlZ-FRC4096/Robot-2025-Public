@@ -83,7 +83,7 @@ class Elevator(Subsystem):
         self.height_encoder = wpilib.DutyCycleEncoder(1)
         self.elevator_motor_1.set_position(0.0)
 
-        self.max_height = 65.0
+        self.max_height = 62.0
         self.set_elevator_height(RobotScoringPositions.elevator_intake_height)
 
     def stop(self):
@@ -117,7 +117,7 @@ class Elevator(Subsystem):
                 self.in_proximity_to_begin_raising_elevator = True # just for logging purposes
 
                 self.robot.end_effector.set_end_effector_position(self.robot.score_state.end_effector_position) # set end effector to scoring position
-                if self.robot.end_effector.get_position() >= 8.2:
+                if self.robot.end_effector.get_position() >= RobotScoringPositions.min_end_effector_position_to_move_elevator_up:
                     self.set_elevator_height(self.robot.score_state.elevator_height) # raise elevator to scoring height
             else:
                 self.in_proximity_to_begin_raising_elevator = False
@@ -126,10 +126,10 @@ class Elevator(Subsystem):
             If the global position is not accurate, we switch to manual scoring. This is a safety feature.
             """
             self.robot.end_effector.set_end_effector_position(self.robot.score_state.end_effector_position) # set end effector to scoring position
-            if self.robot.end_effector.get_position() >= 8.2:
+            if self.robot.end_effector.get_position() >= RobotScoringPositions.min_end_effector_position_to_move_elevator_up:
                 self.set_elevator_height(self.robot.score_state.elevator_height) # raise elevator to scoring height
         elif self.robot.mechanisms_at_default:
-            if self.robot.end_effector.get_position() >= 8.2:
+            if self.robot.end_effector.get_position() >= RobotScoringPositions.min_end_effector_position_to_move_elevator_up:
                 self.set_elevator_height(RobotScoringPositions.elevator_intake_height) # set elevator to intake height
 
 		# bring elevator down if pitch | roll is greater than 10 degrees

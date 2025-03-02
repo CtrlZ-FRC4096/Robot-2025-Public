@@ -158,8 +158,8 @@ class EndEffector(Subsystem):
                 self.robot.has_coral = True
         elif self.robot.mechanisms_at_default:
             self.stop()
-            if self.robot.elevator.get_height() <= 4.0:
-                self.set_end_effector_position(RobotScoringPositions.end_effector_travel_position)
+            if self.robot.elevator.get_height() <= RobotScoringPositions.min_elevator_height_to_bring_in_end_effector:
+                self.set_end_effector_position(RobotScoringPositions.end_effector_intake_position)
 
 
     def log(self):

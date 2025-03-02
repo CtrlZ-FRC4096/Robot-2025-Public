@@ -136,6 +136,14 @@ class OI:
 
                 rotate = -self.driver1.RIGHT_JOY_X()
 
+                elevator_height_adjustment = -square(self.driver2.RIGHT_JOY_Y()) * const.ELEVATOR_RAISE_SPEED
+                if (self.manual_scoring or self.score_intent) and (abs(elevator_height_adjustment) > 0.05):
+                    self.robot.mechanisms_at_default = False
+                    if self.robot.end_effector.get_position() >= RobotScoringPositions.min_end_effector_position_to_move_elevator_up:
+                        self.robot.elevator.set_elevator_height(self.robot.elevator.get_height() + elevator_height_adjustment)
+                    else:
+                        self.robot.end_effector.set_end_effector_position(RobotScoringPositions.end_effector_travel_position)
+
                 # Cancel drive with pid if robot is moving manually
                 if (self.intent_to_auto_drive) and not (
                     abs(self.driver1.LEFT_JOY_X()) > 0.05
