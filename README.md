@@ -1,10 +1,10 @@
 # Ctrl-Z FRC Team 4096 - Robot Code 2024
 
-The codebase for Herme-Z, the Ctrl-Z robot used in FRC 2024 CRESCENDO competition seasons.
+The codebase for Elevator-Z, the Ctrl-Z robot used in FRC 2025 REEFSCAPE competition seasons.
 
 ## Overview
 
-The code is written in Python 3, using the [robotpy](http://robotpy.readthedocs.io/en/latest/) libraries. It uses the command-based
+The code is written in Python 3.13, using the [robotpy](http://robotpy.readthedocs.io/en/latest/) libraries. It uses the command-based
 structure. Subsystems and commands are in dedicated folders, as are the autonomous modes. IDE indentation is tabs 4.
 
 ## Questions?
