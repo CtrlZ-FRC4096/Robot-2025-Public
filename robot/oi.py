@@ -151,6 +151,8 @@ class OI:
                     or abs(self.driver1.RIGHT_JOY_X()) > 0.1
                     or abs(self.driver1.RIGHT_JOY_Y()) > 0.1
                 ):
+                    if not self.running_pid_lineup:
+                        self.final_lineup_pose = self.robot.poseEstimator.curEstPose
                     self.running_pid_lineup = True
                 elif (not self.robot.in_autonomous_mode) and (self.intent_to_auto_drive) and (
                     abs(self.driver1.LEFT_JOY_X()) > 0.05
