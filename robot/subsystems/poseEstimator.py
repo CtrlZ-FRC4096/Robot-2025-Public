@@ -483,10 +483,10 @@ class PoseEstimator(Subsystem):
             if len(tags) == 1:
                 self.theta_modifier = 1000.0
             if (
-                self.tag_dist > 4
+                self.tag_dist > 3.5
             ):  # if the robot is more than 4 meters away from the target
-                self.xy_modifier = 3.0
-                self.theta_modifier = 3.0
+                self.xy_modifier = 100.0
+                self.theta_modifier = 100.0
 
             for observation in observations:
                 self.poseEst.addVisionMeasurement(
