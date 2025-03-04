@@ -129,7 +129,7 @@ class Elevator(Subsystem):
             if self.robot.end_effector.get_position() >= RobotScoringPositions.min_end_effector_position_to_move_elevator_up:
                 self.set_elevator_height(self.robot.score_state.elevator_height) # raise elevator to scoring height
         elif self.robot.mechanisms_at_default:
-            if self.robot.end_effector.get_position() >= RobotScoringPositions.min_end_effector_position_to_move_elevator_up:
+            if self.robot.end_effector.get_position() >= RobotScoringPositions.min_end_effector_position_to_move_elevator_up and self.robot.end_effector.get_position() <= RobotScoringPositions.end_effector_travel_position:
                 self.set_elevator_height(RobotScoringPositions.elevator_intake_height) # set elevator to intake height
 
 		# bring elevator down if pitch | roll is greater than 10 degrees
