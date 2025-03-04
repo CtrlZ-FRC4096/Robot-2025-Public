@@ -159,9 +159,14 @@ class OI:
                     or abs(self.driver1.RIGHT_JOY_Y()) > 0.1
                 ):
                     self.running_pid_lineup = False
-                    forward_back *= 0.15
-                    left_right *= 0.15
-                    # self.final_lineup_pose = self.robot.poseEstimator.curEstPose
+                    if not self.robot.poseEstimator.useSingleTag(1.0): # closer than 1 meter to reef
+                        self.intent_to_auto_drive = False
+                    else:
+                        forward_back *= 0.15
+                        left_right *= 0.15
+                        self.final_lineup_pose = self.robot.poseEstimator.curEstPose 
+                    # # breaking because at the beginning setting final_lineup_pose to cur pose because I was driving at same time
+
 
                 if abs(rotate) >= 0.02:
                     self.cardinal_directing = False

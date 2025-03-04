@@ -445,7 +445,7 @@ class PoseEstimator(Subsystem):
                 target_pose = Pose2d(offset_pose.X() + x_side_offset, offset_pose.Y() + y_side_offset, source_rotation.rotateBy(Rotation2d.fromDegrees(90)))
                 return target_pose
 
-    def useSingleTag(self):
+    def useSingleTag(self, distance=2):
         return (self.curEstPoseGlobal - self.tag_layout.getTagPose(self.calculate_closest_reef_tag()[0]).toPose2d()).translation().norm() < 2
 
     def periodic(self):
