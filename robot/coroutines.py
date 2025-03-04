@@ -38,7 +38,7 @@ class Coroutines:
 
 
         self.reset_robot_after_scoring = (
-            reset_robot_after_scoring()
+            reset_robot_after_scoring
         )
 
         @commandify
@@ -47,7 +47,7 @@ class Coroutines:
             robot.oi.right_branch = False
 
         self.score_left_branch = (
-            score_left_branch()
+            score_left_branch
         )
 
         @commandify
@@ -56,7 +56,7 @@ class Coroutines:
             robot.oi.right_branch = True
 
         self.score_right_branch = (
-            score_right_branch()
+            score_right_branch
         )
 
         @commandify
@@ -76,7 +76,7 @@ class Coroutines:
             robot.oi.score_intent = True
 
         self.score_piece = (
-            score_piece()
+            score_piece
         )
 
         @commandify
@@ -87,7 +87,7 @@ class Coroutines:
             robot.oi.score_intent = True
 
         self.score_L4 = (
-            score_L4()
+            score_L4
         )
 
         @commandify
@@ -98,7 +98,7 @@ class Coroutines:
             robot.oi.score_intent = True
 
         self.score_L3 = (
-            score_L3()
+            score_L3
         )
 
         @commandify
@@ -109,7 +109,7 @@ class Coroutines:
             robot.oi.score_intent = True
 
         self.score_L2 = (
-            score_L2()
+            score_L2
         )
 
         @commandify
@@ -120,7 +120,7 @@ class Coroutines:
             robot.oi.score_intent = True
 
         self.score_L1 = (
-            score_L1()
+            score_L1
         )
 
         @commandify # position 1 on source
@@ -129,7 +129,7 @@ class Coroutines:
             robot.oi.position_on_source = 1
 
         self.set_position_to_1_on_source = (
-            set_position_to_1_on_source()
+            set_position_to_1_on_source
         )
 
         @commandify # position 2 on source
@@ -138,7 +138,7 @@ class Coroutines:
             robot.oi.position_on_source = 2
 
         self.set_position_to_2_on_source = (
-            set_position_to_2_on_source()
+            set_position_to_2_on_source
         )
 
         @commandify # position 3 on source
@@ -147,7 +147,7 @@ class Coroutines:
             robot.oi.position_on_source = 3
 
         self.set_position_to_3_on_source = (
-            set_position_to_3_on_source()
+            set_position_to_3_on_source
         )
 
         @commandify
@@ -163,7 +163,7 @@ class Coroutines:
             robot.oi.score_intent = False
 
         self.intake_coral = (
-            intake_coral()
+            intake_coral
         )
 
         @commandify
@@ -179,6 +179,6 @@ class Coroutines:
             robot.drivetrain.stop()
 
         self.reset_robot_after_intaking = (
-            reset_robot_after_intaking()
+            reset_robot_after_intaking
         )
 
