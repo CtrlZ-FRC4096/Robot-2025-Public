@@ -185,7 +185,7 @@ class PoseEstimator(Subsystem):
 
         # # Update with positionon robot
         ROBOT_TO_CAM3 = Transform3d(
-            Translation3d(0.359, 0.282, 0.432),  # X  # Y  # Z
+            Translation3d(0.359, 0.289, 0.432),  # X  # Y (0.282 need to change on robot)  # Z
             Rotation3d(
                 0.0, 0.0, np.deg2rad(-105.0)
             ),  # Roll  # Pitch  # Yaw
@@ -205,7 +205,7 @@ class PoseEstimator(Subsystem):
             WrapperedPhotonCamera("camera_1", ROBOT_TO_CAM1),
             WrapperedPhotonCamera("camera_2", ROBOT_TO_CAM2),
             WrapperedPhotonCamera("camera_3", ROBOT_TO_CAM3),
-            WrapperedPhotonCamera("camera_4", ROBOT_TO_CAM4),
+            # WrapperedPhotonCamera("camera_4", ROBOT_TO_CAM4),
         ]
 
         self.poseConverge = True
@@ -335,8 +335,8 @@ class PoseEstimator(Subsystem):
         return [closest_reef_tag, FieldConstants.tag_to_face[closest_reef_tag]]
 
 
-    def get_path_to_reef(self, face: int, right_branch: bool, margin_dist_offset=0.05, do_side_offset=True, do_manip_offset=True):
-        manip_offset = 1.75
+    def get_path_to_reef(self, face: int, right_branch: bool, margin_dist_offset=1.0, do_side_offset=True, do_manip_offset=True):
+        manip_offset = 3.25
 
         side_offset = (inchesToMeters(6.47) if not do_manip_offset else (inchesToMeters(6.47 + manip_offset) if right_branch else inchesToMeters(6.47 - manip_offset)))  # distance b/w center of face to branch
         dist_offset = (
@@ -413,8 +413,9 @@ class PoseEstimator(Subsystem):
         2- center source
         3 - closest to PROCESSOR WALL
         '''
-        dist_offset = (inchesToMeters(29.5) / 2) + (inchesToMeters(7.25) / 2) + (inchesToMeters(0.5))
+        dist_offset = (inchesToMeters(29.5) / 2) + (inchesToMeters(7.25) / 2) + (inchesToMeters(0.0))
         side_offset = inchesToMeters(24)
+
         if left_source:
             source_pose = FieldConstants.flip_Pose2d(FieldConstants.CoralStation.leftCenterFace)
             source_rotation = source_pose.rotation()

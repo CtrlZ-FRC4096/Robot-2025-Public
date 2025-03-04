@@ -58,7 +58,7 @@ class EndEffector(Subsystem):
         self.end_effector_config.current_limits.stator_current_limit = 100
 
         self.end_effector_config.motion_magic.motion_magic_cruise_velocity = 100 # Recalc has us at 16 RPS, but starting slow
-        self.end_effector_config.motion_magic.motion_magic_acceleration = 100 # Recalc has us at 100 RPS/s^2, but starting slow
+        self.end_effector_config.motion_magic.motion_magic_acceleration = 150 # Recalc has us at 100 RPS/s^2, but starting slow
 
         self.end_effector_motor.configurator.apply(self.end_effector_config)
         self.isRunning = False
@@ -123,7 +123,7 @@ class EndEffector(Subsystem):
         self.outtake_motor.set_control(controls.StaticBrake())
 
     def set_end_effector_position(self, position):
-        if (abs(self.get_position() - position) <= 0.02) or (position >= self.max_extension):
+        if (abs(self.get_position() - position) <= 0.02):
             return
         self.command_position = position
         sprocket_rotations = position / (math.pi * self.sprocket_diameter)
@@ -155,6 +155,7 @@ class EndEffector(Subsystem):
                 self.robot.funnel_intake.is_intaking = False
                 self.robot.funnel_intake.stop()
                 self.stop()
+                self.set_end_effector_position(RobotScoringPositions.end_effector_travel_position)
                 self.robot.has_coral = True
         elif self.robot.mechanisms_at_default:
             self.stop()

@@ -160,7 +160,7 @@ class Drivetrain(Subsystem):
             and self.theta_controller.atSetpoint()
         ):
             # self.robot.oi.running_pid_lineup = False
-            if self.robot.oi.score_intent:
+            if self.robot.oi.score_intent and self.robot.oi.running_pid_lineup:
                 self.robot.at_scoring_position = True
             # self.stop()
             # Optionally, stop the drivetrain if at setpoint

@@ -193,7 +193,7 @@ class Robot(CoroutineRobot):
             self.drivetrain.shouldFlipPath, # Supplier to control path flipping based on alliance color
             self.drivetrain # Reference to this subsystem to set requirements
         )
-    
+
     ### DISABLED ###
 
     def disabled_mode(self):

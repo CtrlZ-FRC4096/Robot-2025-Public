@@ -137,12 +137,12 @@ class OI:
                 rotate = -self.driver1.RIGHT_JOY_X()
 
                 elevator_height_adjustment = -square(self.driver2.RIGHT_JOY_Y()) * const.ELEVATOR_RAISE_SPEED
-                if (self.manual_scoring or self.score_intent) and (abs(elevator_height_adjustment) > 0.05):
-                    self.robot.mechanisms_at_default = False
-                    if self.robot.end_effector.get_position() >= RobotScoringPositions.min_end_effector_position_to_move_elevator_up:
-                        self.robot.elevator.set_elevator_height(self.robot.elevator.get_height() + elevator_height_adjustment)
-                    else:
-                        self.robot.end_effector.set_end_effector_position(RobotScoringPositions.end_effector_travel_position)
+                # if (self.manual_scoring or self.score_intent) and (abs(elevator_height_adjustment) > 0.05):
+                #     self.robot.mechanisms_at_default = False
+                #     if self.robot.end_effector.get_position() >= RobotScoringPositions.min_end_effector_position_to_move_elevator_up:
+                #         self.robot.elevator.set_elevator_height(self.robot.elevator.get_height() + elevator_height_adjustment)
+                #     else:
+                #         self.robot.end_effector.set_end_effector_position(RobotScoringPositions.end_effector_travel_position)
 
                 # Cancel drive with pid if robot is moving manually
                 if (not self.robot.in_autonomous_mode) and (self.intent_to_auto_drive) and not (
@@ -151,8 +151,6 @@ class OI:
                     or abs(self.driver1.RIGHT_JOY_X()) > 0.1
                     or abs(self.driver1.RIGHT_JOY_Y()) > 0.1
                 ):
-                    if not self.running_pid_lineup:
-                        self.final_lineup_pose = self.robot.poseEstimator.curEstPose
                     self.running_pid_lineup = True
                 elif (not self.robot.in_autonomous_mode) and (self.intent_to_auto_drive) and (
                     abs(self.driver1.LEFT_JOY_X()) > 0.05
@@ -161,8 +159,9 @@ class OI:
                     or abs(self.driver1.RIGHT_JOY_Y()) > 0.1
                 ):
                     self.running_pid_lineup = False
-                    forward_back *= 0.2
-                    left_right *= 0.2
+                    forward_back *= 0.15
+                    left_right *= 0.15
+                    # self.final_lineup_pose = self.robot.poseEstimator.curEstPose
 
                 if abs(rotate) >= 0.02:
                     self.cardinal_directing = False
@@ -224,9 +223,8 @@ class OI:
 
         @self.driver1.Y.whenHeld
         def _():
-            # self.robot.mechanisms_at_default = True
-            # self.manual_scoring = False
-            self.robot.score_piece = True
+            self.robot.mechanisms_at_default = True
+            self.manual_scoring = False
 
         @self.driver1.Y.whenReleased
         def _():
