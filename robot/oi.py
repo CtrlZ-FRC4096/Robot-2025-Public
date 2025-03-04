@@ -137,11 +137,11 @@ class OI:
                 rotate = -self.driver1.RIGHT_JOY_X()
 
                 elevator_height_adjustment = -square(self.driver2.RIGHT_JOY_Y()) * const.ELEVATOR_RAISE_SPEED
-                if (self.manual_scoring or self.score_intent) and (abs(elevator_height_adjustment) > 0.05):
-                    if self.robot.end_effector.get_position() >= RobotScoringPositions.min_end_effector_position_to_move_elevator_up:
-                        self.robot.elevator.set_elevator_height(self.robot.elevator.get_height() + elevator_height_adjustment) # being overriden in elevator periodic
-                    else:
-                        self.robot.end_effector.set_end_effector_position(self.robot.score_state.end_effector_position)
+                # if (self.manual_scoring or self.score_intent) and (abs(elevator_height_adjustment) > 0.05):
+                #     if self.robot.end_effector.get_position() >= RobotScoringPositions.min_end_effector_position_to_move_elevator_up:
+                #         self.robot.elevator.set_elevator_height(self.robot.elevator.get_height() + elevator_height_adjustment) # being overriden in elevator periodic
+                #     else:
+                #         self.robot.end_effector.set_end_effector_position(self.robot.score_state.end_effector_position)
 
                 # Cancel drive with pid if robot is moving manually
                 if (not self.robot.in_autonomous_mode) and (self.intent_to_auto_drive) and not (
