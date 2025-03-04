@@ -141,6 +141,9 @@ class EndEffector(Subsystem):
         #     return
         self.outtake_motor.set_control(controls.VelocityTorqueCurrentFOC(speed))
 
+    def has_coral(self):
+        return self.canrange_end_effector.get_is_detected().value
+
     def periodic(self):
         if self.robot.score_piece or (self.robot.at_scoring_position and abs(self.robot.score_state.elevator_height-self.robot.elevator.get_height()) <= 0.2): # manual vs automated
             self.set_outtake_motor_speed(self.robot.score_state.end_effector_outtake_speed)

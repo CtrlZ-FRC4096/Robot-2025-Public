@@ -208,7 +208,7 @@ class Robot(CoroutineRobot):
 
     ### AUTONOMOUS ###
     def autonomous_mode(self):
-        self.has_coral = True #Start with preloaded coral
+        self.has_coral = True # Start with preloaded coral
         self.scheduler.cancelAll()
         self.in_autonomous_mode = True
 
