@@ -208,6 +208,7 @@ class Robot(CoroutineRobot):
 
     ### AUTONOMOUS ###
     def autonomous_mode(self):
+        self.has_coral = True #Start with preloaded coral
         self.scheduler.cancelAll()
         self.in_autonomous_mode = True
 
@@ -243,6 +244,7 @@ class Robot(CoroutineRobot):
         wpilib.SmartDashboard.putBoolean("Mechanisms at default", self.mechanisms_at_default)
         wpilib.SmartDashboard.putBoolean("At scoring position", self.at_scoring_position)
         wpilib.SmartDashboard.putBoolean("OI Score Intent", self.oi.score_intent)
+        wpilib.SmartDashboard.putBoolean("Has Coral", self.has_coral)
 
         for s in self.subsystems:
             s.log()

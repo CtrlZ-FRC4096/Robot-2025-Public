@@ -45,34 +45,26 @@ class AutoRoutines:
     def three_piece_auto(self):
         return SequentialCommandGroup(
             self.robot.followPathCommand("3P_1"),
-            SequentialCommandGroup(
-                self.robot.coroutines.score_left_branch,
-                self.robot.coroutines.score_L4,
-                self.robot.coroutines.score_piece.until(lambda: not self.robot.has_coral).withTimeout(5.0),
-                self.robot.coroutines.reset_robot_after_scoring
-            ),
+            self.robot.coroutines.score_left_branch_1,
+            self.robot.coroutines.score_L4_1,
+            self.robot.coroutines.score_piece_1.until(lambda: not self.robot.has_coral).withTimeout(5.0),
+            self.robot.coroutines.reset_robot_after_scoring_1,
             self.robot.followPathCommand("3P_2"),
-            SequentialCommandGroup(
-                self.robot.coroutines.intake_coral.until(lambda: self.robot.has_coral),
-                self.robot.coroutines.reset_robot_after_intaking
-            ),
+            # self.robot.coroutines.intake_coral_1.until(lambda: self.robot.has_coral).withTimeout(3.0), # self.has_coral keeps terminating this early #Remove timeout later,
+            self.robot.coroutines.intake_coral_1.withTimeout(3.0), #Remove timeout later,
+            self.robot.coroutines.reset_robot_after_intaking_1,
             self.robot.followPathCommand("3P_3"),
-            SequentialCommandGroup(
-                self.robot.coroutines.score_right_branch,
-                self.robot.coroutines.score_L4,
-                self.robot.coroutines.score_piece.until(lambda: not self.robot.has_coral).withTimeout(5.0),
-                self.robot.coroutines.reset_robot_after_scoring
-            ),
+            self.robot.coroutines.score_right_branch,
+            self.robot.coroutines.score_L4_2,
+            self.robot.coroutines.score_piece_2.until(lambda: not self.robot.has_coral).withTimeout(5.0),
+            self.robot.coroutines.reset_robot_after_scoring_2,
             self.robot.followPathCommand("3P_4"),
-            SequentialCommandGroup(
-                self.robot.coroutines.intake_coral.until(lambda: self.robot.has_coral),
-                self.robot.coroutines.reset_robot_after_intaking
-            ),
+            # self.robot.coroutines.intake_coral_2.until(lambda: self.robot.has_coral).withTimeout(3.0), # self.has_coral keeps terminating this early #Remove timeout later
+            self.robot.coroutines.intake_coral_2.withTimeout(3.0),
+            self.robot.coroutines.reset_robot_after_intaking_2,
             self.robot.followPathCommand("3P_5"),
-            SequentialCommandGroup(
-                self.robot.coroutines.score_left_branch,
-                self.robot.coroutines.score_L4,
-                self.robot.coroutines.score_piece.until(lambda: not self.robot.has_coral).withTimeout(5.0),
-                self.robot.coroutines.reset_robot_after_scoring
-            ),
+            self.robot.coroutines.score_left_branch_2,
+            self.robot.coroutines.score_L4_3,
+            self.robot.coroutines.score_piece_3.until(lambda: not self.robot.has_coral).withTimeout(5.0),
+            self.robot.coroutines.reset_robot_after_scoring_3,
         )
