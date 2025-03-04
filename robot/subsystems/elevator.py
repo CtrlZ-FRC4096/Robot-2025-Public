@@ -61,7 +61,7 @@ class Elevator(Subsystem):
 
         # We will adjust these values later to get the elevator moving faster
         self.elevator_motor_config.motion_magic.motion_magic_cruise_velocity = 175 # Recalc has us at 16 RPS, but starting slow
-        self.elevator_motor_config.motion_magic.motion_magic_acceleration = 125 # Recalc has us at 100 RPS/s^2, but starting slow
+        self.elevator_motor_config.motion_magic.motion_magic_acceleration = 100 # Recalc has us at 100 RPS/s^2, but starting slow
 
         self.elevator_motor_1.configurator.apply(self.elevator_motor_config)  # type: ignore
         self.elevator_motor_2.configurator.apply(self.elevator_motor_config)  # type: ignore
