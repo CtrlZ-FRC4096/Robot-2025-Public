@@ -446,7 +446,7 @@ class PoseEstimator(Subsystem):
                 return target_pose
 
     def useSingleTag(self, distance=2):
-        return (self.curEstPoseGlobal - self.tag_layout.getTagPose(self.calculate_closest_reef_tag()[0]).toPose2d()).translation().norm() < 2
+        return (self.curEstPoseGlobal - self.tag_layout.getTagPose(self.calculate_closest_reef_tag()[0]).toPose2d()).translation().norm() < distance
 
     def periodic(self):
         allianceColor = DriverStation.getAlliance()
