@@ -281,9 +281,9 @@ class Coroutines:
         @commandify
         def reset_robot_after_intaking_1():
             yield
-            robot.mechanisms_at_default = True
             robot.funnel_intake.is_intaking = False
             robot.end_effector.is_intaking = False
+            robot.mechanisms_at_default = True
             robot.oi.running_pid_lineup = False
             robot.oi.intent_to_auto_drive = False
             robot.oi.score_intent = False
@@ -294,9 +294,9 @@ class Coroutines:
         @commandify
         def reset_robot_after_intaking_2():
             yield
-            robot.mechanisms_at_default = True
             robot.funnel_intake.is_intaking = False
             robot.end_effector.is_intaking = False
+            robot.mechanisms_at_default = True
             robot.oi.running_pid_lineup = False
             robot.oi.intent_to_auto_drive = False
             robot.oi.score_intent = False
