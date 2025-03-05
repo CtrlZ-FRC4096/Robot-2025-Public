@@ -634,3 +634,7 @@ class PoseEstimator(Subsystem):
 
         SmartDashboard.putNumber("skidding ratio", self.get_skidding_ratio())
         SmartDashboard.putNumber("jerk val", self.get_jerk_val())
+
+        SmartDashboard.putNumber("pose x", self.curEstPoseSingleTag.translation().X())
+        SmartDashboard.putNumber("pose y", self.curEstPoseSingleTag.translation().Y())
+        SmartDashboard.putNumber("pose theta", self.curEstPoseSingleTag.rotation().degrees())
