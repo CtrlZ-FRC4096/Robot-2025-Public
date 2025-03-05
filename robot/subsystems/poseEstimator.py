@@ -534,19 +534,9 @@ class PoseEstimator(Subsystem):
         self.poseEstSingleTag.update(self.getYaw(), self.get_module_positions())
         # self.lastPeriodicEstPose = self.curEstPos
 
-        SmartDashboard.putNumber("skidding ratio", self.get_skidding_ratio())
-        SmartDashboard.putNumber("jerk val", self.get_jerk_val())
-
         possible_pose_global = self.poseEst.getEstimatedPosition()
 
         possible_pose_single_tag = self.poseEstSingleTag.getEstimatedPosition()
-
-        SmartDashboard.putBoolean(
-            "pose 4 u :3", self.candidate_pose_OK(possible_pose_global)
-        )
-
-        SmartDashboard.putBoolean("right branch", self.robot.oi.right_branch)
-        SmartDashboard.putNumber("face to path ", self.robot.oi.face)
 
         single_tag = False
         if self.candidate_pose_OK(possible_pose_global):
@@ -564,8 +554,6 @@ class PoseEstimator(Subsystem):
             self.curEstPose = self.curEstPoseGlobal
             single_tag = False
 
-        SmartDashboard.putBoolean("single tag :3", single_tag)
-
         if (self.robot.leds.mode == self.robot.leds.MODE_LOST_ODOMETRY) or (
             self.robot.leds.mode == self.robot.leds.MODE_ODOMETRY
         ):
@@ -575,21 +563,11 @@ class PoseEstimator(Subsystem):
                 self.robot.leds.set_mode(self.robot.leds.MODE_ODOMETRY)
         self.poseConverge = True
 
-        SmartDashboard.putData("Field", self.field)
-        self.field.setRobotPose(self.robot.oi.final_lineup_pose)
-        SmartDashboard.putData("Field w/ Single Tag", self.field_for_single_tag)
-        self.field_for_single_tag.setRobotPose(
-            self.poseEstSingleTag.getEstimatedPosition()
+        SmartDashboard.putBoolean("single tag :3", single_tag)
+
+        SmartDashboard.putBoolean(
+            "pose 4 u :3", self.candidate_pose_OK(possible_pose_global)
         )
-
-        SmartDashboard.putNumber("closest reef tag", self.calculate_closest_reef_tag()[0])
-
-        SmartDashboard.putNumber(
-            "rotation of target pose: ", self.temp_rotation_check.degrees()
-        )
-
-
-
 
         # target_pose = self.get_path_to_reef(3, True)
 
@@ -601,6 +579,19 @@ class PoseEstimator(Subsystem):
         #     field_object.setPose(Pose2d(control_points[idx], Rotation2d.fromDegrees(0)))
 
         # Plot the difference between the single pose and global pose
+        # SmartDashboard.putNumber("Gyro/Roll", self.roll)
+
+        self.odometry.update(self.getYaw(), self.get_module_positions())
+
+        for module in self.modules:
+            SmartDashboard.putNumber(f"Swerve/{module.module_name}/Cancoder Angle", module.get_angle_CANcoder().degrees())  # type: ignore
+            SmartDashboard.putNumber(f"Swerve/{module.module_name}/Motor Angle", module.get_position().angle.degrees())  # type: ignore
+            SmartDashboard.putNumber(
+                f"Swerve/{module.module_name}/Velcoity", module.get_state().speed
+            )
+
+    def log(self):
+        SmartDashboard.putNumber("gyro voltage", self.gyro.get_supply_voltage().value)
 
         SmartDashboard.putNumber(
             "Single/Global Pose Diff",
@@ -624,16 +615,22 @@ class PoseEstimator(Subsystem):
             "Swerve/Odometry Theta", self.odometry.getPose().rotation().degrees()
         )
         SmartDashboard.putNumber("Gyro/Yaw", self.getYaw().degrees())
-        # SmartDashboard.putNumber("Gyro/Roll", self.roll)
 
-        self.odometry.update(self.getYaw(), self.get_module_positions())
+        SmartDashboard.putData("Field", self.field)
+        self.field.setRobotPose(self.robot.oi.final_lineup_pose)
+        SmartDashboard.putData("Field w/ Single Tag", self.field_for_single_tag)
+        self.field_for_single_tag.setRobotPose(
+            self.poseEstSingleTag.getEstimatedPosition()
+        )
 
-        for module in self.modules:
-            SmartDashboard.putNumber(f"Swerve/{module.module_name}/Cancoder Angle", module.get_angle_CANcoder().degrees())  # type: ignore
-            SmartDashboard.putNumber(f"Swerve/{module.module_name}/Motor Angle", module.get_position().angle.degrees())  # type: ignore
-            SmartDashboard.putNumber(
-                f"Swerve/{module.module_name}/Velcoity", module.get_state().speed
-            )
+        SmartDashboard.putNumber("closest reef tag", self.calculate_closest_reef_tag()[0])
 
-    def log(self):
-        SmartDashboard.putNumber("gyro voltage", self.gyro.get_supply_voltage().value)
+        SmartDashboard.putNumber(
+            "rotation of target pose: ", self.temp_rotation_check.degrees()
+        )
+
+        SmartDashboard.putBoolean("right branch", self.robot.oi.right_branch)
+        SmartDashboard.putNumber("face to path ", self.robot.oi.face)
+
+        SmartDashboard.putNumber("skidding ratio", self.get_skidding_ratio())
+        SmartDashboard.putNumber("jerk val", self.get_jerk_val())
