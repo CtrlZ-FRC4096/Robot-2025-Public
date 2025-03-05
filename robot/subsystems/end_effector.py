@@ -148,6 +148,7 @@ class EndEffector(Subsystem):
         if self.robot.score_piece or (self.robot.at_scoring_position and abs(self.robot.score_state.elevator_height-self.robot.elevator.get_height()) <= 0.2): # manual vs automated
             self.set_outtake_motor_speed(self.robot.score_state.end_effector_outtake_speed)
             self.robot.has_coral = False
+            self.set_end_effector_position(RobotScoringPositions.end_effector_travel_position)
         elif self.is_intaking:
             self.set_end_effector_position(RobotScoringPositions.end_effector_intake_position)
             self.set_outtake_motor_speed(15.0) # default outtake speed
@@ -162,8 +163,9 @@ class EndEffector(Subsystem):
                 self.robot.has_coral = True
         elif self.robot.mechanisms_at_default:
             self.stop()
-            self.set_end_effector_position(RobotScoringPositions.end_effector_travel_position)
-            if self.robot.elevator.get_height() <= RobotScoringPositions.min_elevator_height_to_bring_in_end_effector:
+            if self.robot.has_coral and self.robot.elevator.get_height() <= RobotScoringPositions.min_elevator_height_to_bring_in_end_effector:
+                self.set_end_effector_position(RobotScoringPositions.end_effector_travel_position)
+            elif self.robot.elevator.get_height() <= RobotScoringPositions.min_elevator_height_to_bring_in_end_effector:
                 self.set_end_effector_position(RobotScoringPositions.end_effector_intake_position)
 
 
