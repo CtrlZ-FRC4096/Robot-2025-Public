@@ -160,6 +160,8 @@ class OI:
                     self.running_pid_lineup = False
                     if not self.robot.poseEstimator.useSingleTag(1.0): # closer than 1 meter to reef
                         self.intent_to_auto_drive = False
+                        forward_back *= 0.15
+                        left_right *= 0.15
                     else:
                         forward_back *= 0.15
                         left_right *= 0.15
