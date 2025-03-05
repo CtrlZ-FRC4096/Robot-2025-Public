@@ -598,7 +598,7 @@ class PoseEstimator(Subsystem):
             "Swerve/Odometry Theta", self.odometry.getPose().rotation().degrees()
         )
         SmartDashboard.putNumber("Gyro/Yaw", self.getYaw().degrees())
-        SmartDashboard.putNumber("Gyro/Roll", self.roll)
+        SmartDashboard.putNumber("Gyro/Roll", self.gyro.get_roll().value)
 
         SmartDashboard.putData("Field", self.field)
         self.field.setRobotPose(self.robot.oi.final_lineup_pose)

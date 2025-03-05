@@ -133,7 +133,7 @@ class Elevator(Subsystem):
                 self.set_elevator_height(RobotScoringPositions.elevator_intake_height) # set elevator to intake height
 
 		# bring elevator down if pitch | roll is greater than 10 degrees
-        if self.robot.poseEstimator.gyro.get_pitch().value > 10 and self.robot.poseEstimator.gyro.get_roll().value > 10:
+        if self.robot.poseEstimator.gyro.get_pitch().value > 10 or self.robot.poseEstimator.gyro.get_roll().value > 10:
             self.elevator_pitch_roll_greater_10 = True # just for logging purposes
         else:
             self.elevator_pitch_roll_greater_10 = False
