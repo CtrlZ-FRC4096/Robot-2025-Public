@@ -232,7 +232,10 @@ class Drivetrain(Subsystem):
     def periodic(self):
         # if DriverStation.isDisabled():
         #     self.reset_modules_to_absolute()
+        pass
+        
 
+    def log(self):
         SmartDashboard.putData("PID Controller for going to reef, x", self.x_controller)
         SmartDashboard.putData("PID Controller for going to reef, y", self.y_controller)
         SmartDashboard.putData(
@@ -242,6 +245,3 @@ class Drivetrain(Subsystem):
         SmartDashboard.putData("PID Controller (Drivetrain)", self.angle_pid)
         SmartDashboard.putBoolean("Angle at Setpoint", self.angle_pid.atSetpoint())
         SmartDashboard.putNumber("PID Controller Error", self.angle_pid.getError())
-
-    def log(self):
-        pass

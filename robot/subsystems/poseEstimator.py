@@ -216,6 +216,8 @@ class PoseEstimator(Subsystem):
         self.temp_rotation_check = Rotation2d()
 
         self.tag_layout = AprilTagFieldLayout.loadField(AprilTagField.k2025Reefscape)
+        self.single_tag = False
+        self.possible_pose_gbl = Pose2d()
 
     def stop(self):
         print("sike this aint stoppin")
@@ -532,13 +534,13 @@ class PoseEstimator(Subsystem):
         # Update poses with drivetrain information
         self.poseEst.update(self.getYaw(), self.get_module_positions())
         self.poseEstSingleTag.update(self.getYaw(), self.get_module_positions())
-        # self.lastPeriodicEstPose = self.curEstPos
 
         possible_pose_global = self.poseEst.getEstimatedPosition()
+        self.possible_pose_gbl = possible_pose_global
 
         possible_pose_single_tag = self.poseEstSingleTag.getEstimatedPosition()
 
-        single_tag = False
+        self.single_tag = False
         if self.candidate_pose_OK(possible_pose_global):
             self.curEstPoseGlobal = possible_pose_global
         if self.candidate_pose_OK(possible_pose_single_tag):
@@ -546,13 +548,13 @@ class PoseEstimator(Subsystem):
         if self.robot.oi.running_pid_lineup:
             if not self.useSingleTag():
                 self.curEstPose = self.curEstPoseGlobal
-                single_tag = False
+                self.single_tag = False
             else:
                 self.curEstPose = self.curEstPoseSingleTag
-                single_tag = True
+                self.single_tag = True
         else:
             self.curEstPose = self.curEstPoseGlobal
-            single_tag = False
+            self.single_tag = False
 
         if (self.robot.leds.mode == self.robot.leds.MODE_LOST_ODOMETRY) or (
             self.robot.leds.mode == self.robot.leds.MODE_ODOMETRY
@@ -563,34 +565,15 @@ class PoseEstimator(Subsystem):
                 self.robot.leds.set_mode(self.robot.leds.MODE_ODOMETRY)
         self.poseConverge = True
 
-        SmartDashboard.putBoolean("single tag :3", single_tag)
-
-        SmartDashboard.putBoolean(
-            "pose 4 u :3", self.candidate_pose_OK(possible_pose_global)
-        )
-
-        # target_pose = self.get_path_to_reef(3, True)
-
-        # control_points = PathGenerator(
-        #     Pose2d(1, 1, Rotation2d.fromDegrees(0)), target_pose
-        # ).getPointList()
-        # for idx in range(len(control_points)):
-        #     field_object = self.field.getObject("point " + str(idx))
-        #     field_object.setPose(Pose2d(control_points[idx], Rotation2d.fromDegrees(0)))
-
-        # Plot the difference between the single pose and global pose
-        # SmartDashboard.putNumber("Gyro/Roll", self.roll)
-
         self.odometry.update(self.getYaw(), self.get_module_positions())
 
-        for module in self.modules:
-            SmartDashboard.putNumber(f"Swerve/{module.module_name}/Cancoder Angle", module.get_angle_CANcoder().degrees())  # type: ignore
-            SmartDashboard.putNumber(f"Swerve/{module.module_name}/Motor Angle", module.get_position().angle.degrees())  # type: ignore
-            SmartDashboard.putNumber(
-                f"Swerve/{module.module_name}/Velcoity", module.get_state().speed
-            )
 
     def log(self):
+        SmartDashboard.putBoolean("single tag :3", self.single_tag)
+        SmartDashboard.putBoolean(
+            "pose 4 u :3", self.candidate_pose_OK(self.possible_pose_gbl)
+        )
+        
         SmartDashboard.putNumber("gyro voltage", self.gyro.get_supply_voltage().value)
 
         SmartDashboard.putNumber(
@@ -615,6 +598,7 @@ class PoseEstimator(Subsystem):
             "Swerve/Odometry Theta", self.odometry.getPose().rotation().degrees()
         )
         SmartDashboard.putNumber("Gyro/Yaw", self.getYaw().degrees())
+        SmartDashboard.putNumber("Gyro/Roll", self.roll)
 
         SmartDashboard.putData("Field", self.field)
         self.field.setRobotPose(self.robot.oi.final_lineup_pose)
@@ -638,3 +622,10 @@ class PoseEstimator(Subsystem):
         SmartDashboard.putNumber("pose x", self.curEstPoseSingleTag.translation().X())
         SmartDashboard.putNumber("pose y", self.curEstPoseSingleTag.translation().Y())
         SmartDashboard.putNumber("pose theta", self.curEstPoseSingleTag.rotation().degrees())
+
+        for module in self.modules:
+            SmartDashboard.putNumber(f"Swerve/{module.module_name}/Cancoder Angle", module.get_angle_CANcoder().degrees())  # type: ignore
+            SmartDashboard.putNumber(f"Swerve/{module.module_name}/Motor Angle", module.get_position().angle.degrees())  # type: ignore
+            SmartDashboard.putNumber(
+                f"Swerve/{module.module_name}/Velcoity", module.get_state().speed
+            )
