@@ -36,7 +36,7 @@ class Coroutines:
             robot.end_effector.stop()
             robot.drivetrain.stop()
             robot.has_coral = False
-            
+
         @commandify
         def reset_robot_after_scoring_2():
             yield
@@ -48,7 +48,7 @@ class Coroutines:
             robot.end_effector.stop()
             robot.drivetrain.stop()
             robot.has_coral = False
-            
+
         @commandify
         def reset_robot_after_scoring_3():
             yield
@@ -70,7 +70,7 @@ class Coroutines:
         def score_left_branch_1():
             yield
             robot.oi.right_branch = False
-            
+
         @commandify
         def score_left_branch_2():
             yield
@@ -79,7 +79,7 @@ class Coroutines:
         self.score_left_branch_1 = (
             score_left_branch_1
         )
-        
+
         self.score_left_branch_2 = (
             score_left_branch_2
         )
@@ -100,7 +100,8 @@ class Coroutines:
             robot.end_effector.is_intaking = False
             robot.at_scoring_position = False
             robot.score_piece = False
-            final_lineup_pose = robot.poseEstimator.get_path_to_reef(
+            robot.final_lineup_pose_for_auto = robot.poseEstimator.get_path_to_reef(
+                True,
                 robot.poseEstimator.calculate_closest_reef_tag()[1],
             	robot.oi.right_branch,
                 do_manip_offset=True
@@ -109,10 +110,7 @@ class Coroutines:
             robot.oi.running_pid_lineup = True
             robot.oi.intent_to_auto_drive = True
             robot.oi.score_intent = True
-            while True:
-                yield
-                robot.drivetrain.go_to_pose_profiled_pid(final_lineup_pose)
-            
+
         @commandify
         def score_piece_2():
             yield
@@ -120,7 +118,8 @@ class Coroutines:
             robot.end_effector.is_intaking = False
             robot.at_scoring_position = False
             robot.score_piece = False
-            final_lineup_pose = robot.poseEstimator.get_path_to_reef(
+            robot.final_lineup_pose_for_auto = robot.poseEstimator.get_path_to_reef(
+                True,
                 robot.poseEstimator.calculate_closest_reef_tag()[1],
             	robot.oi.right_branch,
                 do_manip_offset=True
@@ -129,10 +128,7 @@ class Coroutines:
             robot.oi.running_pid_lineup = True
             robot.oi.intent_to_auto_drive = True
             robot.oi.score_intent = True
-            while True:
-                yield
-                robot.drivetrain.go_to_pose_profiled_pid(final_lineup_pose)
-            
+
         @commandify
         def score_piece_3():
             yield
@@ -140,7 +136,8 @@ class Coroutines:
             robot.end_effector.is_intaking = False
             robot.at_scoring_position = False
             robot.score_piece = False
-            final_lineup_pose = robot.poseEstimator.get_path_to_reef(
+            robot.final_lineup_pose_for_auto = robot.poseEstimator.get_path_to_reef(
+                True,
                 robot.poseEstimator.calculate_closest_reef_tag()[1],
             	robot.oi.right_branch,
                 do_manip_offset=True
@@ -149,9 +146,6 @@ class Coroutines:
             robot.oi.running_pid_lineup = True
             robot.oi.intent_to_auto_drive = True
             robot.oi.score_intent = True
-            while True:
-                yield
-                robot.drivetrain.go_to_pose_profiled_pid(final_lineup_pose)
 
         self.score_piece_1 = (score_piece_1)
         self.score_piece_2 = (score_piece_2)
@@ -163,14 +157,14 @@ class Coroutines:
             robot.mechanisms_at_default = False
             robot.score_state = RobotScoringPositions.L4_Scoring
             robot.oi.score_intent = True
-            
+
         @commandify
         def score_L4_2():
             yield
             robot.mechanisms_at_default = False
             robot.score_state = RobotScoringPositions.L4_Scoring
             robot.oi.score_intent = True
-            
+
         @commandify
         def score_L4_3():
             yield
@@ -245,7 +239,7 @@ class Coroutines:
         @commandify
         def intake_coral_1():
             yield
-            final_lineup_pose = robot.poseEstimator.get_path_to_source(False, robot.oi.position_on_source)
+            robot.final_lineup_pose_for_auto = robot.poseEstimator.get_path_to_source(False, 1)
             robot.mechanisms_at_default = False
             robot.at_scoring_position = False
             robot.score_piece = False
@@ -254,14 +248,11 @@ class Coroutines:
             robot.oi.running_pid_lineup = True
             robot.oi.intent_to_auto_drive = True
             robot.oi.score_intent = False
-            while True:
-                yield
-                robot.drivetrain.go_to_pose_profiled_pid(final_lineup_pose)
-            
+
         @commandify
         def intake_coral_2():
             yield
-            final_lineup_pose = robot.poseEstimator.get_path_to_source(False, robot.oi.position_on_source)
+            robot.final_lineup_pose_for_auto = robot.poseEstimator.get_path_to_source(False, 1) # CHANGE TO POSITION ON SOURCE from OI
             robot.mechanisms_at_default = False
             robot.at_scoring_position = False
             robot.score_piece = False
@@ -271,9 +262,6 @@ class Coroutines:
             robot.oi.intent_to_auto_drive = True
 
             robot.oi.score_intent = False
-            while True:
-                yield
-                robot.drivetrain.go_to_pose_profiled_pid(final_lineup_pose)
 
         self.intake_coral_1 = (intake_coral_1)
         self.intake_coral_2 = (intake_coral_2)
@@ -290,7 +278,7 @@ class Coroutines:
             robot.oi.robot_oriented_angle = robot.poseEstimator.getYaw().degrees()
             robot.drivetrain.stop()
             robot.has_coral = True
-            
+
         @commandify
         def reset_robot_after_intaking_2():
             yield
@@ -306,6 +294,6 @@ class Coroutines:
 
         self.reset_robot_after_intaking_1 = (reset_robot_after_intaking_1)
         self.reset_robot_after_intaking_2 = (reset_robot_after_intaking_2)
-        
-        
+
+
 

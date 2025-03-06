@@ -232,8 +232,8 @@ class Drivetrain(Subsystem):
     def periodic(self):
         # if DriverStation.isDisabled():
         #     self.reset_modules_to_absolute()
-        pass
-        
+        if self.robot.in_autonomous_mode and self.robot.oi.running_pid_lineup:
+            self.robot.drivetrain.go_to_pose_profiled_pid(self.robot.final_lineup_pose_for_auto)
 
     def log(self):
         SmartDashboard.putData("PID Controller for going to reef, x", self.x_controller)

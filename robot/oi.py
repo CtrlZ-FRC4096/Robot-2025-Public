@@ -104,7 +104,7 @@ class OI:
         self.running_pid_lineup = False
         self.final_lineup_pose = Pose2d()
         self.score_intent = False
-        self.position_on_source = 2
+        self.position_on_source = 1
 
         self.manual_scoring = False
 

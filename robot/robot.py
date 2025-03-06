@@ -54,7 +54,7 @@ from pathplannerlib.auto import AutoBuilder, PathPlannerAuto, NamedCommands, Fol
 from pathplannerlib.config import PIDConstants, RobotConfig
 from pathplannerlib.controller import PPHolonomicDriveController
 
-from wpimath.geometry import Rotation2d
+from wpimath.geometry import Rotation2d, Pose2d
 
 from field_const import FieldConstants
 
@@ -120,6 +120,8 @@ class Robot(CoroutineRobot):
             self.elevator,
             self.end_effector
         ]
+
+        self.final_lineup_pose_for_auto = Pose2d()
 
         # If everything in self.subsystems is a Subsystem object, then
         # everything is automatically registered and this isn't needed.
