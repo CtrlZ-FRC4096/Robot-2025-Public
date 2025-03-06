@@ -299,9 +299,10 @@ class OI:
             self.robot.at_scoring_position = False
             self.robot.score_piece = False
             self.final_lineup_pose = self.robot.poseEstimator.get_path_to_reef(
+                False, # change to true if wanting to use calibrated field
                 self.robot.poseEstimator.calculate_closest_reef_tag()[1],
                 self.right_branch,
-                do_manip_offset=True
+                do_manip_offset=True,
             )
             self.robot.mechanisms_at_default = False
             self.running_pid_lineup = True

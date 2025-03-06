@@ -337,7 +337,7 @@ class PoseEstimator(Subsystem):
         return [closest_reef_tag, FieldConstants.tag_to_face[closest_reef_tag]]
 
 
-    def get_path_to_reef(self, face: int, right_branch: bool, margin_dist_offset=1.0, do_side_offset=True, do_manip_offset=True):
+    def get_path_to_reef(self, use_calibrated_field, face: int, right_branch: bool, margin_dist_offset=1.0, do_side_offset=True, do_manip_offset=True):
         manip_offset = 3.25
 
         side_offset = (inchesToMeters(6.47) if not do_manip_offset else (inchesToMeters(6.47 + manip_offset) if right_branch else inchesToMeters(6.47 - manip_offset)))  # distance b/w center of face to branch
@@ -380,6 +380,12 @@ class PoseEstimator(Subsystem):
                     angle_face.degrees() - 90
                 ),  # don't know if this + 90 is needed, because our battery is facing forward and we want the camera side (scoring side) to face reef
             )
+
+            if use_calibrated_field:
+                alliance_color = "red" if DriverStation.getAlliance() == DriverStation.Alliance.kRed else "blue"
+                branch = "right" if right_branch else "left"
+                target_pose_3 = FieldConstants.ReefCalibratedToField.calibrated_data[alliance_color][branch][face]
+
             return target_pose_3
         else:
             return 0.0
