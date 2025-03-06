@@ -251,7 +251,7 @@ class Coroutines:
             robot.score_piece = False
             robot.funnel_intake.is_intaking = True
             robot.end_effector.is_intaking = True
-            robot.running_pid_lineup = True
+            robot.oi.running_pid_lineup = True
             robot.oi.intent_to_auto_drive = True
             robot.oi.score_intent = False
             while not robot.has_coral:
