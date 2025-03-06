@@ -110,6 +110,8 @@ class Coroutines:
             robot.oi.running_pid_lineup = True
             robot.oi.intent_to_auto_drive = True
             robot.oi.score_intent = True
+            while robot.has_coral:
+                yield
 
         @commandify
         def score_piece_2():
@@ -128,6 +130,8 @@ class Coroutines:
             robot.oi.running_pid_lineup = True
             robot.oi.intent_to_auto_drive = True
             robot.oi.score_intent = True
+            while robot.has_coral:
+                yield
 
         @commandify
         def score_piece_3():
@@ -146,6 +150,8 @@ class Coroutines:
             robot.oi.running_pid_lineup = True
             robot.oi.intent_to_auto_drive = True
             robot.oi.score_intent = True
+            while robot.has_coral:
+                yield
 
         self.score_piece_1 = (score_piece_1)
         self.score_piece_2 = (score_piece_2)
@@ -245,9 +251,11 @@ class Coroutines:
             robot.score_piece = False
             robot.funnel_intake.is_intaking = True
             robot.end_effector.is_intaking = True
-            robot.oi.running_pid_lineup = True
+            robot.running_pid_lineup = True
             robot.oi.intent_to_auto_drive = True
             robot.oi.score_intent = False
+            while not robot.has_coral:
+                yield
 
         @commandify
         def intake_coral_2():
@@ -260,8 +268,9 @@ class Coroutines:
             robot.end_effector.is_intaking = True
             robot.oi.running_pid_lineup = True
             robot.oi.intent_to_auto_drive = True
-
             robot.oi.score_intent = False
+            while not robot.has_coral:
+                yield
 
         self.intake_coral_1 = (intake_coral_1)
         self.intake_coral_2 = (intake_coral_2)
