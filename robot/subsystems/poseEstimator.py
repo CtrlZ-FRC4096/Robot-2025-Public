@@ -579,7 +579,7 @@ class PoseEstimator(Subsystem):
         SmartDashboard.putBoolean(
             "pose 4 u :3", self.candidate_pose_OK(self.possible_pose_gbl)
         )
-        
+
         SmartDashboard.putNumber("gyro voltage", self.gyro.get_supply_voltage().value)
 
         SmartDashboard.putNumber(
@@ -613,7 +613,7 @@ class PoseEstimator(Subsystem):
             self.poseEstSingleTag.getEstimatedPosition()
         )
 
-        SmartDashboard.putNumber("closest reef tag", self.calculate_closest_reef_tag()[0])
+        SmartDashboard.putNumber("closest reef tag", self.calculate_closest_reef_tag()[1])
 
         SmartDashboard.putNumber(
             "rotation of target pose: ", self.temp_rotation_check.degrees()

@@ -165,7 +165,7 @@ class OI:
                     else:
                         forward_back *= 0.15
                         left_right *= 0.15
-                        self.final_lineup_pose = self.robot.poseEstimator.curEstPose 
+                        self.final_lineup_pose = self.robot.poseEstimator.curEstPose
                     # # breaking because at the beginning setting final_lineup_pose to cur pose because I was driving at same time
 
 
@@ -299,7 +299,7 @@ class OI:
             self.robot.at_scoring_position = False
             self.robot.score_piece = False
             self.final_lineup_pose = self.robot.poseEstimator.get_path_to_reef(
-                False, # change to true if wanting to use calibrated field
+                True, # change to true if wanting to use calibrated field
                 self.robot.poseEstimator.calculate_closest_reef_tag()[1],
                 self.right_branch,
                 do_manip_offset=True,

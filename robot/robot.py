@@ -101,6 +101,8 @@ class Robot(CoroutineRobot):
         # Command scheduler
         self.scheduler = CommandScheduler.getInstance()
 
+        self.previously_scored = True
+
         # subsystems
         self.drivetrain = subsystems.drivetrain.Drivetrain(self)
         self.leds = subsystems.leds.LEDs(self)

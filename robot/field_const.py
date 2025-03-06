@@ -196,7 +196,7 @@ class FieldConstants:
 
     class ReefCalibratedToField:
         """
-        JSON in this format: 
+        JSON in this format:
         {
             "red": {
                 "left": {1: (), 2: (), 3: (), 4: (), 5: (), 6: ()},
@@ -208,25 +208,16 @@ class FieldConstants:
             }
         }
         """
-        filename = f'calibration_data.json'
-
-        calibrated_data = {'red': {}, 'blue': {}}  # Store the calibrated data
-        with open(filename, 'r') as file:
-            reef_calibration_data = json.load(file)
-
-        for team in ['red', 'blue']:
-            calibrated_data[team] = {'left': {}, 'right': {}}
-
-            # For left and right positions, create Pose2d objects from (x, y, theta) tuples
-            for side in ['left', 'right']:
-                for key, (x, y, theta) in reef_calibration_data[team][side].items():
-                    # Create the Pose2d
-                    translation = Translation2d(x, y)
-                    rotation = Rotation2d.fromDegrees(theta)
-                    pose = Pose2d(translation, rotation)
-                    
-                    # Store it in the dictionary
-                    calibrated_data[team][side][key] = pose
+        calibrated_data = {
+            "red": {
+                "left": {1: Pose2d(), 2: Pose2d(), 3: Pose2d(), 4: Pose2d(), 5: Pose2d(), 6: Pose2d()},
+                "right": {1: Pose2d(), 2: Pose2d(), 3: Pose2d(), 4: Pose2d(), 5: Pose2d(), 6: Pose2d()}
+            },
+            "blue": {
+                "left": {1: Pose2d(), 2: Pose2d(), 3: Pose2d(), 4: Pose2d(5.83, 3.96377, Rotation2d.fromDegrees(-92.13)), 5: Pose2d(), 6: Pose2d(3.74, 2.899, Rotation2d.fromDegrees(149.85))},
+                "right": {1: Pose2d(), 2: Pose2d(), 3: Pose2d(), 4: Pose2d(5.819, 4.28, Rotation2d.fromDegrees(-91.98)), 5: Pose2d(), 6: Pose2d(4.05785, 2.74, Rotation2d.fromDegrees(149.35))}
+            }
+        }
 
     class StagingPositions:
         """Positions of the starting algae and coral on top of each other"""
