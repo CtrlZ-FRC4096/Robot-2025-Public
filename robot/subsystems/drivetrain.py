@@ -262,6 +262,10 @@ class Drivetrain(Subsystem):
         if self.robot.poseEstimator.gyro.get_pitch().value > 10 or self.robot.poseEstimator.gyro.get_roll().value > 10:
             self.robot.mechanisms_at_default = True
             self.robot.running_pid_lineup = False
+            self.robot.funnel_intake.is_intaking = False
+            self.robot.end_effector.is_intaking = False
+            self.robot.at_scoring_position = False
+            self.robot.score_piece = False
             self.robot.score_intent = False
             self.robot.at_scoring_position = False
             self.robot_oriented_angle = self.robot.poseEstimator.getYaw().degrees()
