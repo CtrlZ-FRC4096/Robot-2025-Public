@@ -479,7 +479,6 @@ class PoseEstimator(Subsystem):
             # observations = cam.getPoseEstimates()
             tags = cam.getTagPositions()
             single_tag_poses = cam.getPoseSingleTag()
-            single_tag_ids = cam.getSingleTagIDs()
             self.single_tag_IDs.update(cam.getSingleTagIDs())
             observations = cam.getPoseEstimates()
             # filter by closest based on global pose

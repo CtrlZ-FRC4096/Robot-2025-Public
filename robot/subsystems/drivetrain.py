@@ -21,6 +21,7 @@ from wpimath.kinematics import (
     SwerveDrive4Kinematics,
     SwerveDrive4Odometry,
     SwerveModulePosition,
+    SwerveModuleState
 )
 from phoenix6 import configs
 
@@ -223,6 +224,23 @@ class Drivetrain(Subsystem):
             [*self.robot.poseEstimator.get_module_positions()],
             pose,
         )
+
+    def turn_wheels_to_x(self, left_source : bool):
+        module_angles = []
+        source_rotation = FieldConstants.flip_Rotation2d(FieldConstants.CoralStation.leftCenterFace.rotation()) if left_source else FieldConstants.flip_Rotation2d(FieldConstants.CoralStation.rightCenterFace.rotation())
+        battery_facing = source_rotation + Rotation2d.fromDegrees(90)
+        module_angles.append(battery_facing + Rotation2d.fromDegrees(-45))
+        module_angles.append(battery_facing + Rotation2d.fromDegrees(45))
+        module_angles.append(battery_facing + Rotation2d.fromDegrees(-135))
+        module_angles.append(battery_facing + Rotation2d.fromDegrees(135))
+        module_states = [
+            SwerveModuleState(0, module_angles[0]),
+            SwerveModuleState(0, module_angles[1]),
+            SwerveModuleState(0, module_angles[1]),
+            SwerveModuleState(0, module_angles[1]),
+        ]
+        for idx, module in enumerate(self.robot.poseEstimator.modules):
+            module.set_desired_state(module_states[idx], False)
 
     def get_robot_relative_speeds(self):
         module_states = (
