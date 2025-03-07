@@ -76,7 +76,6 @@ class Elevator(Subsystem):
         self.request = controls.MotionMagicVoltage(0, enable_foc=True)
         ## Somewhere here we want to set the position of the motor to the absolute encoder value with some offset for the starting position of the encoder
         # self.elevator_motor_1.set_position(0.0)
-        self.elevator_pitch_roll_greater_10 = False
         self.in_proximity_to_begin_raising_elevator = False
 
         self.height_encoder = wpilib.DutyCycleEncoder(1)
@@ -131,16 +130,9 @@ class Elevator(Subsystem):
             if self.robot.end_effector.get_position() >= RobotScoringPositions.min_end_effector_position_to_move_elevator_up:
                 self.set_elevator_height(RobotScoringPositions.elevator_intake_height) # set elevator to intake height
 
-		# bring elevator down if pitch | roll is greater than 10 degrees
-        if self.robot.poseEstimator.gyro.get_pitch().value > 10 or self.robot.poseEstimator.gyro.get_roll().value > 10:
-            self.elevator_pitch_roll_greater_10 = True # just for logging purposes
-        else:
-            self.elevator_pitch_roll_greater_10 = False
-
     def log(self):
         SmartDashboard.putNumber("Current elevator height: ", self.get_height())
         SmartDashboard.putNumber("Commanded elevator height: ", self.command_height)
-        SmartDashboard.putBoolean("elevator pitch roll >10", self.elevator_pitch_roll_greater_10)
         SmartDashboard.putBoolean("closer than 2 meters", self.in_proximity_to_begin_raising_elevator)
         SmartDashboard.putNumber("elevator height encoder", self.height_encoder.get())
 
