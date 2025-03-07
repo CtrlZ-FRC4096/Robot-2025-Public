@@ -95,6 +95,10 @@ class PoseEstimator(Subsystem):
         # bl, fl, br, fr
 
         # fl, fr, bl, br
+        self.camera_X = {}
+        self.camera_Y = {}
+        self.camera_theta = {}
+
 
         self.modules = (
             SwerveModule(
@@ -218,6 +222,8 @@ class PoseEstimator(Subsystem):
         self.tag_layout = AprilTagFieldLayout.loadField(AprilTagField.k2025Reefscape)
         self.single_tag = False
         self.possible_pose_gbl = Pose2d()
+
+        print(FieldConstants.Reef.centerFaces)
 
     def stop(self):
         print("sike this aint stoppin")
@@ -445,13 +451,14 @@ class PoseEstimator(Subsystem):
             y_offset = math.sin(source_rotation.radians()) * dist_offset
 
             offset_pose = Pose2d(source_pose.X() + x_offset, source_pose.Y() + y_offset, source_rotation + Rotation2d.fromDegrees(90))
+            target_pose = Pose2d()
             if place_on_source == 2:
-                return offset_pose
+                target_pose = offset_pose
             elif place_on_source == 1 or place_on_source == 3:
                 x_side_offset = math.cos(degreesToRadians(source_rotation.degrees() + (90 if place_on_source == 1 else -90))) * side_offset
                 y_side_offset = math.sin(degreesToRadians(source_rotation.degrees() + (90 if place_on_source == 1 else -90))) * side_offset
                 target_pose = Pose2d(offset_pose.X() + x_side_offset, offset_pose.Y() + y_side_offset, source_rotation.rotateBy(Rotation2d.fromDegrees(90)))
-                return target_pose
+            return target_pose
 
     def useSingleTag(self, distance=2):
         return (self.curEstPoseGlobal - self.tag_layout.getTagPose(self.calculate_closest_reef_tag()[0]).toPose2d()).translation().norm() < distance
@@ -524,6 +531,10 @@ class PoseEstimator(Subsystem):
             # self.telemetry.addVisionObservations(observations) #Might need later https://github.com/RobotCasserole1736/RobotCasserole2024/blob/fa033322e6f4efe87e8b1af938d8a3f69599f29b/drivetrain/poseEstimation/drivetrainPoseTelemetry.py#L15
 
             for pose in single_tag_poses:
+                self.camera_X[cam.camName] = pose.X()
+                self.camera_Y[cam.camName] = pose.Y()
+                self.camera_theta[cam.camName] = pose.rotation().degrees()
+
                 self.poseEstSingleTag.addVisionMeasurement(
                     pose,
                     cam.getObsTime(),
@@ -575,6 +586,14 @@ class PoseEstimator(Subsystem):
 
 
     def log(self):
+        for idx in range(len(self.cams)):
+            try:
+                SmartDashboard.putNumber(self.cams[idx].camName + " X", self.camera_X[self.cams[idx].camName])
+                SmartDashboard.putNumber(self.cams[idx].camName + " Y", self.camera_Y[self.cams[idx].camName])
+                SmartDashboard.putNumber(self.cams[idx].camName + " THETA", self.camera_theta[self.cams[idx].camName])
+            except:
+                continue
+
         SmartDashboard.putBoolean("single tag :3", self.single_tag)
         SmartDashboard.putBoolean(
             "pose 4 u :3", self.candidate_pose_OK(self.possible_pose_gbl)
@@ -607,7 +626,10 @@ class PoseEstimator(Subsystem):
         SmartDashboard.putNumber("Gyro/Roll", self.gyro.get_roll().value)
 
         SmartDashboard.putData("Field", self.field)
-        self.field.setRobotPose(self.robot.final_lineup_pose)
+        self.field.setRobotPose(self.curEstPose)
+        final_lineup = self.field.getObject("target pose")
+        final_lineup.setPose(self.robot.final_lineup_pose)
+
         SmartDashboard.putData("Field w/ Single Tag", self.field_for_single_tag)
         self.field_for_single_tag.setRobotPose(
             self.poseEstSingleTag.getEstimatedPosition()

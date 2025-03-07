@@ -30,10 +30,10 @@ class FunnelIntake(Subsystem):
         funnel_intake_config.motor_output.inverted = signals.InvertedValue(1)
         funnel_intake_config.current_limits.supply_current_limit = 40
         funnel_intake_config.current_limits.supply_current_limit_enable = True
-        funnel_intake_config.slot0.k_p = const.SWERVE_DRIVE_KP
-        funnel_intake_config.slot0.k_i = const.SWERVE_DRIVE_KI
-        funnel_intake_config.slot0.k_d = const.SWERVE_DRIVE_KD
-        funnel_intake_config.slot0.k_v = const.SWERVE_DRIVE_KF
+        funnel_intake_config.slot0.k_p = 2.5
+        funnel_intake_config.slot0.k_i = 0.0
+        funnel_intake_config.slot0.k_d = 0.0
+        funnel_intake_config.slot0.k_v = 0.0
 
         funnel_intake_config.closed_loop_ramps.torque_closed_loop_ramp_period = 0.02
         funnel_intake_config.open_loop_ramps.torque_open_loop_ramp_period = 0.02
@@ -75,7 +75,7 @@ class FunnelIntake(Subsystem):
 
     def periodic(self):
         if self.is_intaking:
-            self.intake(100)
+            self.intake(70)
             # self.piece_detected.appendleft(self.canrange_funnel.get_is_detected().value) # automatically pops oldest when over 3
             # self.piece_passing_through_previous_tick = self.piece_passing_through_now
             # self.piece_passing_through_now = all(self.piece_detected)

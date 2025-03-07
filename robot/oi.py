@@ -158,8 +158,8 @@ class OI:
 						or abs(self.driver1.RIGHT_JOY_X()) > 0.1
 						or abs(self.driver1.RIGHT_JOY_Y()) > 0.1
 					):
-                        forward_back *= 0.15
-                        left_right *= 0.15
+                        forward_back *= 0.22
+                        left_right *= 0.22
                         self.robot.drivetrain.go_to_pose_profiled_pid(self.robot.final_lineup_pose, forward_back, left_right, rotate)
                     else:
                         self.robot.drivetrain.go_to_pose_profiled_pid(self.robot.final_lineup_pose)

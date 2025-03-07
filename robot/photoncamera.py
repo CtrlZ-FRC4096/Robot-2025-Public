@@ -49,6 +49,7 @@ class WrapperedPhotonCamera:
         self.cameraDistortVector = const.CAM_DICT[camName][0]
         self.cameraIntrinsMatrix = const.CAM_DICT[camName][1]
 
+        self.camName = camName
         self.timeoutSec = 1.0
         self.poseEstimates = []
         self.robotToCam: Transform3d = robotToCam
@@ -272,6 +273,8 @@ class WrapperedPhotonCamera:
 
                 self.poseSingleTag.append(robot_pose)
                 self.singleTagIDs.append(tgtID)
+
+
 
     def getObsTime(self):
         return self.obsTime

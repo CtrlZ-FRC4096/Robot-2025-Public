@@ -61,8 +61,8 @@ class Drivetrain(Subsystem):
         self.angle_pid.enableContinuousInput(0, 360)
         self.angle_pid.setTolerance(0.5)  # Set position tolerance to 0.5 degrees
 
-        self.x_controller = PIDController(2.0, 0.01, 0.015)
-        self.y_controller = PIDController(2.0, 0.01, 0.015)
+        self.x_controller = PIDController(2.0, 0.01, 0.025)
+        self.y_controller = PIDController(2.0, 0.01, 0.025)
         self.theta_controller = PIDController(0.07, 0.01, 0.0015)
 
 
@@ -176,13 +176,18 @@ class Drivetrain(Subsystem):
         SmartDashboard.putNumber("vy", vy)
         SmartDashboard.putNumber("omega", 0)
 
-    def go_to_pose_profiled_pid_ghost(self, final_target_pose : Translation2d):
+    def go_to_pose_profiled_pid_ghost(self, final_target_pose : Pose2d, feedforward_x=0.0, feedforward_y=0.0, feedfoward_theta=0.0):
         current_pose = self.robot.poseEstimator.curEstPose
 
         # **Dynamically shift the pose based on current position**
-        shift_factor = 0.4  # Adjust this value to control shifting effect
-        shift_x = math.copysign(shift_factor, final_target_pose.X() - current_pose.X())
-        shift_y = math.copysign(shift_factor, final_target_pose.Y() - current_pose.Y())
+        shift_factor = 0.5  # Adjust this value to control shifting effect
+        xy_error = (final_target_pose.translation() - current_pose.translation()).norm()
+        if xy_error < 0.1:
+            shift_factor = 0.0
+
+        face_angle = final_target_pose.rotation() - Rotation2d.fromDegrees(90)
+        shift_x = shift_factor * xy_error * math.cos(face_angle.radians())
+        shift_y = shift_factor * xy_error * math.sin(face_angle.radians())
 
         # Compute **intermediate shifted target**
         dynamic_target = Translation2d(
@@ -191,11 +196,11 @@ class Drivetrain(Subsystem):
         )
 
         # **PID-controlled movement towards dynamic target**
-        vx = self.x_controller.calculate(current_pose.X(), dynamic_target.X())
-        vy = self.y_controller.calculate(current_pose.Y(), dynamic_target.Y())
+        vx = self.x_controller.calculate(current_pose.X(), dynamic_target.X()) + feedforward_x
+        vy = self.y_controller.calculate(current_pose.Y(), dynamic_target.Y()) + feedforward_y
         omega = self.theta_controller.calculate(
             current_pose.rotation().degrees(), final_target_pose.rotation().degrees()
-        )
+        ) + feedfoward_theta
 
         # Check if we reached the setpoint
         if self.x_controller.atSetpoint() and self.y_controller.atSetpoint() and self.theta_controller.atSetpoint():
