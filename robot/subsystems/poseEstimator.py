@@ -209,7 +209,7 @@ class PoseEstimator(Subsystem):
             WrapperedPhotonCamera("camera_1", ROBOT_TO_CAM1),
             WrapperedPhotonCamera("camera_2", ROBOT_TO_CAM2),
             WrapperedPhotonCamera("camera_3", ROBOT_TO_CAM3),
-            # WrapperedPhotonCamera("camera_4", ROBOT_TO_CAM4),
+            WrapperedPhotonCamera("camera_4", ROBOT_TO_CAM4),
         ]
 
         self.poseConverge = True
