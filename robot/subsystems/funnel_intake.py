@@ -44,25 +44,11 @@ class FunnelIntake(Subsystem):
 
         self.intake_motor.configurator.apply(funnel_intake_config)  # type: ignore
 
-        self.canrange_funnel = CANrange(const.FUNNEL_CANRANGE_ID, "rio")
-
         self.piece_passing_through_now = False
         self.piece_passing_through_previous_tick = False
 
-        self.canrange_funnel_config = configs.CANrangeConfiguration()
-        self.canrange_funnel_prox_config = ProximityParamsConfigs()
-        self.canrange_funnel_prox_config.proximity_threshold = 0.09
-        # self.canrange_funnel_prox_config.proximity_hysteresis = 0.0508  # +- 2 inches
-        self.canrange_funnel_config.with_proximity_params(self.canrange_funnel_prox_config)
-
-        self.canrange_funnel.configurator.apply(self.canrange_funnel_config)
-
         self.commanded_speed = 0.0
         self.is_intaking = False
-        deque_length = 2
-        self.piece_detected = deque(maxlen=deque_length)
-        for i in range(deque_length):
-            self.piece_detected.append(False)
 
     def stop(self):
         self.intake_motor.set_control(controls.VelocityTorqueCurrentFOC(0.0))
@@ -76,12 +62,6 @@ class FunnelIntake(Subsystem):
     def periodic(self):
         if self.is_intaking:
             self.intake(70)
-            # self.piece_detected.appendleft(self.canrange_funnel.get_is_detected().value) # automatically pops oldest when over 3
-            # self.piece_passing_through_previous_tick = self.piece_passing_through_now
-            # self.piece_passing_through_now = all(self.piece_detected)
-            # if not self.piece_passing_through_now and self.piece_passing_through_previous_tick:
-            #     self.is_intaking = False
-            #     self.stop()
         elif self.robot.mechanisms_at_default:
             self.piece_passing_through = False
             self.stop()

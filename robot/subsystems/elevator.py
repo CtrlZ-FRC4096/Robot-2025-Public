@@ -25,7 +25,6 @@ class Elevator(Subsystem):
     def __init__(self, robot: "Robot"):
         super().__init__()
         self.robot = robot
-        self.path_generator = PathGenerator(Pose2d(), Pose2d(1,1, Rotation2d(0))) #dummy class to check for obstacles
         self.elevator_motor_1 = hardware.TalonFX(const.ELEVATOR_MOTOR_1_CAN_ID, "rio")
         self.elevator_motor_2 = hardware.TalonFX(const.ELEVATOR_MOTOR_2_CAN_ID, "rio")
 
