@@ -50,8 +50,7 @@ class AutoRoutines:
             self.robot.coroutines.score_piece_1.withTimeout(5.0),
             self.robot.coroutines.reset_robot_after_scoring_1,
             self.robot.followPathCommand("3P_2"),
-            # self.robot.coroutines.intake_coral_1.until(lambda: self.robot.has_coral).withTimeout(3.0), # self.has_coral keeps terminating this early #Remove timeout later,
-            self.robot.coroutines.intake_coral_1, #Remove timeout later,
+            self.robot.coroutines.intake_coral_1,
             self.robot.coroutines.reset_robot_after_intaking_1,
             self.robot.followPathCommand("3P_3"),
             self.robot.coroutines.score_right_branch,
@@ -59,7 +58,6 @@ class AutoRoutines:
             self.robot.coroutines.score_piece_2.withTimeout(5.0),
             self.robot.coroutines.reset_robot_after_scoring_2,
             self.robot.followPathCommand("3P_4"),
-            # self.robot.coroutines.intake_coral_2.until(lambda: self.robot.has_coral).withTimeout(3.0), # self.has_coral keeps terminating this early #Remove timeout later
             self.robot.coroutines.intake_coral_2,
             self.robot.coroutines.reset_robot_after_intaking_2,
             self.robot.followPathCommand("3P_5"),
