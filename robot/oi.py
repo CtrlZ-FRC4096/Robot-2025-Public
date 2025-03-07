@@ -100,15 +100,7 @@ class OI:
         self.tick_count = 0
 
         self.face = 1
-        self.right_branch = True
-        self.running_pid_lineup = False
-        self.final_lineup_pose = Pose2d()
-        self.score_intent = False
-        self.position_on_source = 1
 
-        self.manual_scoring = False
-
-        self.intent_to_auto_drive = False
 
         @self.rumble_button.whenPressed
         def _():
@@ -137,27 +129,27 @@ class OI:
                 rotate = -self.driver1.RIGHT_JOY_X()
 
                 elevator_height_adjustment = -square(self.driver2.RIGHT_JOY_Y()) * const.ELEVATOR_RAISE_SPEED
-                # if (self.manual_scoring or self.score_intent) and (abs(elevator_height_adjustment) > 0.05):
+                # if (self.robot.manual_scoring or self.robot.score_intent) and (abs(elevator_height_adjustment) > 0.05):
                 #     if self.robot.end_effector.get_position() >= RobotScoringPositions.min_end_effector_position_to_move_elevator_up:
                 #         self.robot.elevator.set_elevator_height(self.robot.elevator.get_height() + elevator_height_adjustment) # being overriden in elevator periodic
                 #     else:
                 #         self.robot.end_effector.set_end_effector_position(self.robot.score_state.end_effector_position)
 
                 # Cancel drive with pid if robot is moving manually
-                if (not self.robot.in_autonomous_mode) and (self.intent_to_auto_drive) and not (
+                if (not self.robot.in_autonomous_mode) and (self.robot.intent_to_auto_drive) and not (
                     abs(self.driver1.LEFT_JOY_X()) > 0.05
                     or abs(self.driver1.LEFT_JOY_Y()) > 0.05
                     or abs(self.driver1.RIGHT_JOY_X()) > 0.1
                     or abs(self.driver1.RIGHT_JOY_Y()) > 0.1
                 ):
-                    self.running_pid_lineup = True
-                elif (not self.robot.in_autonomous_mode) and (self.intent_to_auto_drive) and (
+                    self.robot.running_pid_lineup = True
+                elif (not self.robot.in_autonomous_mode) and (self.robot.intent_to_auto_drive) and (
                     abs(self.driver1.LEFT_JOY_X()) > 0.05
                     or abs(self.driver1.LEFT_JOY_Y()) > 0.05
                     or abs(self.driver1.RIGHT_JOY_X()) > 0.1
                     or abs(self.driver1.RIGHT_JOY_Y()) > 0.1
                 ):
-                    self.running_pid_lineup = False
+                    self.robot.running_pid_lineup = False
                     forward_back *= 0.15
                     left_right *= 0.15
                     # # breaking because at the beginning setting final_lineup_pose to cur pose because I was driving at same time
@@ -178,8 +170,8 @@ class OI:
                     self.robot_oriented_angle = (
                         self.robot.poseEstimator.getYaw().degrees()
                     )
-                elif self.running_pid_lineup:
-                    self.robot.drivetrain.go_to_pose_profiled_pid(self.final_lineup_pose)
+                elif self.robot.running_pid_lineup:
+                    self.robot.drivetrain.go_to_pose_profiled_pid(self.robot.final_lineup_pose)
                 else:
                     # if not self.cardinal_directing:
                     #     if self.find_heading:
@@ -207,7 +199,7 @@ class OI:
 
         @self.driver1.X.whenPressed  # Manual elevator raise
         def _():
-            self.manual_scoring = True
+            self.robot.manual_scoring = True
             self.robot.mechanisms_at_default = False
 
         @self.driver1.B.whenHeld # outtake piece
@@ -219,12 +211,12 @@ class OI:
         def _():
             self.robot.score_piece = False
             self.robot.mechanisms_at_default = True
-            self.manual_scoring = False
+            self.robot.manual_scoring = False
 
         @self.driver1.Y.whenHeld
         def _():
             self.robot.mechanisms_at_default = True
-            self.manual_scoring = False
+            self.robot.manual_scoring = False
 
         @self.driver1.Y.whenReleased
         def _():
@@ -254,7 +246,7 @@ class OI:
             self.robot.funnel_intake.is_intaking = True
             self.robot.end_effector.is_intaking = True
             self.robot.at_scoring_position = False
-            self.score_intent = False
+            self.robot.score_intent = False
             self.robot.score_piece = False
 
         @self.driver1.LEFT_BUMPER.whenPressed  # manual end to intake process
@@ -270,19 +262,17 @@ class OI:
             self.robot.score_piece = False
             self.robot.funnel_intake.is_intaking = True
             self.robot.end_effector.is_intaking = True
-            self.running_pid_lineup = True
-            self.intent_to_auto_drive = True
-            self.score_intent = False
-            self.final_lineup_pose = self.robot.poseEstimator.get_path_to_source(self.robot.poseEstimator.calculate_closest_source()[0], self.position_on_source)
+            self.robot.running_pid_lineup = True
+            self.robot.intent_to_auto_drive = True
+            self.robot.score_intent = False
+            self.robot.final_lineup_pose = self.robot.poseEstimator.get_path_to_source(self.robot.poseEstimator.calculate_closest_source()[0], self.robot.position_on_source)
 
         @self.driver1.LEFT_TRIGGER_AS_BUTTON.whenReleased #stop pid
         def _():
             self.robot.mechanisms_at_default = True
-            self.robot.funnel_intake.is_intaking = False
-            self.robot.end_effector.is_intaking = False
-            self.running_pid_lineup = False
-            self.intent_to_auto_drive = False
-            self.score_intent = False
+            self.robot.running_pid_lineup = False
+            self.robot.intent_to_auto_drive = False
+            self.robot.score_intent = False
             self.robot_oriented_angle = self.robot.poseEstimator.getYaw().degrees()
             self.robot.drivetrain.stop()
 
@@ -292,23 +282,23 @@ class OI:
             self.robot.end_effector.is_intaking = False
             self.robot.at_scoring_position = False
             self.robot.score_piece = False
-            self.final_lineup_pose = self.robot.poseEstimator.get_path_to_reef(
+            self.robot.final_lineup_pose = self.robot.poseEstimator.get_path_to_reef(
                 True, # change to true if wanting to use calibrated field
                 self.robot.poseEstimator.calculate_closest_reef_tag()[1],
-                self.right_branch,
+                self.robot.right_branch,
                 do_manip_offset=True,
             )
             self.robot.mechanisms_at_default = False
-            self.running_pid_lineup = True
-            self.intent_to_auto_drive = True
-            self.score_intent = True
+            self.robot.running_pid_lineup = True
+            self.robot.intent_to_auto_drive = True
+            self.robot.score_intent = True
 
         @self.driver1.RIGHT_TRIGGER_AS_BUTTON.whenReleased  # stop profiled PID
         def _():
-            self.intent_to_auto_drive = False
+            self.robot.intent_to_auto_drive = False
             self.robot.mechanisms_at_default = True
-            self.running_pid_lineup = False
-            self.score_intent = False
+            self.robot.running_pid_lineup = False
+            self.robot.score_intent = False
             self.robot.at_scoring_position = False
             self.robot_oriented_angle = self.robot.poseEstimator.getYaw().degrees()
             self.robot.end_effector.stop()
@@ -332,43 +322,37 @@ class OI:
 
         @self.driver2.RIGHT_TRIGGER_AS_BUTTON.whenPressed  # right face
         def _():
-            self.right_branch = True
+            self.robot.right_branch = True
 
         @self.driver2.LEFT_TRIGGER_AS_BUTTON.whenPressed  # left face
         def _():
-            self.right_branch = False
+            self.robot.right_branch = False
 
         @self.driver2.POV.LEFT.whenPressed # position 1 on source
         def _():
-            self.position_on_source = 1
+            self.robot.position_on_source = 1
 
         @self.driver2.POV.UP.whenPressed # position 2 on source
         def _():
-            self.position_on_source = 2
+            self.robot.position_on_source = 2
 
         @self.driver2.POV.RIGHT.whenPressed # position 3 on source
         def _():
-            self.position_on_source = 3
+            self.robot.position_on_source = 3
 
         @self.driver1.BACK.whenPressed
         def _():
             self.robot.mechanisms_at_default = True
-            self.score_intent = False
-            self.manual_scoring = False
-            self.running_pid_lineup = False
+            self.robot.score_intent = False
+            self.robot.manual_scoring = False
+            self.robot.running_pid_lineup = False
             self.robot.funnel_intake.is_intaking = False
             self.robot.end_effector.is_intaking = False
 
 
-        # @self.driver2.POV.DOWN.whenPressed
-        # def _():
-        #     self.robot.mechanisms_at_default = False
-        #     self.robot.elevator.set_elevator_height(56.0)
-
-
     def log(self):
         SmartDashboard.putNumber("robot oriented angle", self.robot_oriented_angle)
-        SmartDashboard.putNumber("position on source", self.position_on_source)
-        SmartDashboard.putBoolean("right branch", self.right_branch)
-        SmartDashboard.putNumber("final lineup x", self.final_lineup_pose.X())
-        SmartDashboard.putNumber("final lineup y", self.final_lineup_pose.Y())
+        SmartDashboard.putNumber("position on source", self.robot.position_on_source)
+        SmartDashboard.putBoolean("right branch", self.robot.right_branch)
+        SmartDashboard.putNumber("final lineup x", self.robot.final_lineup_pose.X())
+        SmartDashboard.putNumber("final lineup y", self.robot.final_lineup_pose.Y())

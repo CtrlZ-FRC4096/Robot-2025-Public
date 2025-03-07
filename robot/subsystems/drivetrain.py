@@ -159,8 +159,8 @@ class Drivetrain(Subsystem):
             and self.y_controller.atSetpoint()
             and self.theta_controller.atSetpoint()
         ):
-            # self.robot.oi.running_pid_lineup = False
-            if self.robot.oi.score_intent and self.robot.oi.running_pid_lineup:
+            # self.robot.running_pid_lineup = False
+            if self.robot.score_intent and self.robot.running_pid_lineup:
                 self.robot.at_scoring_position = True
             # self.stop()
             # Optionally, stop the drivetrain if at setpoint
@@ -199,7 +199,7 @@ class Drivetrain(Subsystem):
 
         # Check if we reached the setpoint
         if self.x_controller.atSetpoint() and self.y_controller.atSetpoint() and self.theta_controller.atSetpoint():
-            if self.robot.oi.score_intent:
+            if self.robot.score_intent:
                 self.robot.at_scoring_position = True
 
         # **Drive towards dynamic pose instead of final target**
@@ -232,8 +232,8 @@ class Drivetrain(Subsystem):
     def periodic(self):
         # if DriverStation.isDisabled():
         #     self.reset_modules_to_absolute()
-        if self.robot.in_autonomous_mode and self.robot.oi.running_pid_lineup:
-            self.robot.drivetrain.go_to_pose_profiled_pid(self.robot.final_lineup_pose_for_auto)
+        if self.robot.in_autonomous_mode and self.robot.running_pid_lineup:
+            self.robot.drivetrain.go_to_pose_profiled_pid(self.robot.final_lineup_pose)
 
     def log(self):
         SmartDashboard.putData("PID Controller for going to reef, x", self.x_controller)

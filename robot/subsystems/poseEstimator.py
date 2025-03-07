@@ -551,7 +551,7 @@ class PoseEstimator(Subsystem):
             self.curEstPoseGlobal = possible_pose_global
         if self.candidate_pose_OK(possible_pose_single_tag):
             self.curEstPoseSingleTag = possible_pose_single_tag
-        if self.robot.oi.running_pid_lineup:
+        if self.robot.running_pid_lineup:
             if not self.useSingleTag():
                 self.curEstPose = self.curEstPoseGlobal
                 self.single_tag = False
@@ -607,7 +607,7 @@ class PoseEstimator(Subsystem):
         SmartDashboard.putNumber("Gyro/Roll", self.gyro.get_roll().value)
 
         SmartDashboard.putData("Field", self.field)
-        self.field.setRobotPose(self.robot.oi.final_lineup_pose)
+        self.field.setRobotPose(self.robot.final_lineup_pose)
         SmartDashboard.putData("Field w/ Single Tag", self.field_for_single_tag)
         self.field_for_single_tag.setRobotPose(
             self.poseEstSingleTag.getEstimatedPosition()
@@ -619,7 +619,7 @@ class PoseEstimator(Subsystem):
             "rotation of target pose: ", self.temp_rotation_check.degrees()
         )
 
-        SmartDashboard.putBoolean("right branch", self.robot.oi.right_branch)
+        SmartDashboard.putBoolean("right branch", self.robot.right_branch)
         SmartDashboard.putNumber("face to path ", self.robot.oi.face)
 
         SmartDashboard.putNumber("skidding ratio", self.get_skidding_ratio())

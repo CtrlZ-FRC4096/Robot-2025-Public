@@ -121,8 +121,6 @@ class Robot(CoroutineRobot):
             self.end_effector
         ]
 
-        self.final_lineup_pose_for_auto = Pose2d()
-
         # If everything in self.subsystems is a Subsystem object, then
         # everything is automatically registered and this isn't needed.
         for subsystem in self.subsystems:
@@ -160,6 +158,16 @@ class Robot(CoroutineRobot):
 
         DataLogManager.start()
         DriverStation.startDataLog(DataLogManager.getLog())
+
+		### STATE MACHINE VARIABLES ###
+        self.running_pid_lineup = False
+        self.intent_to_auto_drive = False
+        self.manual_scoring = False
+        self.position_on_source = 1
+        self.score_intent = False
+        self.final_lineup_pose = Pose2d()
+        self.right_branch = True
+
 
         @self.addPeriodic(period=0.25, offset=0)
         def _():
@@ -226,7 +234,8 @@ class Robot(CoroutineRobot):
         self.funnel_intake.is_intaking = False
         self.end_effector.is_intaking = False
         self.running_pid_lineup = False
-        self.oi.score_intent = False
+        self.intent_to_auto_drive = False
+        self.score_intent = False
         self.in_autonomous_mode = False
 
         while True:
@@ -247,7 +256,7 @@ class Robot(CoroutineRobot):
         wpilib.SmartDashboard.putBoolean("Score piece", self.score_piece)
         wpilib.SmartDashboard.putBoolean("Mechanisms at default", self.mechanisms_at_default)
         wpilib.SmartDashboard.putBoolean("At scoring position", self.at_scoring_position)
-        wpilib.SmartDashboard.putBoolean("OI Score Intent", self.oi.score_intent)
+        wpilib.SmartDashboard.putBoolean("OI Score Intent", self.score_intent)
         wpilib.SmartDashboard.putBoolean("Has Coral", self.has_coral)
 
         for s in self.subsystems:

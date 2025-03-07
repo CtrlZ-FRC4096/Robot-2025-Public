@@ -108,11 +108,11 @@ class Elevator(Subsystem):
         ## If limit switch is hit,
             ## Stop the motors and set the position to 0 or the maximum height
             ## Hopefully this prevents the elevator from breaking
-        if self.robot.oi.score_intent:
+        if self.robot.score_intent:
             """
             TODO: We need to make sure that this if statement logic is correct.
             """
-            if (self.robot.poseEstimator.curEstPose.translation() - self.robot.oi.final_lineup_pose.translation()).norm() < RobotScoringPositions.elevator_raise_threshold:
+            if (self.robot.poseEstimator.curEstPose.translation() - self.robot.final_lineup_pose.translation()).norm() < RobotScoringPositions.elevator_raise_threshold:
                 # if we are close to the scoring position and there are no obstacles, begin raising the elevator
                 self.in_proximity_to_begin_raising_elevator = True # just for logging purposes
 
@@ -121,7 +121,7 @@ class Elevator(Subsystem):
                     self.set_elevator_height(self.robot.score_state.elevator_height) # raise elevator to scoring height
             else:
                 self.in_proximity_to_begin_raising_elevator = False
-        elif self.robot.oi.manual_scoring:
+        elif self.robot.manual_scoring:
             """
             If the global position is not accurate, we switch to manual scoring. This is a safety feature.
             """
@@ -146,8 +146,8 @@ class Elevator(Subsystem):
         SmartDashboard.putNumber("elevator height encoder", self.height_encoder.get())
 
         # logging variables elevator checks before autonomously scoring
-        within_2_meters = (self.robot.poseEstimator.curEstPose.translation() - self.robot.oi.final_lineup_pose.translation()).norm() < 2
-        # path_clear = not (self.path_generator.obstacleBetween(self.robot.poseEstimator.curEstPose, self.robot.oi.final_lineup_pose))
+        within_2_meters = (self.robot.poseEstimator.curEstPose.translation() - self.robot.final_lineup_pose.translation()).norm() < 2
+        # path_clear = not (self.path_generator.obstacleBetween(self.robot.poseEstimator.curEstPose, self.robot.final_lineup_pose))
         SmartDashboard.putBoolean("in proximity to begin raising elevator", within_2_meters)
         # SmartDashboard.putBoolean("obstacle in between", path_clear)
         # SmartDashboard.putBoolean("both elevator autonomously rainsing conditions met", within_2_meters and path_clear)
