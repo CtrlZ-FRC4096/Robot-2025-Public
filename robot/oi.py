@@ -346,6 +346,33 @@ class OI:
             self.robot.end_effector.is_intaking = False
             self.robot.drivetrain.turn_wheels_to_x()
 
+        @self.driver2.LEFT_BUMPER.whenHeld # descore algae
+        def _():
+            self.robot.mechanisms_at_default = False
+            self.robot.score_intent = False
+            self.robot.manual_scoring = False
+            self.robot.running_pid_lineup = False
+            self.robot.funnel_intake.is_intaking = False
+            self.robot.end_effector.is_intaking = False
+            self.robot.manual_scoring = True
+            self.robot.score_piece = True
+
+            self.robot.score_state = RobotScoringPositions.Descore_Algae
+        
+        @self.driver2.LEFT_BUMPER.whenReleased
+        def _():
+            self.robot.mechanisms_at_default = True
+            self.robot.score_intent = False
+            self.robot.manual_scoring = False
+            self.robot.running_pid_lineup = False
+            self.robot.funnel_intake.is_intaking = False
+            self.robot.end_effector.is_intaking = False
+            self.robot.manual_scoring = False
+            self.robot.score_piece = False
+
+            self.robot.score_state = RobotScoringPositions.L4_Scoring
+            
+
 
     def log(self):
         SmartDashboard.putNumber("robot oriented angle", self.robot_oriented_angle)

@@ -25,3 +25,8 @@ class RobotScoringPositions:
 		end_effector_outtake_speed = 42.0
 		end_effector_position = 10.0
 		number = 4
+	class Descore_Algae:
+		elevator_height = 43.5
+		end_effector_outtake_speed = 40
+		end_effector_position = 8.5
+		number = 5
