@@ -151,7 +151,7 @@ class Robot(CoroutineRobot):
         self.remote_shell = RemoteShell(self)
 
         self.autoroutines = autoroutines.AutoRoutines(self)
-
+        self.auto = self.autoroutines.three_piece_auto()
 
         DataLogManager.start()
         DriverStation.startDataLog(DataLogManager.getLog())
@@ -220,7 +220,7 @@ class Robot(CoroutineRobot):
         self.scheduler.cancelAll()
         self.in_autonomous_mode = True
 
-        self.scheduler.schedule(self.autoroutines.three_piece_auto())
+        self.scheduler.schedule(self.auto)
 
     ### TELEOPERATED ###
     def teleop_mode(self):
