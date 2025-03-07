@@ -260,12 +260,15 @@ class OI:
             self.robot.end_effector.is_intaking = False
             self.robot.at_scoring_position = False
             self.robot.score_piece = False
-            self.robot.final_lineup_pose = self.robot.poseEstimator.get_path_to_reef(
-                True, # change to true if wanting to use calibrated field
-                self.robot.poseEstimator.calculate_closest_reef_tag()[1],
-                self.robot.right_branch,
-                do_manip_offset=True,
-            )
+            if self.robot.score_state.number == 1:
+                self.robot.final_lineup_pose = self.robot.poseEstimator.get_path_to_closest_L1()
+            else:
+                self.robot.final_lineup_pose = self.robot.poseEstimator.get_path_to_reef(
+                    True, # change to true if wanting to use calibrated field
+                    self.robot.poseEstimator.calculate_closest_reef_tag()[1],
+                    self.robot.right_branch,
+                    do_manip_offset=True,
+                )
             self.robot.mechanisms_at_default = False
             self.robot.running_pid_lineup = True
             self.robot.score_intent = True
