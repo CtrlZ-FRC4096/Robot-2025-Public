@@ -223,7 +223,10 @@ class PoseEstimator(Subsystem):
         self.single_tag = False
         self.possible_pose_gbl = Pose2d()
 
-        print(FieldConstants.Reef.centerFaces)
+        # for face in [1,5]:
+        #     for side in range(2):
+        #         object = self.field.getObject("l1 score " + str(face) + " " + ("right side" if side else "left side"))
+        #         object.setPose(self.get_path_to_L1(face, side))
 
     def stop(self):
         print("sike this aint stoppin")
@@ -331,7 +334,35 @@ class PoseEstimator(Subsystem):
         else:
             return True
 
-    def calculate_closest_reef_tag(self):
+    def get_path_to_closest_L1(self):
+        closest_face = self.calculate_closest_reef_tag()[1]
+        L1_score_right_side = self.get_path_to_L1(closest_face, True)
+        L1_score_left_side = self.get_path_to_L1(closest_face, False)
+
+        dist_to_L1_right_side = (self.curEstPose.translation() - L1_score_right_side.translation()).norm()
+        dist_to_L1_left_side = (self.curEstPose.translation() - L1_score_left_side.translation()).norm()
+
+        if dist_to_L1_left_side < dist_to_L1_right_side:
+            # left side is closer
+            return L1_score_left_side
+        else:
+            # right side is closer
+            return L1_score_right_side
+
+    def get_path_to_L1(self, face_to_score : int, right_side : bool):
+        target_face = (face_to_score - 1) % 6 if right_side else (face_to_score + 1) % 6
+        target_translation = self.get_path_to_reef(False, target_face, not right_side, margin_dist_offset=8.625, do_side_offset=True, do_manip_offset=False).translation()
+        face_angle = FieldConstants.flip_Rotation2d(FieldConstants.Reef.centerFaces[target_face - 1].rotation())
+        target_angle = Rotation2d()
+        if right_side:
+            target_angle = face_angle + Rotation2d.fromDegrees(-14 - 65)
+        else:
+            target_angle = face_angle + Rotation2d.fromDegrees(194 + 65)
+        target_pose = Pose2d(target_translation, target_angle)
+        return target_pose
+
+
+    def calculate_closest_reef_tag(self):   
         min_distance_to_tag = math.inf
         closest_reef_tag = None
         for tagID in FieldConstants.reef_tags:
