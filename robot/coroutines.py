@@ -28,9 +28,13 @@ class Coroutines:
         @commandify
         def reset_robot_after_scoring_1():
             yield
+            robot.score_piece = True
+            yield from robot.wait(0.25)
             robot.mechanisms_at_default = True
+            robot.score_piece = False
             robot.running_pid_lineup = False
             robot.score_intent = False
+            robot.score_piece = False
             robot.at_scoring_position = False
             robot.oi.robot_oriented_angle = robot.poseEstimator.getYaw().degrees()
             robot.end_effector.stop()
@@ -40,7 +44,10 @@ class Coroutines:
         @commandify
         def reset_robot_after_scoring_2():
             yield
+            robot.score_piece = True
+            yield from robot.wait(0.25)
             robot.mechanisms_at_default = True
+            robot.score_piece = False
             robot.running_pid_lineup = False
             robot.score_intent = False
             robot.at_scoring_position = False
@@ -52,7 +59,10 @@ class Coroutines:
         @commandify
         def reset_robot_after_scoring_3():
             yield
+            robot.score_piece = True
+            yield from robot.wait(0.25)
             robot.mechanisms_at_default = True
+            robot.score_piece = False
             robot.running_pid_lineup = False
             robot.score_intent = False
             robot.at_scoring_position = False
@@ -108,7 +118,6 @@ class Coroutines:
             )
             robot.mechanisms_at_default = False
             robot.running_pid_lineup = True
-            robot.intent_to_auto_drive = True
             robot.score_intent = True
             while robot.has_coral:
                 yield
@@ -128,7 +137,6 @@ class Coroutines:
             )
             robot.mechanisms_at_default = False
             robot.running_pid_lineup = True
-            robot.intent_to_auto_drive = True
             robot.score_intent = True
             while robot.has_coral:
                 yield
@@ -148,7 +156,6 @@ class Coroutines:
             )
             robot.mechanisms_at_default = False
             robot.running_pid_lineup = True
-            robot.intent_to_auto_drive = True
             robot.score_intent = True
             while robot.has_coral:
                 yield
@@ -252,7 +259,6 @@ class Coroutines:
             robot.funnel_intake.is_intaking = True
             robot.end_effector.is_intaking = True
             robot.running_pid_lineup = True
-            robot.intent_to_auto_drive = True
             robot.score_intent = False
             while not robot.has_coral:
                 yield
@@ -267,7 +273,6 @@ class Coroutines:
             robot.funnel_intake.is_intaking = True
             robot.end_effector.is_intaking = True
             robot.running_pid_lineup = True
-            robot.intent_to_auto_drive = True
             robot.score_intent = False
             while not robot.has_coral:
                 yield
@@ -282,7 +287,6 @@ class Coroutines:
             robot.end_effector.is_intaking = False
             robot.mechanisms_at_default = True
             robot.running_pid_lineup = False
-            robot.intent_to_auto_drive = False
             robot.score_intent = False
             robot.oi.robot_oriented_angle = robot.poseEstimator.getYaw().degrees()
             robot.drivetrain.stop()
@@ -295,7 +299,6 @@ class Coroutines:
             robot.end_effector.is_intaking = False
             robot.mechanisms_at_default = True
             robot.running_pid_lineup = False
-            robot.intent_to_auto_drive = False
             robot.score_intent = False
             robot.oi.robot_oriented_angle = robot.poseEstimator.getYaw().degrees()
             robot.drivetrain.stop()

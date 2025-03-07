@@ -161,7 +161,6 @@ class Robot(CoroutineRobot):
 
 		### STATE MACHINE VARIABLES ###
         self.running_pid_lineup = False
-        self.intent_to_auto_drive = False
         self.manual_scoring = False
         self.position_on_source = 1
         self.score_intent = False
@@ -234,7 +233,6 @@ class Robot(CoroutineRobot):
         self.funnel_intake.is_intaking = False
         self.end_effector.is_intaking = False
         self.running_pid_lineup = False
-        self.intent_to_auto_drive = False
         self.score_intent = False
         self.in_autonomous_mode = False
 

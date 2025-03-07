@@ -135,26 +135,6 @@ class OI:
                 #     else:
                 #         self.robot.end_effector.set_end_effector_position(self.robot.score_state.end_effector_position)
 
-                # Cancel drive with pid if robot is moving manually
-                if (not self.robot.in_autonomous_mode) and (self.robot.intent_to_auto_drive) and not (
-                    abs(self.driver1.LEFT_JOY_X()) > 0.05
-                    or abs(self.driver1.LEFT_JOY_Y()) > 0.05
-                    or abs(self.driver1.RIGHT_JOY_X()) > 0.1
-                    or abs(self.driver1.RIGHT_JOY_Y()) > 0.1
-                ):
-                    self.robot.running_pid_lineup = True
-                elif (not self.robot.in_autonomous_mode) and (self.robot.intent_to_auto_drive) and (
-                    abs(self.driver1.LEFT_JOY_X()) > 0.05
-                    or abs(self.driver1.LEFT_JOY_Y()) > 0.05
-                    or abs(self.driver1.RIGHT_JOY_X()) > 0.1
-                    or abs(self.driver1.RIGHT_JOY_Y()) > 0.1
-                ):
-                    self.robot.running_pid_lineup = False
-                    forward_back *= 0.15
-                    left_right *= 0.15
-                    # # breaking because at the beginning setting final_lineup_pose to cur pose because I was driving at same time
-
-
                 if abs(rotate) >= 0.02:
                     self.cardinal_directing = False
                     self.find_heading = True
@@ -171,7 +151,18 @@ class OI:
                         self.robot.poseEstimator.getYaw().degrees()
                     )
                 elif self.robot.running_pid_lineup:
-                    self.robot.drivetrain.go_to_pose_profiled_pid(self.robot.final_lineup_pose)
+                    # Cancel drive with pid if robot is moving manually
+                    if (
+						abs(self.driver1.LEFT_JOY_X()) > 0.05
+						or abs(self.driver1.LEFT_JOY_Y()) > 0.05
+						or abs(self.driver1.RIGHT_JOY_X()) > 0.1
+						or abs(self.driver1.RIGHT_JOY_Y()) > 0.1
+					):
+                        forward_back *= 0.15
+                        left_right *= 0.15
+                        self.robot.drivetrain.go_to_pose_profiled_pid(self.robot.final_lineup_pose, forward_back, left_right, rotate)
+                    else:
+                        self.robot.drivetrain.go_to_pose_profiled_pid(self.robot.final_lineup_pose)
                 else:
                     # if not self.cardinal_directing:
                     #     if self.find_heading:
@@ -201,17 +192,6 @@ class OI:
         def _():
             self.robot.manual_scoring = True
             self.robot.mechanisms_at_default = False
-
-        @self.driver1.B.whenHeld # outtake piece
-        def _():
-            self.robot.mechanisms_at_default = False
-            self.robot.score_piece = True
-
-        @self.driver1.B.whenReleased
-        def _():
-            self.robot.score_piece = False
-            self.robot.mechanisms_at_default = True
-            self.robot.manual_scoring = False
 
         @self.driver1.Y.whenHeld
         def _():
@@ -263,7 +243,6 @@ class OI:
             self.robot.funnel_intake.is_intaking = True
             self.robot.end_effector.is_intaking = True
             self.robot.running_pid_lineup = True
-            self.robot.intent_to_auto_drive = True
             self.robot.score_intent = False
             self.robot.final_lineup_pose = self.robot.poseEstimator.get_path_to_source(self.robot.poseEstimator.calculate_closest_source()[0], self.robot.position_on_source)
 
@@ -271,7 +250,6 @@ class OI:
         def _():
             self.robot.mechanisms_at_default = True
             self.robot.running_pid_lineup = False
-            self.robot.intent_to_auto_drive = False
             self.robot.score_intent = False
             self.robot_oriented_angle = self.robot.poseEstimator.getYaw().degrees()
             self.robot.drivetrain.stop()
@@ -290,12 +268,10 @@ class OI:
             )
             self.robot.mechanisms_at_default = False
             self.robot.running_pid_lineup = True
-            self.robot.intent_to_auto_drive = True
             self.robot.score_intent = True
 
         @self.driver1.RIGHT_TRIGGER_AS_BUTTON.whenReleased  # stop profiled PID
         def _():
-            self.robot.intent_to_auto_drive = False
             self.robot.mechanisms_at_default = True
             self.robot.running_pid_lineup = False
             self.robot.score_intent = False
@@ -339,6 +315,17 @@ class OI:
         @self.driver2.POV.RIGHT.whenPressed # position 3 on source
         def _():
             self.robot.position_on_source = 3
+
+        @self.driver2.POV.DOWN.whenHeld # outtake piece
+        def _():
+            self.robot.mechanisms_at_default = False
+            self.robot.score_piece = True
+
+        @self.driver2.POV.DOWN.whenReleased
+        def _():
+            self.robot.score_piece = False
+            self.robot.mechanisms_at_default = True
+            self.robot.manual_scoring = False
 
         @self.driver1.BACK.whenPressed
         def _():

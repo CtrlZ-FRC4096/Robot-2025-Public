@@ -141,16 +141,16 @@ class Drivetrain(Subsystem):
             # print(module_states[idx].speed)
             module.set_desired_state(module_states[idx], is_open_loop=False)
 
-    def go_to_pose_profiled_pid(self, target_pose : Translation2d):
+    def go_to_pose_profiled_pid(self, target_pose : Translation2d, feedforward_x=0.0, feedforward_y=0.0, feedfoward_theta=0.0):
 
         current_pose = self.robot.poseEstimator.curEstPose
 
         # Calculate the control outputs
-        vx = self.x_controller.calculate(current_pose.X(), target_pose.X()) # meters / 0.05 seconds
-        vy = self.y_controller.calculate(current_pose.Y(), target_pose.Y())
+        vx = self.x_controller.calculate(current_pose.X(), target_pose.X()) + feedforward_x # meters / 0.05 seconds
+        vy = self.y_controller.calculate(current_pose.Y(), target_pose.Y()) + feedforward_y
         omega = self.theta_controller.calculate(
             current_pose.rotation().degrees(), target_pose.rotation().degrees()
-        )
+        ) + feedfoward_theta
 
 
         # Check if the controllers are at their setpoints
