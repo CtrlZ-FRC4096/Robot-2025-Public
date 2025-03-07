@@ -99,6 +99,15 @@ class EndEffector(Subsystem):
         self.outtake_motor_config.open_loop_ramps.voltage_open_loop_ramp_period = 0.02
         self.outtake_motor.configurator.apply(self.outtake_motor_config)
 
+
+        self.end_effector_reef_alignment_can_range = CANrange(const.END_EFFECTOR_REEF_ALIGNMENT_CANRANGE, "rio")
+        self.end_effector_reef_alignment_can_range_config = configs.CANrangeConfiguration()
+        self.end_effector_reef_alignment_can_range_prox_config = ProximityParamsConfigs()
+        self.end_effector_reef_alignment_can_range_prox_config.proximity_threshold = 0.08
+        self.canrange_end_effector_config.with_proximity_params(self.canrange_end_effector_prox_config)
+
+        self.canrange_end_effector.configurator.apply(self.canrange_end_effector_config)
+
         self.set_end_effector_position(RobotScoringPositions.end_effector_travel_position)
 
         self.is_intaking = False
@@ -143,6 +152,9 @@ class EndEffector(Subsystem):
 
     def has_coral(self):
         return self.canrange_end_effector.get_is_detected().value
+    
+    def lined_up_with_reef(self):
+        return self.end_effector_reef_alignment_can_range.get_is_detected().value
 
     def periodic(self):
         if self.robot.score_piece or (self.robot.at_scoring_position and abs(self.robot.score_state.elevator_height-self.robot.elevator.get_height()) <= 0.2): # manual vs automated
