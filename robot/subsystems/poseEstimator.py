@@ -148,9 +148,9 @@ class PoseEstimator(Subsystem):
             const.SWERVE_KINEMATICS, self.getYaw(), self.get_module_positions()  # type: ignore
         )
 
-        self.curEstPose = Pose2d(0, 0, self.getYaw())
-        self.curEstPoseSingleTag = Pose2d(0, 0, self.getYaw())
-        self.curEstPoseGlobal = Pose2d(0, 0, self.getYaw())
+        self.curEstPose = Pose2d(7.170, 3.033, self.getYaw())
+        self.curEstPoseSingleTag = Pose2d(7.170, 3.033, self.getYaw())
+        self.curEstPoseGlobal = Pose2d(7.170, 3.033, self.getYaw())
         # self.lastPeriodicEstPose = self.curEstPose
 
         self.poseEst = SwerveDrive4PoseEstimator(
