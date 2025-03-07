@@ -335,6 +335,16 @@ class OI:
             self.robot.running_pid_lineup = False
             self.robot.funnel_intake.is_intaking = False
             self.robot.end_effector.is_intaking = False
+        
+        @self.driver2.BACK.whenPressed
+        def _():
+            self.robot.mechanisms_at_default = True
+            self.robot.score_intent = False
+            self.robot.manual_scoring = False
+            self.robot.running_pid_lineup = False
+            self.robot.funnel_intake.is_intaking = False
+            self.robot.end_effector.is_intaking = False
+            self.robot.drivetrain.turn_wheels_to_x()
 
 
     def log(self):
