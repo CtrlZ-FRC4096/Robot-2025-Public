@@ -348,6 +348,10 @@ class OI:
             self.robot.funnel_intake.is_intaking = False
             self.robot.end_effector.is_intaking = False
             self.robot.drivetrain.turn_wheels_to_x()
+        
+        @self.driver2.RIGHT_TRIGGER_AS_BUTTON.whenPressed # ignore 
+        def _():
+            self.robot.end_effector_canrange_for_reef_returning_bad_values = not self.robot.end_effector_canrange_for_reef_returning_bad_values
 
         @self.driver2.LEFT_BUMPER.whenHeld # descore algae
         def _():

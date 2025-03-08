@@ -155,6 +155,8 @@ class EndEffector(Subsystem):
     
     def lined_up_with_reef(self):
         # once we get function working use this piece in EE periodic: (self.lined_up_with_reef() and (self.robot.manual_scoring or self.robot.score_intent)) or 
+        if self.robot.end_effector_canrange_for_reef_returning_bad_values:
+            return False
         return self.end_effector_reef_alignment_can_range.get_is_detected().value
 
     def periodic(self):

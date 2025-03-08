@@ -163,6 +163,7 @@ class Robot(CoroutineRobot):
         self.score_intent = False
         self.final_lineup_pose = Pose2d()
         self.right_branch = True
+        self.end_effector_canrange_for_reef_returning_bad_values = False
 
 
         @self.addPeriodic(period=0.25, offset=0)
