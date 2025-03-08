@@ -308,4 +308,65 @@ class Coroutines:
         self.reset_robot_after_intaking_2 = (reset_robot_after_intaking_2)
 
 
+        @commandify
+        def score_3_piece_auto_no_closest_tag_1():
+            yield
+            robot.funnel_intake.is_intaking = False
+            robot.end_effector.is_intaking = False
+            robot.at_scoring_position = False
+            robot.score_piece = False
+            robot.final_lineup_pose = robot.poseEstimator.get_path_to_reef(
+                True,
+                4,
+            	robot.right_branch,
+                do_manip_offset=True
+            )
+            robot.mechanisms_at_default = False
+            robot.running_pid_lineup = True
+            robot.score_intent = True
+            while robot.has_coral:
+                yield
+
+        @commandify
+        def score_3_piece_auto_no_closest_tag_2():
+            yield
+            robot.funnel_intake.is_intaking = False
+            robot.end_effector.is_intaking = False
+            robot.at_scoring_position = False
+            robot.score_piece = False
+            robot.final_lineup_pose = robot.poseEstimator.get_path_to_reef(
+                True,
+                6,
+            	robot.right_branch,
+                do_manip_offset=True
+            )
+            robot.mechanisms_at_default = False
+            robot.running_pid_lineup = True
+            robot.score_intent = True
+            while robot.has_coral:
+                yield
+        @commandify
+        def score_3_piece_auto_no_closest_tag_3():
+            yield
+            robot.funnel_intake.is_intaking = False
+            robot.end_effector.is_intaking = False
+            robot.at_scoring_position = False
+            robot.score_piece = False
+            robot.final_lineup_pose = robot.poseEstimator.get_path_to_reef(
+                True,
+                6,
+            	robot.right_branch,
+                do_manip_offset=True
+            )
+            robot.mechanisms_at_default = False
+            robot.running_pid_lineup = True
+            robot.score_intent = True
+            while robot.has_coral:
+                yield
+        
+
+        self.score_3_piece_auto_no_closest_tag_1 = (score_3_piece_auto_no_closest_tag_1)
+        self.score_3_piece_auto_no_closest_tag_2 = (score_3_piece_auto_no_closest_tag_2)
+        self.score_3_piece_auto_no_closest_tag_3 = (score_3_piece_auto_no_closest_tag_3)
+
 
