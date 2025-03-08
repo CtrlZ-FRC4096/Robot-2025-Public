@@ -364,7 +364,7 @@ class OI:
             self.robot.manual_scoring = True
             self.robot.score_piece = True
 
-            self.robot.score_state = RobotScoringPositions.Descore_Algae
+            self.robot.score_state = RobotScoringPositions.Descore_Algae_L2 # need to change to be dynamic
         
         @self.driver2.LEFT_BUMPER.whenReleased
         def _():
