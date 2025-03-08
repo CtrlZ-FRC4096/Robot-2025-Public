@@ -148,9 +148,9 @@ class PoseEstimator(Subsystem):
             const.SWERVE_KINEMATICS, self.getYaw(), self.get_module_positions()  # type: ignore
         )
 
-        self.curEstPose = Pose2d(7.170, 3.033, self.getYaw())
-        self.curEstPoseSingleTag = Pose2d(7.170, 3.033, self.getYaw())
-        self.curEstPoseGlobal = Pose2d(7.170, 3.033, self.getYaw())
+        self.curEstPose = Pose2d(7.170, 3.033, self.getYaw()) if not FieldConstants.shouldFlip else FieldConstants.flip_Pose2d(Pose2d(7.170, 3.033, self.getYaw()))
+        self.curEstPoseSingleTag = Pose2d(7.170, 3.033, self.getYaw()) if not FieldConstants.shouldFlip else FieldConstants.flip_Pose2d(Pose2d(7.170, 3.033, self.getYaw()))
+        self.curEstPoseGlobal = Pose2d(7.170, 3.033, self.getYaw()) if not FieldConstants.shouldFlip else FieldConstants.flip_Pose2d(Pose2d(7.170, 3.033, self.getYaw()))
         # self.lastPeriodicEstPose = self.curEstPose
 
         self.poseEst = SwerveDrive4PoseEstimator(
@@ -209,7 +209,7 @@ class PoseEstimator(Subsystem):
             WrapperedPhotonCamera("camera_1", ROBOT_TO_CAM1),
             WrapperedPhotonCamera("camera_2", ROBOT_TO_CAM2),
             WrapperedPhotonCamera("camera_3", ROBOT_TO_CAM3),
-            WrapperedPhotonCamera("camera_4", ROBOT_TO_CAM4),
+            # WrapperedPhotonCamera("camera_4", ROBOT_TO_CAM4),
         ]
 
         self.poseConverge = True

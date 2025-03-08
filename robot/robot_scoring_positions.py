@@ -5,6 +5,7 @@ class RobotScoringPositions:
 	end_effector_intake_position = 0.0
 	min_elevator_height_to_bring_in_end_effector = 4.0
 	min_end_effector_position_to_move_elevator_up = 7.5
+	dangerous_tip_angle = 15.0
 	class L1_Scoring:
 		elevator_height = 7.18
 		end_effector_outtake_speed = 20

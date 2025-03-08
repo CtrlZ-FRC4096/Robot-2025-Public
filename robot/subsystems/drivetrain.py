@@ -51,7 +51,7 @@ from pathplannerlib.path import PathPlannerPath, PathConstraints
 from wpimath.estimator import SwerveDrive4PoseEstimator
 from photoncamera import WrapperedPhotonCamera
 from wpimath.units import degreesToRadians, inchesToMeters
-
+from robot_scoring_positions import RobotScoringPositions
 
 class Drivetrain(Subsystem):
     def __init__(self, robot: "Robot"):
@@ -259,7 +259,7 @@ class Drivetrain(Subsystem):
             self.robot.drivetrain.go_to_pose_profiled_pid(self.robot.final_lineup_pose)
 
         # bring elevator down if pitch | roll is greater than 10 degrees
-        if self.robot.poseEstimator.gyro.get_pitch().value > 10 or self.robot.poseEstimator.gyro.get_roll().value > 10:
+        if self.robot.poseEstimator.gyro.get_pitch().value > RobotScoringPositions.dangerous_tip_angle or self.robot.poseEstimator.gyro.get_roll().value > RobotScoringPositions.dangerous_tip_angle:
             self.robot.mechanisms_at_default = True
             self.robot.running_pid_lineup = False
             self.robot.funnel_intake.is_intaking = False
