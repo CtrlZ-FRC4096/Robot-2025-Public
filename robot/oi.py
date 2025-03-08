@@ -364,7 +364,11 @@ class OI:
             self.robot.manual_scoring = True
             self.robot.score_piece = True
 
-            self.robot.score_state = RobotScoringPositions.Descore_Algae_L2 # TODO: need to change to be dynamic
+            algae_height_at_closest_side = self.robot.poseEstimator.calculate_algae_height_at_closest_side()
+            if algae_height_at_closest_side == 3:
+                self.robot.score_state = RobotScoringPositions.Descore_Algae_L3
+            elif algae_height_at_closest_side == 2:
+                self.robot.score_state = RobotScoringPositions.Descore_Algae_L2 # TODO: need to change to be dynamic
         
         @self.driver2.LEFT_BUMPER.whenReleased
         def _():
