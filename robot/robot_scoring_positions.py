@@ -7,8 +7,8 @@ class RobotScoringPositions:
 	min_end_effector_position_to_move_elevator_up = 7.5
 	dangerous_tip_angle = 15.0
 	class L1_Scoring:
-		elevator_height = 7.18
-		end_effector_outtake_speed = 20
+		elevator_height = 15.0
+		end_effector_outtake_speed = 15
 		end_effector_position = 10.0
 		number = 1
 	class L2_Scoring:
@@ -27,12 +27,12 @@ class RobotScoringPositions:
 		end_effector_position = 10.0
 		number = 4
 	class Descore_Algae_L3:
-		elevator_height = 43.5
+		elevator_height = 37.5
 		end_effector_outtake_speed = 40
 		end_effector_position = 8.5
 		number = 6
 	class Descore_Algae_L2:
-		elevator_height = 27.5
+		elevator_height = 20.0
 		end_effector_outtake_speed = 40
 		end_effector_position = 8.5
 		number = 5

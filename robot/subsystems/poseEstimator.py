@@ -189,7 +189,7 @@ class PoseEstimator(Subsystem):
 
         # # Update with positionon robot
         ROBOT_TO_CAM3 = Transform3d(
-            Translation3d(0.359, 0.289, 0.432),  # X  # Y (0.282 need to change on robot)  # Z
+            Translation3d(0.3335, 0.282, 0.432),  # X  # Y (0.282 need to change on robot)  # Z
             Rotation3d(
                 0.0, 0.0, np.deg2rad(-105.0)
             ),  # Roll  # Pitch  # Yaw
@@ -209,7 +209,7 @@ class PoseEstimator(Subsystem):
             WrapperedPhotonCamera("camera_1", ROBOT_TO_CAM1),
             WrapperedPhotonCamera("camera_2", ROBOT_TO_CAM2),
             WrapperedPhotonCamera("camera_3", ROBOT_TO_CAM3),
-            # WrapperedPhotonCamera("camera_4", ROBOT_TO_CAM4),
+            WrapperedPhotonCamera("camera_4", ROBOT_TO_CAM4),
         ]
 
         self.poseConverge = True
@@ -362,12 +362,12 @@ class PoseEstimator(Subsystem):
         return target_pose
 
 
-    def calculate_closest_reef_tag(self):   
+    def calculate_closest_reef_tag(self):
         min_distance_to_tag = math.inf
         closest_reef_tag = None
         for tagID in FieldConstants.reef_tags:
             tag_pose = self.tag_layout.getTagPose(tagID).toPose2d()
-            distance = (self.curEstPoseGlobal - tag_pose).translation().norm()
+            distance = (self.curEstPose - tag_pose).translation().norm()
             if distance < min_distance_to_tag:
                 min_distance_to_tag = distance
                 closest_reef_tag = tagID
@@ -496,7 +496,7 @@ class PoseEstimator(Subsystem):
 
     def calculate_algae_height_at_closest_side(self):
         closest_face = self.calculate_closest_reef_tag()[1]
-        return (closest_face % 2) + 2
+        return (closest_face % 2) + 2 # CHANGE THIS BACK TO + 2
 
     def periodic(self):
         allianceColor = DriverStation.getAlliance()

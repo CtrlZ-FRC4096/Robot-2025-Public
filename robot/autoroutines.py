@@ -31,6 +31,12 @@ class AutoRoutines:
     def __init__(self, robot: "Robot"):
         self.robot = robot
 
+        self.p_1 = self.robot.followPathCommand("3P_1")
+        self.p_2 = self.robot.followPathCommand("3P_2")
+        self.p_3 = self.robot.followPathCommand("3P_3")
+        self.p_4 = self.robot.followPathCommand("3P_4")
+        self.p_5 = self.robot.followPathCommand("3P_5")
+
     def three_piece_no_pathplanner(self):
         return SequentialCommandGroup(
             # self.robot.followPathCommand("3P_1"),
@@ -69,29 +75,29 @@ class AutoRoutines:
 
     def three_piece_auto(self):
         return SequentialCommandGroup(
-            self.robot.followPathCommand("3P_1"),
+            self.p_1,
             self.robot.coroutines.score_left_branch_1,
             self.robot.coroutines.score_L4_1,
             self.robot.coroutines.score_piece_1.withTimeout(5.0),
             self.robot.coroutines.reset_robot_after_scoring_1,
-            self.robot.followPathCommand("3P_2"),
+            self.p_2,
             self.robot.coroutines.intake_coral_1,
             self.robot.coroutines.reset_robot_after_intaking_1,
-            self.robot.followPathCommand("3P_3"),
+            self.p_3,
             self.robot.coroutines.score_right_branch,
             self.robot.coroutines.score_L4_2,
             self.robot.coroutines.score_piece_2.withTimeout(5.0),
             self.robot.coroutines.reset_robot_after_scoring_2,
-            self.robot.followPathCommand("3P_4"),
+            self.p_4,
             self.robot.coroutines.intake_coral_2,
             self.robot.coroutines.reset_robot_after_intaking_2,
-            self.robot.followPathCommand("3P_5"),
+            self.p_5,
             self.robot.coroutines.score_left_branch_2,
             self.robot.coroutines.score_L4_3,
             self.robot.coroutines.score_piece_3.withTimeout(5.0),
             self.robot.coroutines.reset_robot_after_scoring_3,
         )
-    
+
     def tush_push_auto(self):
         return SequentialCommandGroup(
             self.robot.followPathCommand("tp_1"),

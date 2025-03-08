@@ -71,7 +71,6 @@ class Coroutines:
             robot.drivetrain.stop()
             robot.has_coral = False
 
-
         self.reset_robot_after_scoring_1 = (reset_robot_after_scoring_1)
         self.reset_robot_after_scoring_2 = (reset_robot_after_scoring_2)
         self.reset_robot_after_scoring_3 = (reset_robot_after_scoring_3)
@@ -316,8 +315,8 @@ class Coroutines:
             robot.at_scoring_position = False
             robot.score_piece = False
             robot.final_lineup_pose = robot.poseEstimator.get_path_to_reef(
-                True,
-                4,
+                False,
+                5,
             	robot.right_branch,
                 do_manip_offset=True
             )
@@ -345,6 +344,7 @@ class Coroutines:
             robot.score_intent = True
             while robot.has_coral:
                 yield
+                
         @commandify
         def score_3_piece_auto_no_closest_tag_3():
             yield
@@ -363,7 +363,7 @@ class Coroutines:
             robot.score_intent = True
             while robot.has_coral:
                 yield
-        
+
 
         self.score_3_piece_auto_no_closest_tag_1 = (score_3_piece_auto_no_closest_tag_1)
         self.score_3_piece_auto_no_closest_tag_2 = (score_3_piece_auto_no_closest_tag_2)
