@@ -152,9 +152,10 @@ class EndEffector(Subsystem):
 
     def has_coral(self):
         return self.canrange_end_effector.get_is_detected().value
-    
+
     def lined_up_with_reef(self):
-        # once we get function working use this piece in EE periodic: (self.lined_up_with_reef() and (self.robot.manual_scoring or self.robot.score_intent)) or 
+        # TODO: Use deque to make it true for 2 ticks and then outtake
+        # once we get function working use this piece in EE periodic: (self.lined_up_with_reef() and (self.robot.manual_scoring or self.robot.score_intent)) or
         if self.robot.end_effector_canrange_for_reef_returning_bad_values:
             return False
         return self.end_effector_reef_alignment_can_range.get_is_detected().value
