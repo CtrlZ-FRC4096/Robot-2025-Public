@@ -124,6 +124,11 @@ class EndEffector(Subsystem):
         for i in range(deque_length):
             self.piece_detected.append(False)
 
+        reef_deque_length = 2
+        self.reef_detected = deque(maxlen=reef_deque_length)
+        for i in range(reef_deque_length):
+            self.reef_detected.append(False)
+
         self.end_effector_motor.set_position(0.0)
 
     def stop(self):
@@ -154,13 +159,13 @@ class EndEffector(Subsystem):
         return self.canrange_end_effector.get_is_detected().value
 
     def lined_up_with_reef(self):
-        # TODO: Use deque to make it true for 2 ticks and then outtake
         # once we get function working use this piece in EE periodic: (self.lined_up_with_reef() and (self.robot.manual_scoring or self.robot.score_intent)) or
         if self.robot.end_effector_canrange_for_reef_returning_bad_values:
             return False
-        return self.end_effector_reef_alignment_can_range.get_is_detected().value
+        return all(self.reef_detected)
 
     def periodic(self):
+        self.reef_detected.appendleft(self.end_effector_reef_alignment_can_range.get_is_detected().value)
         if self.robot.score_piece or (self.robot.at_scoring_position and abs(self.robot.score_state.elevator_height-self.robot.elevator.get_height()) <= 0.2): # manual vs automated
             self.set_outtake_motor_speed(self.robot.score_state.end_effector_outtake_speed)
             self.robot.has_coral = False
