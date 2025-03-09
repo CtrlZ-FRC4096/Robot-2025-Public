@@ -492,7 +492,7 @@ class PoseEstimator(Subsystem):
             return target_pose
 
     def useSingleTag(self, distance=2):
-        return (self.curEstPoseGlobal - self.tag_layout.getTagPose(self.calculate_closest_reef_tag()[0]).toPose2d()).translation().norm() < distance
+        return (self.curEstPose - self.tag_layout.getTagPose(self.calculate_closest_reef_tag()[0]).toPose2d()).translation().norm() < distance
 
     def calculate_algae_height_at_closest_side(self):
         closest_face = self.calculate_closest_reef_tag()[1]
