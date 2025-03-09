@@ -516,6 +516,7 @@ class PoseEstimator(Subsystem):
             single_tag_poses = cam.getPoseSingleTag()
             self.single_tag_IDs.update(cam.getSingleTagIDs())
             observations = cam.getPoseEstimates()
+            tag_distances = cam.getTagDistances()
             # filter by closest based on global pose
 
             self.tag_dist = 0.0
@@ -525,11 +526,9 @@ class PoseEstimator(Subsystem):
             self.theta_modifier_single_tag = 1.0
             self.xy_modifier_single_tag = 1.0
 
-            for tag in tags:
-                tag2D = tag.toPose2d()
-                self.tag_dist += (self.curEstPoseGlobal - tag2D).translation().norm()
             if len(tags) > 0:
-                self.tag_dist /= len(tags)
+                self.tag_dist = sum(tag_distances) / len(tag_distances)
+                
             if len(tags) == 1:
                 self.theta_modifier = 1000.0
             if (

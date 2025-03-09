@@ -73,6 +73,7 @@ class WrapperedPhotonCamera:
         self.tagAmbiguity = []
         self.poseSingleTag = []
         self.singleTagIDs = []
+        self.tagDistances = []
         # if (self.counter % 20 == 0):
         #     if not self.cam.isConnected():
         #         # Faulted - no estimates, just return.
@@ -112,6 +113,7 @@ class WrapperedPhotonCamera:
                 tagFieldPose = self.tag_map.getTagPose(tgtID)
                 self.tagAmbiguity.append(target.getPoseAmbiguity())
                 self.tagPositions.append(tagFieldPose)
+                self.tagDistances.append(target.getBestCameraToTarget().translation().norm())
 
         ## Single Tag Code
         # Process each target.
@@ -296,6 +298,9 @@ class WrapperedPhotonCamera:
 
     def getSingleTagIDs(self):
         return self.singleTagIDs
+    
+    def getTagDistances(self):
+        return self.tagDistances
 
     def _toFieldPose(self, tgtPose: Pose3d, camToTarget: Transform3d):
         camPose = tgtPose.transformBy(camToTarget.inverse())
