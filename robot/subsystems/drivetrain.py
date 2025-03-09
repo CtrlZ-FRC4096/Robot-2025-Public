@@ -259,18 +259,18 @@ class Drivetrain(Subsystem):
             self.robot.drivetrain.go_to_pose_profiled_pid(self.robot.final_lineup_pose)
 
         # bring elevator down if pitch | roll is greater than 10 degrees
-        if self.robot.poseEstimator.gyro.get_pitch().value > RobotScoringPositions.dangerous_tip_angle or self.robot.poseEstimator.gyro.get_roll().value > RobotScoringPositions.dangerous_tip_angle:
-            self.robot.mechanisms_at_default = True
-            self.robot.running_pid_lineup = False
-            self.robot.funnel_intake.is_intaking = False
-            self.robot.end_effector.is_intaking = False
-            self.robot.at_scoring_position = False
-            self.robot.score_piece = False
-            self.robot.score_intent = False
-            self.robot.at_scoring_position = False
-            self.robot_oriented_angle = self.robot.poseEstimator.getYaw().degrees()
-            self.robot.end_effector.stop()
-            self.robot.drivetrain.stop()
+        # if self.robot.poseEstimator.gyro.get_pitch().value > RobotScoringPositions.dangerous_tip_angle or self.robot.poseEstimator.gyro.get_roll().value > RobotScoringPositions.dangerous_tip_angle:
+        #     self.robot.mechanisms_at_default = True
+        #     self.robot.running_pid_lineup = False
+        #     self.robot.funnel_intake.is_intaking = False
+        #     self.robot.end_effector.is_intaking = False
+        #     self.robot.at_scoring_position = False
+        #     self.robot.score_piece = False
+        #     self.robot.score_intent = False
+        #     self.robot.at_scoring_position = False
+        #     self.robot_oriented_angle = self.robot.poseEstimator.getYaw().degrees()
+        #     self.robot.end_effector.stop()
+        #     self.robot.drivetrain.stop()
 
     def log(self):
         SmartDashboard.putData("PID Controller for going to reef, x", self.x_controller)

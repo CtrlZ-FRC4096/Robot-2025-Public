@@ -170,17 +170,18 @@ class EndEffector(Subsystem):
             self.set_outtake_motor_speed(self.robot.score_state.end_effector_outtake_speed)
             self.robot.has_coral = False
         elif self.is_intaking:
-            self.set_end_effector_position(RobotScoringPositions.end_effector_intake_position)
-            self.set_outtake_motor_speed(15.0) # default outtake speed
-            self.piece_detected.appendleft(self.canrange_end_effector.get_is_detected().value)
-            if all(self.piece_detected):
-                self.robot.mechanisms_at_default = True
-                self.is_intaking = False
-                self.robot.funnel_intake.is_intaking = False
-                self.robot.funnel_intake.stop()
-                self.stop()
-                self.set_end_effector_position(RobotScoringPositions.end_effector_travel_position)
-                self.robot.has_coral = True
+            if self.robot.elevator.get_height() <= RobotScoringPositions.min_elevator_height_to_bring_in_end_effector:
+                self.set_end_effector_position(RobotScoringPositions.end_effector_intake_position)
+                self.set_outtake_motor_speed(15.0) # default outtake speed
+                self.piece_detected.appendleft(self.canrange_end_effector.get_is_detected().value)
+                if all(self.piece_detected):
+                    self.robot.mechanisms_at_default = True
+                    self.is_intaking = False
+                    self.robot.funnel_intake.is_intaking = False
+                    self.robot.funnel_intake.stop()
+                    self.stop()
+                    self.set_end_effector_position(RobotScoringPositions.end_effector_travel_position)
+                    self.robot.has_coral = True
         elif self.robot.mechanisms_at_default:
             self.stop()
             if (self.robot.has_coral and self.robot.elevator.get_height() <= RobotScoringPositions.min_elevator_height_to_bring_in_end_effector) or (not self.robot.has_coral and self.robot.elevator.get_height() >= RobotScoringPositions.min_elevator_height_to_bring_in_end_effector):
