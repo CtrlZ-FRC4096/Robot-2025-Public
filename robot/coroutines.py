@@ -26,6 +26,16 @@ class Coroutines:
 
     def __init__(self, robot: "Robot"):
         @commandify
+        def tush_push_towards_yaw():
+            yield
+            yaw = robot.poseEstimator.getYaw().radians()
+            vx = math.cos(yaw) * 3.0
+            vy = math.sin(yaw) * 3.0
+            robot.drivetrain.drive(Translation2d(vx, vy), 0, True, False)
+            yield from robot.wait(0.75)
+        self.tush_push_towards_yaw = (tush_push_towards_yaw)
+        
+        @commandify
         def reset_robot_after_scoring_1():
             yield
             robot.score_piece = True

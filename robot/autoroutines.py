@@ -100,7 +100,7 @@ class AutoRoutines:
 
     def tush_push_auto(self):
         return SequentialCommandGroup(
-            self.robot.followPathCommand("tp_1"),
+            self.robot.coroutines.tush_push_towards_yaw,
             self.robot.coroutines.score_left_branch_1,
             self.robot.coroutines.score_L4_1,
             self.robot.coroutines.score_piece_1.withTimeout(5.0),
