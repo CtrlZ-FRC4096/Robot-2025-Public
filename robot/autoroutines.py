@@ -31,7 +31,7 @@ class AutoRoutines:
     def __init__(self, robot: "Robot"):
         self.robot = robot
 
-        self.p_1 = self.robot.followPathCommand("3P_1")
+        #self.p_1 = self.robot.followPathCommand("3P_1")
         self.p_2 = self.robot.followPathCommand("3P_2")
         self.p_3 = self.robot.followPathCommand("3P_3")
         self.p_4 = self.robot.followPathCommand("3P_4")
@@ -75,7 +75,7 @@ class AutoRoutines:
 
     def three_piece_auto(self):
         return SequentialCommandGroup(
-            self.p_1,
+            # self.p_1
             self.robot.coroutines.score_left_branch_1,
             self.robot.coroutines.score_L4_1,
             self.robot.coroutines.score_piece_1.withTimeout(5.0),
