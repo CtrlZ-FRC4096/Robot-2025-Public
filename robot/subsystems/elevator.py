@@ -127,6 +127,7 @@ class Elevator(Subsystem):
             if self.robot.end_effector.get_position() >= RobotScoringPositions.min_end_effector_position_to_move_elevator_up:
                 self.set_elevator_height(self.robot.score_state.elevator_height) # raise elevator to scoring height
         elif self.robot.is_climbing:
+            self.robot.end_effector.set_end_effector_position(RobotScoringPositions.end_effector_climbing_position) # set end effector to climbing position
             if self.robot.end_effector.get_position() >= RobotScoringPositions.min_end_effector_position_to_move_elevator_up:
                 self.set_elevator_height(RobotScoringPositions.elevator_climb_height)
         elif self.robot.mechanisms_at_default:
