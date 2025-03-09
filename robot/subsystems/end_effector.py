@@ -182,6 +182,9 @@ class EndEffector(Subsystem):
                     self.stop()
                     self.set_end_effector_position(RobotScoringPositions.end_effector_travel_position)
                     self.robot.has_coral = True
+        elif self.robot.is_climbing:
+            if self.robot.elevator.get_height() <= RobotScoringPositions.min_elevator_height_to_bring_in_end_effector:
+                self.set_end_effector_position(RobotScoringPositions.end_effector_climbing_position)
         elif self.robot.mechanisms_at_default:
             self.stop()
             if (self.robot.has_coral and self.robot.elevator.get_height() <= RobotScoringPositions.min_elevator_height_to_bring_in_end_effector) or (not self.robot.has_coral and self.robot.elevator.get_height() >= RobotScoringPositions.min_elevator_height_to_bring_in_end_effector):

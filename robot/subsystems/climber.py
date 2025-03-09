@@ -98,12 +98,25 @@ class Climber(Subsystem):
         rotations = self.climber_arm_motor.get_position().value
         height = rotations / self.gear_ratio
         return height
+    
+    def set_intake_speed(self, speed):
+        self.climber_intake_motor.set_control(controls.VelocityTorqueCurrentFOC(speed))
+
+    def successfully_intaked_cage(self):
+        return self.climber_intake_motor.get_torque_current().value > 15 # TODO: Find the correct value
+    
+    def climb(self):
+        self.set_climber_position(0.0) # TODO: Find the correct position
 
     def stop(self):
         pass
 
     def periodic(self):
-        pass
+        if self.robot.is_climbing:
+            self.set_intake_speed(50)
+            if self.successfully_intaked_cage() and self.robot.end_effector.get_position() >= RobotScoringPositions.min_end_effector_position_to_climb and self.robot.elevator.get_height() >= RobotScoringPositions.min_elevator_climb_height:
+                self.climb()
+
 
     def log(self):
         pass

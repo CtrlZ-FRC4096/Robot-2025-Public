@@ -339,15 +339,15 @@ class OI:
             self.robot.funnel_intake.is_intaking = False
             self.robot.end_effector.is_intaking = False
         
-        @self.driver2.BACK.whenPressed
-        def _():
-            self.robot.mechanisms_at_default = True
-            self.robot.score_intent = False
-            self.robot.manual_scoring = False
-            self.robot.running_pid_lineup = False
-            self.robot.funnel_intake.is_intaking = False
-            self.robot.end_effector.is_intaking = False
-            self.robot.drivetrain.turn_wheels_to_x()
+        # @self.driver2.BACK.whenPressed # x-mode wheels
+        # def _():
+        #     self.robot.mechanisms_at_default = True
+        #     self.robot.score_intent = False
+        #     self.robot.manual_scoring = False
+        #     self.robot.running_pid_lineup = False
+        #     self.robot.funnel_intake.is_intaking = False
+        #     self.robot.end_effector.is_intaking = False
+        #     self.robot.drivetrain.turn_wheels_to_x()
         
         @self.driver2.RIGHT_TRIGGER_AS_BUTTON.whenPressed # ignore 
         def _():
@@ -382,6 +382,16 @@ class OI:
             self.robot.score_piece = False
 
             self.robot.score_state = RobotScoringPositions.L4_Scoring
+
+        @self.driver2.RIGHT_BUMPER.whenPressed
+        def _():
+            self.robot.mechanisms_at_default = False
+            self.robot.score_intent = False
+            self.robot.manual_scoring = False
+            self.robot.running_pid_lineup = False
+            self.robot.funnel_intake.is_intaking = False
+            self.robot.end_effector.is_intaking = False
+            self.robot.is_climbing = True
             
 
 
