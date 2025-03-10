@@ -11,6 +11,7 @@ from wpilib import SmartDashboard, Timer
 from phoenix6 import configs, hardware, controls, signals
 from commands2 import Subsystem
 import wpilib
+from collections import deque
 
 from wpimath.geometry import (
     Translation2d,
@@ -88,6 +89,11 @@ class Climber(Subsystem):
         self.climber_intake_motor_config.motor_output.inverted = signals.InvertedValue(1)
 
         self.climber_intake_motor.configurator.apply(self.climber_intake_motor_config)
+
+        cage_intake_deque_length = 10
+        self.cage_intaked = deque(maxlen=cage_intake_deque_length)
+        for i in range(cage_intake_deque_length):
+            self.reef_detected.append(False)
     
     def set_climber_position(self, position):
         self.command_position = position
@@ -112,9 +118,10 @@ class Climber(Subsystem):
         pass
 
     def periodic(self):
+        self.cage_intaked.appendleft(self.successfully_intaked_cage())
         if self.robot.is_climbing:
             self.set_intake_speed(50)
-            if self.successfully_intaked_cage() and self.robot.end_effector.get_position() >= RobotScoringPositions.min_end_effector_position_to_climb and self.robot.elevator.get_height() >= RobotScoringPositions.min_elevator_climb_height:
+            if all(self.cage_intaked) and self.robot.end_effector.get_position() >= RobotScoringPositions.min_end_effector_position_to_climb and self.robot.elevator.get_height() >= RobotScoringPositions.min_elevator_climb_height:
                 self.climb()
 
 
