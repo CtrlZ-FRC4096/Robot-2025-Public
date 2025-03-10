@@ -112,6 +112,7 @@ class Climber(Subsystem):
         return self.climber_intake_motor.get_torque_current().value > 15 # TODO: Find the correct value
     
     def climb(self):
+        self.set_intake_speed(15)
         self.set_climber_position(0.0) # TODO: Find the correct position
 
     def stop(self):
