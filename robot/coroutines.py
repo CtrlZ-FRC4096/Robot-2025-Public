@@ -34,7 +34,7 @@ class Coroutines:
             robot.drivetrain.drive(Translation2d(vx, vy), 0, True, False)
             yield from robot.wait(0.75)
         self.tush_push_towards_yaw = (tush_push_towards_yaw)
-        
+
         @commandify
         def reset_robot_after_scoring_1():
             yield
@@ -269,7 +269,7 @@ class Coroutines:
             robot.end_effector.is_intaking = True
             robot.running_pid_lineup = True
             robot.score_intent = False
-            while not robot.has_coral:
+            while robot.funnel_intake.piece_passing_through:
                 yield
 
         @commandify
@@ -283,7 +283,7 @@ class Coroutines:
             robot.end_effector.is_intaking = True
             robot.running_pid_lineup = True
             robot.score_intent = False
-            while not robot.has_coral:
+            while robot.funnel_intake.piece_passing_through:
                 yield
 
         self.intake_coral_1 = (intake_coral_1)
@@ -298,7 +298,7 @@ class Coroutines:
             robot.running_pid_lineup = False
             robot.score_intent = False
             robot.oi.robot_oriented_angle = robot.poseEstimator.getYaw().degrees()
-            robot.drivetrain.stop()
+            # robot.drivetrain.stop()
             robot.has_coral = True
 
         @commandify
@@ -310,7 +310,7 @@ class Coroutines:
             robot.running_pid_lineup = False
             robot.score_intent = False
             robot.oi.robot_oriented_angle = robot.poseEstimator.getYaw().degrees()
-            robot.drivetrain.stop()
+            # robot.drivetrain.stop()
             robot.has_coral = True
 
         self.reset_robot_after_intaking_1 = (reset_robot_after_intaking_1)
@@ -354,7 +354,7 @@ class Coroutines:
             robot.score_intent = True
             while robot.has_coral:
                 yield
-                
+
         @commandify
         def score_3_piece_auto_no_closest_tag_3():
             yield

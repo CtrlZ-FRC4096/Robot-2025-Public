@@ -50,6 +50,21 @@ class FunnelIntake(Subsystem):
         self.commanded_speed = 0.0
         self.is_intaking = False
 
+        self.funnel_cannrange = CANrange(const.FUNNEL_CANRANGE, "rio")
+        self.funnel_cannrange_config = configs.CANrangeConfiguration()
+        self.funnel_cannrange_prox_config = ProximityParamsConfigs()
+        self.funnel_cannrange_prox_config.proximity_threshold = 0.09
+        self.funnel_cannrange_config.with_proximity_params(self.funnel_cannrange_prox_config)
+
+        self.funnel_cannrange.configurator.apply(self.funnel_cannrange_config)
+
+        self.piece_passing_through = False
+
+        funnel_piece_length = 2
+        self.piece_in_funnel = deque(maxlen=funnel_piece_length)
+        for i in range(funnel_piece_length):
+            self.piece_in_funnel.append(False)
+
     def stop(self):
         self.intake_motor.set_control(controls.VelocityTorqueCurrentFOC(0.0))
 
@@ -60,6 +75,8 @@ class FunnelIntake(Subsystem):
         self.intake_motor.set_control(controls.VelocityTorqueCurrentFOC(speed))
 
     def periodic(self):
+        self.piece_in_funnel.append(self.funnel_cannrange.get_is_detected().value)
+        self.piece_passing_through = all(self.piece_in_funnel)
         if self.is_intaking:
             self.intake(70)
         elif self.robot.mechanisms_at_default:

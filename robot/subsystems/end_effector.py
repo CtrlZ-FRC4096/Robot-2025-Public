@@ -104,9 +104,9 @@ class EndEffector(Subsystem):
         self.end_effector_reef_alignment_can_range_config = configs.CANrangeConfiguration()
         self.end_effector_reef_alignment_can_range_prox_config = ProximityParamsConfigs()
         self.end_effector_reef_alignment_can_range_prox_config.proximity_threshold = 0.08
-        self.canrange_end_effector_config.with_proximity_params(self.canrange_end_effector_prox_config)
+        self.end_effector_reef_alignment_can_range_config.with_proximity_params(self.end_effector_reef_alignment_can_range_prox_config)
 
-        self.canrange_end_effector.configurator.apply(self.canrange_end_effector_config)
+        self.end_effector_reef_alignment_can_range.configurator.apply(self.end_effector_reef_alignment_can_range_config)
 
         self.set_end_effector_position(RobotScoringPositions.end_effector_travel_position)
 

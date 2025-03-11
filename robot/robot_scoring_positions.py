@@ -6,8 +6,8 @@ class RobotScoringPositions:
 	min_elevator_height_to_bring_in_end_effector = 4.0
 	min_end_effector_position_to_move_elevator_up = 7.5
 	dangerous_tip_angle = 15.0
-	end_effector_climbing_position = 8.5
-	elevator_climb_height = 5.0
+	end_effector_climbing_position = 10.0
+	elevator_climb_height = 15.0
 	min_end_effector_position_to_climb = 7.7
 	min_elevator_climb_height = 3.5
 	class L1_Scoring:

@@ -110,7 +110,7 @@ class Elevator(Subsystem):
             """
             TODO: We need to make sure that this if statement logic is correct.
             """
-            if (self.robot.poseEstimator.curEstPose.translation() - self.robot.final_lineup_pose.translation()).norm() < RobotScoringPositions.elevator_raise_threshold:
+            if (self.robot.poseEstimator.curEstPoseSingleTag.translation() - self.robot.final_lineup_pose.translation()).norm() < RobotScoringPositions.elevator_raise_threshold and (self.robot.end_effector.get_position() >= RobotScoringPositions.min_end_effector_position_to_move_elevator_up):
                 # if we are close to the scoring position and there are no obstacles, begin raising the elevator
                 self.in_proximity_to_begin_raising_elevator = True # just for logging purposes
 
@@ -119,6 +119,7 @@ class Elevator(Subsystem):
                     self.set_elevator_height(self.robot.score_state.elevator_height) # raise elevator to scoring height
             else:
                 self.in_proximity_to_begin_raising_elevator = False
+                self.robot.end_effector.set_end_effector_position(self.robot.score_state.end_effector_position)
         elif self.robot.manual_scoring:
             """
             If the global position is not accurate, we switch to manual scoring. This is a safety feature.
