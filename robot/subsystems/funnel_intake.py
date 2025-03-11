@@ -44,11 +44,9 @@ class FunnelIntake(Subsystem):
 
         self.intake_motor.configurator.apply(funnel_intake_config)  # type: ignore
 
-        self.piece_passing_through_now = False
-        self.piece_passing_through_previous_tick = False
-
         self.commanded_speed = 0.0
         self.is_intaking = False
+        self.piece_passing_through = False
 
         self.funnel_cannrange = CANrange(const.FUNNEL_CANRANGE, "rio")
         self.funnel_cannrange_config = configs.CANrangeConfiguration()
@@ -58,12 +56,10 @@ class FunnelIntake(Subsystem):
 
         self.funnel_cannrange.configurator.apply(self.funnel_cannrange_config)
 
-        self.piece_passing_through = False
-
         funnel_piece_length = 2
-        self.piece_in_funnel = deque(maxlen=funnel_piece_length)
+        self.piece_detected_in_funnel = deque(maxlen=funnel_piece_length)
         for i in range(funnel_piece_length):
-            self.piece_in_funnel.append(False)
+            self.piece_detected_in_funnel.append(False)
 
     def stop(self):
         self.intake_motor.set_control(controls.VelocityTorqueCurrentFOC(0.0))
@@ -75,16 +71,17 @@ class FunnelIntake(Subsystem):
         self.intake_motor.set_control(controls.VelocityTorqueCurrentFOC(speed))
 
     def periodic(self):
-        self.piece_in_funnel.append(self.funnel_cannrange.get_is_detected().value)
-        self.piece_passing_through = all(self.piece_in_funnel)
+        if self.robot.in_autonomous_mode:
+            self.piece_detected_in_funnel.append(self.funnel_cannrange.get_is_detected().value)
+            self.piece_passing_through = all(self.piece_detected_in_funnel)
         if self.is_intaking:
-            self.intake(70)
+            self.intake(55)
         elif self.robot.mechanisms_at_default:
             self.piece_passing_through = False
             self.stop()
 
     def log(self):
         SmartDashboard.putBoolean("funnel is intaking", self.is_intaking)
-        SmartDashboard.putBoolean("piece passing through funnel", self.piece_passing_through_now)
+        SmartDashboard.putBoolean("piece passing through funnel", self.piece_passing_through)
         SmartDashboard.putNumber("funnel intake speed", self.intake_motor.get_velocity().value)
         SmartDashboard.putNumber("funnel commanded intake speed", self.commanded_speed)

@@ -134,6 +134,8 @@ class Coroutines:
         @commandify
         def score_piece_2():
             yield
+            while not robot.has_coral:
+                yield
             robot.funnel_intake.is_intaking = False
             robot.end_effector.is_intaking = False
             robot.at_scoring_position = False
@@ -153,6 +155,8 @@ class Coroutines:
         @commandify
         def score_piece_3():
             yield
+            while not robot.has_coral:
+                yield
             robot.funnel_intake.is_intaking = False
             robot.end_effector.is_intaking = False
             robot.at_scoring_position = False
@@ -269,8 +273,10 @@ class Coroutines:
             robot.end_effector.is_intaking = True
             robot.running_pid_lineup = True
             robot.score_intent = False
-            while robot.funnel_intake.piece_passing_through:
+            while True:
                 yield
+                if robot.funnel_intake.piece_passing_through:
+                    break
 
         @commandify
         def intake_coral_2():
@@ -283,8 +289,10 @@ class Coroutines:
             robot.end_effector.is_intaking = True
             robot.running_pid_lineup = True
             robot.score_intent = False
-            while robot.funnel_intake.piece_passing_through:
+            while True:
                 yield
+                if robot.funnel_intake.piece_passing_through:
+                    break
 
         self.intake_coral_1 = (intake_coral_1)
         self.intake_coral_2 = (intake_coral_2)
