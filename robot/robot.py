@@ -202,7 +202,7 @@ class Robot(CoroutineRobot):
             self.pathplanner_config, # The robot configuration
             self.drivetrain.shouldFlipPath, # Supplier to control path flipping based on alliance color
             self.drivetrain # Reference to this subsystem to set requirements
-        )
+        ).addRequirements(self.drivetrain)
 
     ### DISABLED ###
 
