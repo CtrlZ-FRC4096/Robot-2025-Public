@@ -135,7 +135,7 @@ class Coroutines:
         def score_piece_2():
             yield
             while not robot.has_coral:
-                yield
+                yield # wait til piece hits EE
             robot.funnel_intake.is_intaking = False
             robot.end_effector.is_intaking = False
             robot.at_scoring_position = False
@@ -156,7 +156,7 @@ class Coroutines:
         def score_piece_3():
             yield
             while not robot.has_coral:
-                yield
+                yield # wait til piece hits EE
             robot.funnel_intake.is_intaking = False
             robot.end_effector.is_intaking = False
             robot.at_scoring_position = False
