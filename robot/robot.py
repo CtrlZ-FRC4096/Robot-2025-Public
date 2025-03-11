@@ -50,7 +50,7 @@ import inspect
 import autoroutines
 
 from pathplannerlib.path import PathPlannerPath
-from pathplannerlib.auto import AutoBuilder, PathPlannerAuto, NamedCommands, FollowPathCommand
+from pathplannerlib.auto import AutoBuilder, PathPlannerAuto, NamedCommands, FollowPathCommand, PathConstraints
 from pathplannerlib.config import PIDConstants, RobotConfig
 from pathplannerlib.controller import PPHolonomicDriveController
 
@@ -183,9 +183,10 @@ class Robot(CoroutineRobot):
             yield
             self.scheduler.run()
 
-    def followPathCommand(self, pathName: str):
+    def followPathCommand(self, pathName: str, pathConstraints=None):
         path = PathPlannerPath.fromPathFile(pathName)
-
+        if pathConstraints != None:
+            path._globalConstraints = pathConstraints
         return FollowPathCommand(
             path,
             self.drivetrain.get_pose, # Robot pose supplier
@@ -203,6 +204,8 @@ class Robot(CoroutineRobot):
             self.drivetrain.shouldFlipPath, # Supplier to control path flipping based on alliance color
             self.drivetrain # Reference to this subsystem to set requirements
         ).addRequirements(self.drivetrain)
+            
+
 
     ### DISABLED ###
 

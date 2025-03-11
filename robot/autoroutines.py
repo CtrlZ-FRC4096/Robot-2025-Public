@@ -12,6 +12,7 @@ from wpilibextra.coroutine.coroutine_command import autoroutine2command
 from wpilib import Timer
 import wpimath.geometry
 import const
+from pathplannerlib.path import PathConstraints
 
 # from commands import autonomous
 # from commands.autonomous import DriveTrajectory
@@ -30,7 +31,7 @@ class AutoRoutines:
 
     def __init__(self, robot: "Robot"):
         self.robot = robot
-
+        path_constraints = PathConstraints()# adjust these max speeds and accelerations for each path
         #self.p_1 = self.robot.followPathCommand("3P_1")
         self.p_2 = self.robot.followPathCommand("3P_2")
         self.p_3 = self.robot.followPathCommand("3P_3")
@@ -85,14 +86,14 @@ class AutoRoutines:
             self.p_3,
             self.robot.coroutines.score_right_branch,
             self.robot.coroutines.score_L4_2,
-            self.robot.coroutines.score_piece_2.withTimeout(1.9),
+            self.robot.coroutines.score_piece_2.withTimeout(1.8),
             self.robot.coroutines.reset_robot_after_scoring_2,
             self.p_4,
             self.robot.coroutines.intake_coral_2,
             self.p_5,
             self.robot.coroutines.score_left_branch_2,
             self.robot.coroutines.score_L4_3,
-            self.robot.coroutines.score_piece_3.withTimeout(1.9),
+            self.robot.coroutines.score_piece_3.withTimeout(1.8),
             self.robot.coroutines.reset_robot_after_scoring_3,
         )
 
