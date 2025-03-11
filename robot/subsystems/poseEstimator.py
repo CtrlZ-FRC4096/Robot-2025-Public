@@ -450,7 +450,7 @@ class PoseEstimator(Subsystem):
 
         return [left_source_closer, proper_tag]
 
-    def get_path_to_source(self, left_source : bool, place_on_source=1):
+    def get_path_to_source(self, left_source : bool, place_on_source=1, extra_dist_offset=0.0):
         '''
         Use calculate_closest source
         Place on source (default 2):
@@ -458,8 +458,8 @@ class PoseEstimator(Subsystem):
         2- center source
         3 - closest to PROCESSOR WALL
         '''
-        dist_offset = (inchesToMeters(29.5) / 2) + (inchesToMeters(7.25) / 2) + (inchesToMeters(0.0))
-        side_offset = inchesToMeters(24)
+        dist_offset = (inchesToMeters(29.5) / 2) + (inchesToMeters(7.25) / 2) + (inchesToMeters(extra_dist_offset))
+        side_offset = inchesToMeters(24) + inchesToMeters(2) # test for 2
 
         if left_source:
             source_pose = FieldConstants.flip_Pose2d(FieldConstants.CoralStation.leftCenterFace)

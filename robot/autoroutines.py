@@ -31,7 +31,7 @@ class AutoRoutines:
 
     def __init__(self, robot: "Robot"):
         self.robot = robot
-        path_constraints = PathConstraints()# adjust these max speeds and accelerations for each path
+        #path_constraints = PathConstraints()# adjust these max speeds and accelerations for each path
         #self.p_1 = self.robot.followPathCommand("3P_1")
         self.p_2 = self.robot.followPathCommand("3P_2")
         self.p_3 = self.robot.followPathCommand("3P_3")
