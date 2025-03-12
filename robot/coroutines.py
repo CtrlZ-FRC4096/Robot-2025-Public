@@ -181,7 +181,7 @@ class Coroutines:
             robot.at_scoring_position = False
             robot.score_piece = False
             robot.final_lineup_pose = robot.poseEstimator.get_path_to_reef(
-                True,
+                False,
                 5,
             	robot.right_branch,
                 do_manip_offset=True
