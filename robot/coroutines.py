@@ -39,7 +39,7 @@ class Coroutines:
         def reset_robot_after_scoring_1():
             yield
             robot.score_piece = True
-            yield from robot.wait(0.175)
+            yield from robot.wait(0.25)
             robot.mechanisms_at_default = True
             robot.score_piece = False
             robot.running_pid_lineup = False
@@ -55,7 +55,7 @@ class Coroutines:
         def reset_robot_after_scoring_2():
             yield
             robot.score_piece = True
-            yield from robot.wait(0.175)
+            yield from robot.wait(0.25)
             robot.mechanisms_at_default = True
             robot.score_piece = False
             robot.running_pid_lineup = False
