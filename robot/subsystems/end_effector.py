@@ -166,7 +166,7 @@ class EndEffector(Subsystem):
 
     def periodic(self):
         self.reef_detected.appendleft(self.end_effector_reef_alignment_can_range.get_is_detected().value)
-        if self.robot.score_piece or (self.robot.at_scoring_position and abs(self.robot.score_state.elevator_height-self.robot.elevator.get_height()) <= 0.2): # manual vs automated
+        if self.robot.score_piece or (self.robot.at_scoring_position and abs(self.robot.score_state.elevator_height-self.robot.elevator.get_height()) <= 0.2 and abs(self.robot.end_effector.get_position() - self.robot.score_state.end_effector_position) <= 0.2): # manual vs automated
             self.set_outtake_motor_speed(self.robot.score_state.end_effector_outtake_speed)
             self.robot.has_coral = False
         elif self.is_intaking:
