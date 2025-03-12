@@ -38,6 +38,8 @@ class AutoRoutines:
         self.p_4 = self.robot.followPathCommand("3P_4")
         self.p_5 = self.robot.followPathCommand("3P_5")
 
+        self.p_2_f5 = self.robot.followPathCommand("f5 intake")
+
     def three_piece_no_pathplanner(self):
         return SequentialCommandGroup(
             # self.robot.followPathCommand("3P_1"),
@@ -96,6 +98,31 @@ class AutoRoutines:
             self.robot.coroutines.score_piece_3,
             self.robot.coroutines.reset_robot_after_scoring_3,
         )
+
+    def three_piece_to_f5(self):
+        return SequentialCommandGroup(
+            self.robot.coroutines.score_left_branch_1,
+            self.robot.coroutines.score_L4_1,
+            self.robot.coroutines.score_piece_1_f5.withTimeout(1.7), #CHANGE TIME
+            self.robot.coroutines.reset_robot_after_scoring_1,
+            self.p_2_f5,
+            self.robot.coroutines.intake_coral_1,
+            self.p_3,   
+            self.robot.coroutines.score_right_branch,
+            self.robot.coroutines.score_L4_2,
+            self.robot.coroutines.score_piece_2,
+            self.robot.coroutines.reset_robot_after_scoring_2,
+            # self.p_4,
+            self.robot.coroutines.intake_coral_2,
+            self.p_5,
+            self.robot.coroutines.score_left_branch_2,
+            self.robot.coroutines.score_L4_3,
+            self.robot.coroutines.score_piece_3,
+            self.robot.coroutines.reset_robot_after_scoring_3,
+        )
+
+    
+
 
     def tush_push_auto(self):
         return SequentialCommandGroup(
