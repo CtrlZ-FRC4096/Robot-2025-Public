@@ -145,7 +145,6 @@ class Coroutines:
 
         @commandify
         def score_piece_1_f5():
-            yield
             robot.funnel_intake.is_intaking = False
             robot.end_effector.is_intaking = False
             robot.at_scoring_position = False
