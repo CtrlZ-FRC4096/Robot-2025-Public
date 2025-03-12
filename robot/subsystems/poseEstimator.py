@@ -459,7 +459,7 @@ class PoseEstimator(Subsystem):
         3 - closest to PROCESSOR WALL
         '''
         dist_offset = (inchesToMeters(29.5) / 2) + (inchesToMeters(7.25) / 2) + (inchesToMeters(extra_dist_offset))
-        side_offset = inchesToMeters(24) + inchesToMeters(2) # test for 2
+        side_offset = inchesToMeters(24) + inchesToMeters(1) # test for 2
 
         if left_source:
             source_pose = FieldConstants.flip_Pose2d(FieldConstants.CoralStation.leftCenterFace)
@@ -488,7 +488,7 @@ class PoseEstimator(Subsystem):
             elif place_on_source == 1 or place_on_source == 3:
                 x_side_offset = math.cos(degreesToRadians(source_rotation.degrees() + (90 if place_on_source == 1 else -90))) * side_offset
                 y_side_offset = math.sin(degreesToRadians(source_rotation.degrees() + (90 if place_on_source == 1 else -90))) * side_offset
-                target_pose = Pose2d(offset_pose.X() + x_side_offset, offset_pose.Y() + y_side_offset, source_rotation.rotateBy(Rotation2d.fromDegrees(90)))
+                target_pose = Pose2d(offset_pose.X() + x_side_offset, offset_pose.Y() + y_side_offset, source_rotation + Rotation2d.fromDegrees(90))
             return target_pose
 
     def useSingleTag(self, distance=2):
@@ -528,7 +528,7 @@ class PoseEstimator(Subsystem):
 
             if len(tags) > 0:
                 self.tag_dist = sum(tag_distances) / len(tag_distances)
-                
+
             if len(tags) == 1:
                 self.theta_modifier = 1000.0
             # if (

@@ -203,8 +203,8 @@ class Robot(CoroutineRobot):
             self.pathplanner_config, # The robot configuration
             self.drivetrain.shouldFlipPath, # Supplier to control path flipping based on alliance color
             self.drivetrain # Reference to this subsystem to set requirements
-        ).addRequirements(self.drivetrain)
-            
+        )
+
 
 
     ### DISABLED ###
@@ -231,7 +231,7 @@ class Robot(CoroutineRobot):
     def teleop_mode(self):
         self.leds.set_mode(self.leds.MODE_ODOMETRY)
         self.scheduler.cancelAll()
-        self.mechanisms_at_default = True
+        # self.mechanisms_at_default = True
         self.funnel_intake.is_intaking = False
         self.end_effector.is_intaking = False
         self.running_pid_lineup = False

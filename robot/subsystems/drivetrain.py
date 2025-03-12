@@ -68,10 +68,10 @@ class Drivetrain(Subsystem):
 
 
         ## Need to check these tolerances
-        self.x_controller.setTolerance(0.025, 0.1)
-        self.y_controller.setTolerance(0.025, 0.1)
+        self.x_controller.setTolerance(0.04, 0.25) #0.025, 0.1
+        self.y_controller.setTolerance(0.04, 0.25) #0.025, 0.1
         self.theta_controller.enableContinuousInput(0, 360)
-        self.theta_controller.setTolerance(2.0, 0.1)
+        self.theta_controller.setTolerance(3.5, 2.5) #3.0, 0.1
 
         ### Field Visualisation - Needs testing ###
         self.previous_chassisspeeds = ChassisSpeeds()
@@ -225,10 +225,11 @@ class Drivetrain(Subsystem):
             pose,
         )
 
-    def turn_wheels_to_x(self, left_source : bool):
+    def turn_wheels_to_x(self): #, left_source : bool):
         module_angles = []
-        source_rotation = FieldConstants.flip_Rotation2d(FieldConstants.CoralStation.leftCenterFace.rotation()) if left_source else FieldConstants.flip_Rotation2d(FieldConstants.CoralStation.rightCenterFace.rotation())
-        battery_facing = source_rotation + Rotation2d.fromDegrees(90)
+        #source_rotation = FieldConstants.flip_Rotation2d(FieldConstants.CoralStation.leftCenterFace.rotation()) if left_source else FieldConstants.flip_Rotation2d(FieldConstants.CoralStation.rightCenterFace.rotation())
+        battery_facing = self.robot.poseEstimator.getYaw()
+        #source_rotation + Rotation2d.fromDegrees(90)
         module_angles.append(battery_facing + Rotation2d.fromDegrees(-45))
         module_angles.append(battery_facing + Rotation2d.fromDegrees(45))
         module_angles.append(battery_facing + Rotation2d.fromDegrees(-135))

@@ -39,7 +39,7 @@ class Coroutines:
         def reset_robot_after_scoring_1():
             yield
             robot.score_piece = True
-            yield from robot.wait(0.25)
+            yield from robot.wait(0.175)
             robot.mechanisms_at_default = True
             robot.score_piece = False
             robot.running_pid_lineup = False
@@ -55,7 +55,7 @@ class Coroutines:
         def reset_robot_after_scoring_2():
             yield
             robot.score_piece = True
-            yield from robot.wait(0.25)
+            yield from robot.wait(0.175)
             robot.mechanisms_at_default = True
             robot.score_piece = False
             robot.running_pid_lineup = False
@@ -265,7 +265,7 @@ class Coroutines:
         @commandify
         def intake_coral_1():
             yield
-            robot.final_lineup_pose = robot.poseEstimator.get_path_to_source(False, 1, extra_dist_offset=-3.0)
+            robot.final_lineup_pose = robot.poseEstimator.get_path_to_source(False, 1, extra_dist_offset=-6.0)
             robot.mechanisms_at_default = False
             robot.at_scoring_position = False
             robot.score_piece = False
@@ -276,12 +276,13 @@ class Coroutines:
             while True:
                 yield
                 if robot.funnel_intake.piece_passing_through:
+                    robot.running_pid_lineup = False
                     break
 
         @commandify
         def intake_coral_2():
             yield
-            robot.final_lineup_pose = robot.poseEstimator.get_path_to_source(False, 1, extra_dist_offset=-3.0) # CHANGE TO POSITION ON SOURCE from OI
+            robot.final_lineup_pose = robot.poseEstimator.get_path_to_source(False, 1, extra_dist_offset=-6.0) # CHANGE TO POSITION ON SOURCE from OI
             robot.mechanisms_at_default = False
             robot.at_scoring_position = False
             robot.score_piece = False
@@ -292,6 +293,7 @@ class Coroutines:
             while True:
                 yield
                 if robot.funnel_intake.piece_passing_through:
+                    robot.running_pid_lineup = False
                     break
 
         self.intake_coral_1 = (intake_coral_1)
