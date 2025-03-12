@@ -339,6 +339,29 @@ class OI:
             self.robot.funnel_intake.is_intaking = False
             self.robot.end_effector.is_intaking = False
 
+        @self.driver2.BACK.whenPressed # raise all setpoints
+        def _():
+            RobotScoringPositions.elevator_intake_height += 0.1
+            RobotScoringPositions.elevator_climb_height += 0.2
+            RobotScoringPositions.L1_Scoring.elevator_height += 0.5
+            RobotScoringPositions.L2_Scoring.elevator_height += 0.5
+            RobotScoringPositions.L3_Scoring.elevator_height += 0.5
+            RobotScoringPositions.L4_Scoring.elevator_height += 0.5
+            RobotScoringPositions.Descore_Algae_L3.elevator_height += 0.5
+            RobotScoringPositions.Descore_Algae_L2.elevator_height += 0.5
+
+        @self.driver2.START.whenPressed # lower all setpoints
+        def _():
+            RobotScoringPositions.elevator_intake_height -= 0.1
+            RobotScoringPositions.elevator_climb_height -= 0.2
+            RobotScoringPositions.L1_Scoring.elevator_height -= 0.5
+            RobotScoringPositions.L2_Scoring.elevator_height -= 0.5
+            RobotScoringPositions.L3_Scoring.elevator_height -= 0.5
+            RobotScoringPositions.L4_Scoring.elevator_height -= 0.5
+            RobotScoringPositions.Descore_Algae_L3.elevator_height -= 0.5
+            RobotScoringPositions.Descore_Algae_L2.elevator_height -= 0.5
+
+
         # @self.driver2.BACK.whenPressed # x-mode wheels
         # def _():
         #     self.robot.mechanisms_at_default = True

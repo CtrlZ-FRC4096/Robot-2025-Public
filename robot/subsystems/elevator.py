@@ -94,8 +94,11 @@ class Elevator(Subsystem):
         return height
 
     def set_elevator_height(self, height):
-        if abs(self.get_height() - height) <= 0.02 or self.command_height >= self.max_height:
+        if abs(self.get_height() - height) <= 0.02:
             return
+
+        if self.command_height >= self.max_height:
+            self.command_height = self.max_height
         self.command_height = height
         sprocket_rotations = height / (math.pi * self.sprocket_diameter * 3) # some math for height here
         rotation = sprocket_rotations * self.gear_ratio
