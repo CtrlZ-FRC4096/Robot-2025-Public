@@ -76,6 +76,8 @@ class FunnelIntake(Subsystem):
             self.piece_passing_through = all(self.piece_detected_in_funnel)
         if self.is_intaking:
             self.intake(55)
+        elif self.robot.score_piece:
+            self.intake(-40)
         elif self.robot.mechanisms_at_default:
             self.piece_passing_through = False
             self.stop()
