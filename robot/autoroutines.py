@@ -37,6 +37,7 @@ class AutoRoutines:
         self.p_3 = self.robot.followPathCommand("3P_3")
         self.p_4 = self.robot.followPathCommand("3P_4")
         self.p_5 = self.robot.followPathCommand("3P_5")
+        self.p_6 = self.robot.followPathCommand("3P_6")
 
         self.p_2_f5 = self.robot.followPathCommand("f5_intake")
 
@@ -89,6 +90,9 @@ class AutoRoutines:
             self.p_5,
             self.robot.coroutines.score_piece_3,
             self.robot.coroutines.reset_robot_after_scoring_3,
+            self.robot.coroutines.intake_coral_3,
+            self.p_6,
+            self.robot.coroutines.score_piece_4,
         )
 
     def three_piece_to_f5(self):

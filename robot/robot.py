@@ -49,12 +49,13 @@ from coroutines import Coroutines
 import inspect
 import autoroutines
 
-from pathplannerlib.path import PathPlannerPath
+from pathplannerlib.path import PathPlannerPath, Waypoint, IdealStartingState, GoalEndState
 from pathplannerlib.auto import AutoBuilder, PathPlannerAuto, NamedCommands, FollowPathCommand, PathConstraints
 from pathplannerlib.config import PIDConstants, RobotConfig
 from pathplannerlib.controller import PPHolonomicDriveController
 
-from wpimath.geometry import Rotation2d, Pose2d
+from wpimath.geometry import Rotation2d, Pose2d, Translation2d
+from wpimath.units import degreesToRadians
 
 from field_const import FieldConstants
 
@@ -65,6 +66,7 @@ from commands2 import (
     ParallelRaceGroup,
     SequentialCommandGroup,
 )
+from wpilibextra.coroutine import CoroutineCommand
 
 
 log = logging.getLogger("robot")
@@ -151,7 +153,7 @@ class Robot(CoroutineRobot):
         self.remote_shell = RemoteShell(self)
 
         self.autoroutines = autoroutines.AutoRoutines(self)
-        self.auto = self.autoroutines.three_piece_to_f5()
+        self.auto = self.autoroutines.three_piece_auto()
 
         DataLogManager.start()
         DriverStation.startDataLog(DataLogManager.getLog())
@@ -166,6 +168,8 @@ class Robot(CoroutineRobot):
         self.end_effector_canrange_for_reef_returning_bad_values = False
         self.is_climbing = False
 
+        # PATH CONSTRAINTS
+        self.path_constraints = PathConstraints(4.0, 4.0, )
 
         @self.addPeriodic(period=0.25, offset=0)
         def _():
@@ -182,6 +186,77 @@ class Robot(CoroutineRobot):
         while True:
             yield
             self.scheduler.run()
+
+    def flip_X_coord(self, x):
+        return FieldConstants.fieldLength - x
+    def flip_Y_coord(self, y):
+        return FieldConstants.fieldWidth - y
+
+    def flip_Rotation2d(self, rotation : Rotation2d):
+        return (
+            rotation.rotateBy(Rotation2d.fromDegrees(180))
+            )
+
+    def flip_3_piece_to_f5(self, auto : SequentialCommandGroup, quadrant : int):
+        '''FieldLength, 0 - quadrant 1;
+            FieldLength, FieldWidth - quadrant 2;
+            0, FieldWidth - quadrant 3;
+            0,0 - quadrant 4;'''
+        if quadrant == 4:
+            return auto
+        elif quadrant == 3:
+            new_routine = SequentialCommandGroup()
+            for command in auto:
+                if type(command) == FollowPathCommand:
+                    #mirror across x axis
+                    path = command._originalPath
+                    waypoints = path.getWaypoints()
+                    new_waypoints = []
+                    ideal_start = IdealStartingState(path.getIdealStartingState().velocity, path.getIdealStartingState().rotation.__neg__())
+                    goal_end = GoalEndState(path.getGoalEndState().velocity, path.getGoalEndState().rotation.__neg__())
+                    for idx, waypoint in enumerate(waypoints):
+                        if idx == 0:
+                            # no prev control
+                            new_waypoints.append(Waypoint(
+                                prevControl=None,
+                                anchor=Translation2d(self.flip_X_coord(waypoint.anchor.X()), waypoint.anchor.Y()),
+                                nextControl=Translation2d(self.flip_X_coord(waypoint.nextControl.X()), waypoint.nextControl.Y())
+                            ))
+                        elif idx == len(waypoints) - 1:
+                            #no next control
+                            new_waypoints.append(Waypoint(
+                                prevControl=Translation2d(self.flip_X_coord(waypoint.prevControl.X()), waypoint.prevControl.Y()),
+                                anchor=Translation2d(self.flip_X_coord(waypoint.anchor.X()), waypoint.anchor.Y()),
+                                nextControl=None
+                            ))
+                        else:
+                            # both controls
+                            new_waypoints.append(Waypoint(
+                                prevControl=Translation2d(self.flip_X_coord(waypoint.prevControl.X()), waypoint.prevControl.Y()),
+                                anchor=Translation2d(self.flip_X_coord(waypoint.anchor.X()), waypoint.anchor.Y()),
+                                nextControl=Translation2d(self.flip_X_coord(waypoint.nextControl.X()), waypoint.nextControl.Y())
+                            ))
+                    new_path = PathPlannerPath(new_waypoints, self.path_constraints, ideal_starting_state=ideal_start, goal_end_state=goal_end)
+                    new_routine.addCommands(FollowPathCommand(
+            new_path,
+            self.drivetrain.get_pose, # Robot pose supplier
+            self.drivetrain.get_robot_relative_speeds, # ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
+            self.drivetrain.drive_robot_relative, # Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds, AND feedforwards
+            PPHolonomicDriveController(  # PPHolonomicController is the built in path following controller for holonomic drive trains
+                PIDConstants(
+                    const.X_KP, const.X_KI, const.X_KD
+                ),  # Translation PID constants
+                PIDConstants(
+                    const.THETA_KP, const.THETA_KI, const.THETA_KD
+                ),  # Rotation PID constants
+            ),
+            self.pathplanner_config, # The robot configuration
+            self.drivetrain.shouldFlipPath, # Supplier to control path flipping based on alliance color
+            self.drivetrain # Reference to this subsystem to set requirements
+        ))
+                if type(command) == CoroutineCommand:
+                    if "score_piece" in command.getName():
+                        pass
 
     def followPathCommand(self, pathName: str, pathConstraints=None):
         path = PathPlannerPath.fromPathFile(pathName)
