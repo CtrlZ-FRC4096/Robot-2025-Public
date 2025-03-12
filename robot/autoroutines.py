@@ -78,7 +78,6 @@ class AutoRoutines:
 
     def three_piece_auto(self):
         return SequentialCommandGroup(
-            # self.p_1
             self.robot.coroutines.score_piece_1.withTimeout(1.37),
             self.robot.coroutines.reset_robot_after_scoring_1,
             self.p_2,
@@ -86,7 +85,6 @@ class AutoRoutines:
             self.p_3,
             self.robot.coroutines.score_piece_2,
             self.robot.coroutines.reset_robot_after_scoring_2,
-            # self.p_4,
             self.robot.coroutines.intake_coral_2,
             self.p_5,
             self.robot.coroutines.score_piece_3,
@@ -102,7 +100,6 @@ class AutoRoutines:
             self.p_3,
             self.robot.coroutines.score_piece_2,
             self.robot.coroutines.reset_robot_after_scoring_2,
-            # self.p_4,
             self.robot.coroutines.intake_coral_2,
             self.p_5,
             self.robot.coroutines.score_piece_3,
