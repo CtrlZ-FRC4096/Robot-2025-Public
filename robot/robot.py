@@ -153,7 +153,7 @@ class Robot(CoroutineRobot):
         self.remote_shell = RemoteShell(self)
 
         self.autoroutines = autoroutines.AutoRoutines(self)
-        self.auto = self.autoroutines.three_piece_auto()
+        self.auto = self.autoroutines.three_piece_to_f5()
 
         DataLogManager.start()
         DriverStation.startDataLog(DataLogManager.getLog())
@@ -352,6 +352,7 @@ class Robot(CoroutineRobot):
         self.running_pid_lineup = False
         self.score_intent = False
         self.in_autonomous_mode = False
+        self.oi.robot_oriented_angle = self.poseEstimator.getYaw().degrees()
 
         while True:
             yield
