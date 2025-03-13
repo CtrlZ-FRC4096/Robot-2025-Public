@@ -48,7 +48,6 @@ class Coroutines:
             robot.at_scoring_position = False
             robot.oi.robot_oriented_angle = robot.poseEstimator.getYaw().degrees()
             robot.end_effector.stop()
-            robot.drivetrain.stop()
             robot.has_coral = False
 
         @commandify
