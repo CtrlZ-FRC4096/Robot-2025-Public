@@ -361,17 +361,6 @@ class OI:
             RobotScoringPositions.Descore_Algae_L3.elevator_height -= 0.5
             RobotScoringPositions.Descore_Algae_L2.elevator_height -= 0.5
 
-
-        # @self.driver2.BACK.whenPressed # x-mode wheels
-        # def _():
-        #     self.robot.mechanisms_at_default = True
-        #     self.robot.score_intent = False
-        #     self.robot.manual_scoring = False
-        #     self.robot.running_pid_lineup = False
-        #     self.robot.funnel_intake.is_intaking = False
-        #     self.robot.end_effector.is_intaking = False
-        #     self.robot.drivetrain.turn_wheels_to_x()
-
         @self.driver2.RIGHT_TRIGGER_AS_BUTTON.whenPressed # ignore
         def _():
             self.robot.end_effector_canrange_for_reef_returning_bad_values = not self.robot.end_effector_canrange_for_reef_returning_bad_values
@@ -406,7 +395,7 @@ class OI:
 
             self.robot.score_state = RobotScoringPositions.L4_Scoring
 
-        @self.driver2.RIGHT_BUMPER.whenPressed
+        @self.driver2.RIGHT_BUMPER.whenPressed # climb
         def _():
             self.robot.mechanisms_at_default = False
             self.robot.score_intent = False

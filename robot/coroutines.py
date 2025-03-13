@@ -114,6 +114,7 @@ class Coroutines:
         @commandify
         def score_piece_1():
             yield
+            robot.score_state = RobotScoringPositions.L4_Scoring
             robot.funnel_intake.is_intaking = False
             robot.end_effector.is_intaking = False
             robot.at_scoring_position = False
@@ -135,6 +136,7 @@ class Coroutines:
             yield
             while not robot.has_coral:
                 yield # wait til piece hits EE
+            robot.score_state = RobotScoringPositions.L4_Scoring
             robot.funnel_intake.is_intaking = False
             robot.end_effector.is_intaking = False
             robot.at_scoring_position = False
@@ -156,6 +158,7 @@ class Coroutines:
             yield
             while not robot.has_coral:
                 yield # wait til piece hits EE
+            robot.score_state = RobotScoringPositions.L4_Scoring
             robot.funnel_intake.is_intaking = False
             robot.end_effector.is_intaking = False
             robot.at_scoring_position = False
@@ -177,6 +180,7 @@ class Coroutines:
             yield
             while not robot.has_coral:
                 yield # wait til piece hits EE
+            robot.score_state = RobotScoringPositions.L4_Scoring
             robot.funnel_intake.is_intaking = False
             robot.end_effector.is_intaking = False
             robot.at_scoring_position = False
@@ -196,14 +200,15 @@ class Coroutines:
         @commandify
         def score_piece_1_f5():
             yield
+            robot.score_state = RobotScoringPositions.L4_Scoring
             robot.funnel_intake.is_intaking = False
             robot.end_effector.is_intaking = False
             robot.at_scoring_position = False
             robot.score_piece = False
             robot.final_lineup_pose = robot.poseEstimator.get_path_to_reef(
-                False,
-                5,
-            	False,
+                True if robot.score_1_f5_face in [4,6] else False, # CHANGE WHEN WE HAVE FIELD CALIBRATED
+                robot.score_1_f5_face,
+            	robot.score_1_f5_right_branch,
                 do_manip_offset=True
             )
             robot.mechanisms_at_default = False
@@ -316,7 +321,7 @@ class Coroutines:
             robot.score_intent = False
             while True:
                 yield
-                if robot.funnel_intake.piece_passing_through:
+                if robot.funnel_intake.piece_passing_through or robot.has_coral:
                     robot.running_pid_lineup = False
                     break
 
@@ -333,7 +338,7 @@ class Coroutines:
             robot.score_intent = False
             while True:
                 yield
-                if robot.funnel_intake.piece_passing_through:
+                if robot.funnel_intake.piece_passing_through or robot.has_coral:
                     robot.running_pid_lineup = False
                     break
 
@@ -350,7 +355,7 @@ class Coroutines:
             robot.score_intent = False
             while True:
                 yield
-                if robot.funnel_intake.piece_passing_through:
+                if robot.funnel_intake.piece_passing_through or robot.has_coral:
                     robot.running_pid_lineup = False
                     break
 

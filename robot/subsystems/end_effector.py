@@ -19,6 +19,7 @@ from phoenix6.hardware import CANrange
 from phoenix6.configs import CANcoderConfigurator
 from phoenix6.configs.config_groups import ProximityParamsConfigs
 from robot_scoring_positions import RobotScoringPositions
+import wpilib
 
 class EndEffector(Subsystem):
     def __init__(self, robot: "Robot"):
@@ -129,6 +130,10 @@ class EndEffector(Subsystem):
         for i in range(reef_deque_length):
             self.reef_detected.append(False)
 
+        self.end_effector_extension_encoder = wpilib.DutyCycleEncoder(1)
+
+        # value_at_0 = 10.0
+        # self.end_effector_motor.set_position((self.end_effector_extension_encoder - value_at_0) * self.gear_ratio)
         self.end_effector_motor.set_position(0.0)
 
     def stop(self):
@@ -166,7 +171,7 @@ class EndEffector(Subsystem):
 
     def periodic(self):
         self.reef_detected.appendleft(self.end_effector_reef_alignment_can_range.get_is_detected().value)
-        if self.robot.score_piece or (self.robot.at_scoring_position and abs(self.robot.score_state.elevator_height-self.robot.elevator.get_height()) <= 0.2 and abs(self.robot.end_effector.get_position() - self.robot.score_state.end_effector_position) <= 0.2): # manual vs automated
+        if self.robot.score_piece or ((self.robot.at_scoring_position or self.lined_up_with_reef()) and abs(self.robot.score_state.elevator_height-self.robot.elevator.get_height()) <= 0.2 and abs(self.robot.end_effector.get_position() - self.robot.score_state.end_effector_position) <= 0.2): # manual vs automated
             self.set_outtake_motor_speed(self.robot.score_state.end_effector_outtake_speed)
             self.robot.has_coral = False
         elif self.is_intaking:
@@ -183,11 +188,21 @@ class EndEffector(Subsystem):
                     self.set_end_effector_position(RobotScoringPositions.end_effector_travel_position)
                     self.robot.has_coral = True
             else:
+                self.robot.running_pid_lineup = False
+                self.robot.score_intent = False
+                self.robot.manual_scoring = False
+                self.robot.is_climbing = False
+                self.robot.at_scoring_position = False
                 self.robot.elevator.set_elevator_height(RobotScoringPositions.elevator_intake_height)
         elif self.robot.is_climbing:
             if self.robot.elevator.get_height() <= RobotScoringPositions.min_elevator_height_to_bring_in_end_effector:
                 self.set_end_effector_position(RobotScoringPositions.end_effector_climbing_position)
             else:
+                self.is_intaking = False
+                self.robot.manual_scoring = False
+                self.robot.running_pid_lineup = False
+                self.robot.score_intent = False
+                self.robot.at_scoring_position = False
                 self.robot.elevator.set_elevator_height(RobotScoringPositions.elevator_climb_height)
         elif self.robot.mechanisms_at_default:
             self.stop()

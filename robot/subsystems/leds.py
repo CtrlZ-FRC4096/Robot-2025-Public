@@ -9,45 +9,39 @@ if TYPE_CHECKING:
 import wpilib
 
 # Constants
-PWM_PORT = 0
-NUM_LEDS = 30
+PWM_PORT_STRIP_1 = 0
+PWM_PORT_STRIP_2 = 1
+NUM_LEDS = 18
 
 
 class LEDs(Subsystem):
     # LED pattern modes to cycle through
-    MODE_OFF = "off"  # whatever
-    MODE_ODOMETRY = "odometry"  # blue good -> purple bad
-    MODE_LOST_CAMS = "lost cams"  # red for reked
-    MODE_WAITING = "waiting"  # blue for waiting
-    MODE_STANDBY = "standby"
-    MODE_LOST_ODOMETRY = "lost odometry"
-    MODE_LOCKED_ON = "locked on"
+    MODE_ODOMETRY = "odometry"  # blue, solid (there was "purple bad here", but I am unsure what odometry mode means)
+    MODE_LOST_ODOMETRY = "lost odometry" # orange, solid
+    # if both odometry and cams are lost, the color is red, blinking
+    MODE_LOCKED_ON = "locked on" # white, solid
 
     # RGB Colors
-    COLOR_PURPLE = (100, 0, 255)
-    COLOR_RED = (255, 0, 0)
     COLOR_WHITE = (255, 255, 255)
-    COLOR_GREEN = (0, 255, 0)
-    COLOR_BLUE = (0, 0, 255)
+    COLOR_RED = (255, 0, 0)
     COLOR_ORANGE = (246, 61, 25)
     COLOR_YELLOW = (255, 255, 0)
+    COLOR_GREEN = (0, 255, 0)
+    COLOR_CYAN = (0, 255, 255)
+    COLOR_BLUE = (0, 0, 255)
+    COLOR_MAGENTA = (255, 0, 255)
 
     def __init__(self, robot: "Robot"):
         super().__init__()
         self.robot = robot
 
-        self.mode = self.MODE_WAITING
+        self.mode = self.MODE_ODOMETRY
 
-        self.led = wpilib.AddressableLED(port=PWM_PORT)  # check this
-        self.led.setLength(NUM_LEDS)  # check this
+        self.led_strip_1 = wpilib.AddressableLED(port=PWM_PORT_STRIP_1)  # check this
+        self.led_strip_2 = wpilib.AddressableLED(port=PWM_PORT_STRIP_2)
 
-        # Initialize our LED color data list
-        self.data = []
-        for i in range(NUM_LEDS):
-            self.data.append(wpilib.AddressableLED.LEDData(0, 0, 0))
-
-        self.led.setData(self.data)
-        self.led.start()
+        self.led_strip_1.setLength(NUM_LEDS)  # check this
+        self.led_strip_2.setLength(NUM_LEDS)
 
         # States & timers related to patterns below
         self.timer1 = wpilib.Timer()
@@ -149,23 +143,11 @@ class LEDs(Subsystem):
     def periodicX(self):
         # Set colors for current LED mode
 
-        if self.mode == self.MODE_OFF:
-            self.clear()
+        if self.mode == self.MODE_ODOMETRY:
+            self.fill(self.COLOR_BLUE)
 
         elif self.mode == self.MODE_LOST_ODOMETRY:
-            self.fill(self.COLOR_RED)
-            self.fill(self.COLOR_RED)
-
-        elif self.mode == self.MODE_ODOMETRY:
-            self.fill(self.COLOR_BLUE)
-            self.fill(self.COLOR_BLUE)
-
-
-        elif self.mode == self.MODE_LOST_CAMS:
-            self.pattern_flash(self.COLOR_RED)
-
-        elif self.mode == self.MODE_STANDBY:
-            self.fill(self.COLOR_BLUE)
+            self.fill(self.COLOR_ORANGE)
 
         elif self.mode == self.MODE_LOCKED_ON:
             self.fill(self.COLOR_WHITE)
@@ -174,5 +156,4 @@ class LEDs(Subsystem):
             pass
 
     def log(self):
-        # wpilib.SmartDashboard.putString("LEDs Mode", self.get_mode())
-        pass
+        wpilib.SmartDashboard.putString("LEDs Mode", self.get_mode())

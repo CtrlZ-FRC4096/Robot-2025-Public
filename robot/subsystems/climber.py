@@ -64,34 +64,9 @@ class Climber(Subsystem):
 
         self.climber_arm_motor.configurator.apply(climber_arm_motor_config)
 
-        self.gear_ratio = 140.0 # need to adjust if using something else
+        self.gear_ratio = 268.8 # need to adjust if using something else
         self.command_position = 0.0
         self.request = controls.MotionMagicVoltage(0, enable_foc=True)
-
-        self.climber_intake_motor = hardware.TalonFX(const.CLIMBER_INTAKE_MOTOR_CAN_ID, "rio")
-
-        climber_intake_motor_config = configs.TalonFXConfiguration()
-        climber_intake_motor_config.motor_output.inverted = signals.InvertedValue(1)
-        climber_intake_motor_config.current_limits.supply_current_limit = 40
-        climber_intake_motor_config.current_limits.supply_current_limit_enable = True
-        climber_intake_motor_config.slot0.k_p = 2.5
-        climber_intake_motor_config.slot0.k_i = 0.0
-        climber_intake_motor_config.slot0.k_d = 0.0
-        climber_intake_motor_config.slot0.k_v = 0.0
-
-        climber_intake_motor_config.closed_loop_ramps.torque_closed_loop_ramp_period = 0.02
-        climber_intake_motor_config.open_loop_ramps.torque_open_loop_ramp_period = 0.02
-        climber_intake_motor_config.closed_loop_ramps.duty_cycle_closed_loop_ramp_period = 0.02
-        climber_intake_motor_config.open_loop_ramps.duty_cycle_open_loop_ramp_period = 0.02
-        climber_intake_motor_config.closed_loop_ramps.voltage_closed_loop_ramp_period = 0.02
-        climber_intake_motor_config.open_loop_ramps.voltage_open_loop_ramp_period = 0.02
-
-        self.climber_intake_motor.configurator.apply(climber_intake_motor_config)
-
-        cage_intake_deque_length = 10
-        self.cage_intaked = deque(maxlen=cage_intake_deque_length)
-        for i in range(cage_intake_deque_length):
-            self.cage_intaked.append(False)
 
     def set_climber_position(self, position):
         self.command_position = position
@@ -103,26 +78,15 @@ class Climber(Subsystem):
         height = rotations / self.gear_ratio
         return height
 
-    def set_intake_speed(self, speed):
-        self.climber_intake_motor.set_control(controls.VelocityTorqueCurrentFOC(speed))
-
-    def successfully_intaked_cage(self):
-        return self.climber_intake_motor.get_torque_current().value > 15 # TODO: Find the correct value
-
     def climb(self):
-        self.set_intake_speed(15)
         self.set_climber_position(0.0) # TODO: Find the correct position
 
     def stop(self):
         pass
 
     def periodic(self):
-        # self.cage_intaked.appendleft(self.successfully_intaked_cage())
-        # if self.robot.is_climbing:
-        #     self.set_intake_speed(50)
-        #     if all(self.cage_intaked) and self.robot.end_effector.get_position() >= RobotScoringPositions.min_end_effector_position_to_climb and self.robot.elevator.get_height() >= RobotScoringPositions.min_elevator_climb_height:
-        #         self.climb()
-        pass
+        if self.robot.is_climbing:
+            self.climb()
 
 
     def log(self):

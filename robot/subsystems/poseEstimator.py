@@ -606,13 +606,13 @@ class PoseEstimator(Subsystem):
             self.curEstPose = self.curEstPoseGlobal
             self.single_tag = False
 
-        if (self.robot.leds.mode == self.robot.leds.MODE_LOST_ODOMETRY) or (
-            self.robot.leds.mode == self.robot.leds.MODE_ODOMETRY
-        ):
-            if not self.poseConverge:
-                self.robot.leds.set_mode(self.robot.leds.MODE_LOST_ODOMETRY)
-            elif self.poseConverge:
-                self.robot.leds.set_mode(self.robot.leds.MODE_ODOMETRY)
+        # if (self.robot.leds.mode == self.robot.leds.MODE_LOST_ODOMETRY) or (
+        #     self.robot.leds.mode == self.robot.leds.MODE_ODOMETRY
+        # ):
+        #     if not self.poseConverge:
+        #         self.robot.leds.set_mode(self.robot.leds.MODE_LOST_ODOMETRY)
+        #     elif self.poseConverge:
+        #         self.robot.leds.set_mode(self.robot.leds.MODE_ODOMETRY)
         self.poseConverge = True
 
         self.odometry.update(self.getYaw(), self.get_module_positions())

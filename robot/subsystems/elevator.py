@@ -78,7 +78,11 @@ class Elevator(Subsystem):
         # self.elevator_motor_1.set_position(0.0)
         self.in_proximity_to_begin_raising_elevator = False
 
-        self.height_encoder = wpilib.DutyCycleEncoder(1)
+        self.height_encoder = wpilib.DutyCycleEncoder(0)
+
+        # value_at_0 = 10.0
+        # self.elevator_motor_1.set_position((self.height_encoder.get() - value_at_0) * self.gear_ratio)
+
         self.elevator_motor_1.set_position(0.0)
 
         self.max_height = 67.0
@@ -148,5 +152,6 @@ class Elevator(Subsystem):
         within_2_meters = (self.robot.poseEstimator.curEstPose.translation() - self.robot.final_lineup_pose.translation()).norm() < 2
         # path_clear = not (self.path_generator.obstacleBetween(self.robot.poseEstimator.curEstPose, self.robot.final_lineup_pose))
         SmartDashboard.putBoolean("in proximity to begin raising elevator", within_2_meters)
+        SmartDashboard.putNumber("elevator encoder value", self.height_encoder.get())
         # SmartDashboard.putBoolean("obstacle in between", path_clear)
         # SmartDashboard.putBoolean("both elevator autonomously rainsing conditions met", within_2_meters and path_clear)

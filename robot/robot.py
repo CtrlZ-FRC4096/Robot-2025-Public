@@ -31,6 +31,7 @@ import const
 import oi
 import math
 import ntcore
+import subsystems.climber
 import subsystems.drivetrain
 
 # import subsystems.limelight
@@ -49,7 +50,7 @@ from coroutines import Coroutines
 import inspect
 import autoroutines
 
-from pathplannerlib.path import PathPlannerPath, Waypoint, IdealStartingState, GoalEndState
+from pathplannerlib.path import PathPlannerPath, Waypoint, IdealStartingState, GoalEndState, PathPoint
 from pathplannerlib.auto import AutoBuilder, PathPlannerAuto, NamedCommands, FollowPathCommand, PathConstraints
 from pathplannerlib.config import PIDConstants, RobotConfig
 from pathplannerlib.controller import PPHolonomicDriveController
@@ -107,20 +108,21 @@ class Robot(CoroutineRobot):
 
         # subsystems
         self.drivetrain = subsystems.drivetrain.Drivetrain(self)
-        self.leds = subsystems.leds.LEDs(self)
-        self.limelight = subsystems.limelight.Limelight_Wrapper()
+        # self.leds = subsystems.leds.LEDs(self)
         self.poseEstimator = subsystems.poseEstimator.PoseEstimator(self)
         self.funnel_intake = subsystems.funnel_intake.FunnelIntake(self)
         self.elevator = subsystems.elevator.Elevator(self)
         self.end_effector = subsystems.end_effector.EndEffector(self)
+        self.climber = subsystems.climber.Climber(self)
 
         self.subsystems = [
             self.drivetrain,
-            self.leds,
+            # self.leds,
             self.poseEstimator,
             self.funnel_intake,
             self.elevator,
-            self.end_effector
+            self.end_effector,
+            self.climber
         ]
 
         # If everything in self.subsystems is a Subsystem object, then
@@ -152,7 +154,11 @@ class Robot(CoroutineRobot):
         ### LOGGING ###
         self.remote_shell = RemoteShell(self)
 
+		# PATH CONSTRAINTS
+        self.path_constraints = PathConstraints(4.0, 4.0, degreesToRadians(540), degreesToRadians(540))
+
         self.autoroutines = autoroutines.AutoRoutines(self)
+        self.flip_3_piece_to_f5(False)
         self.auto = self.autoroutines.three_piece_to_f5()
 
         DataLogManager.start()
@@ -168,8 +174,7 @@ class Robot(CoroutineRobot):
         self.end_effector_canrange_for_reef_returning_bad_values = False
         self.is_climbing = False
 
-        # PATH CONSTRAINTS
-        self.path_constraints = PathConstraints(4.0, 4.0, degreesToRadians(540), degreesToRadians(540))
+
 
         @self.addPeriodic(period=0.25, offset=0)
         def _():
@@ -178,7 +183,7 @@ class Robot(CoroutineRobot):
 
         @self.addPeriodic(period=0.05, offset=-0.01)
         def _leds():
-            self.leds.periodicX()
+            # self.leds.periodicX()
             pass
 
         self.in_autonomous_mode = False
@@ -197,7 +202,9 @@ class Robot(CoroutineRobot):
             rotation.rotateBy(Rotation2d.fromDegrees(180))
             )
 
+
     def flip_path_cmd_across_x(self, cmd_path : FollowPathCommand):
+        # FLIPPING Y COORDS
         path = cmd_path._originalPath
         waypoints = path.getWaypoints()
         new_waypoints = []
@@ -208,25 +215,25 @@ class Robot(CoroutineRobot):
                 # no prev control
                 new_waypoints.append(Waypoint(
                     prevControl=None,
-                    anchor=Translation2d(self.flip_X_coord(waypoint.anchor.X()), waypoint.anchor.Y()),
-                    nextControl=Translation2d(self.flip_X_coord(waypoint.nextControl.X()), waypoint.nextControl.Y())
+                    anchor=Translation2d(waypoint.anchor.X(), self.flip_Y_coord(waypoint.anchor.Y())),
+                    nextControl=Translation2d(waypoint.nextControl.X(), self.flip_Y_coord(waypoint.nextControl.Y()))
                 ))
             elif idx == len(waypoints) - 1:
                 #no next control
                 new_waypoints.append(Waypoint(
-                    prevControl=Translation2d(self.flip_X_coord(waypoint.prevControl.X()), waypoint.prevControl.Y()),
-                    anchor=Translation2d(self.flip_X_coord(waypoint.anchor.X()), waypoint.anchor.Y()),
+                    prevControl=Translation2d(waypoint.prevControl.X(), self.flip_Y_coord(waypoint.prevControl.Y())),
+                    anchor=Translation2d(waypoint.anchor.X(), self.flip_Y_coord(waypoint.anchor.Y())),
                     nextControl=None
                 ))
             else:
                         # both controls
                 new_waypoints.append(Waypoint(
-                    prevControl=Translation2d(self.flip_X_coord(waypoint.prevControl.X()), waypoint.prevControl.Y()),
-                        anchor=Translation2d(self.flip_X_coord(waypoint.anchor.X()), waypoint.anchor.Y()),
-                        nextControl=Translation2d(self.flip_X_coord(waypoint.nextControl.X()), waypoint.nextControl.Y())
+                    prevControl=Translation2d(waypoint.prevControl.X(), self.flip_Y_coord(waypoint.prevControl.Y())),
+                        anchor=Translation2d(waypoint.anchor.X(), self.flip_Y_coord(waypoint.anchor.Y())),
+                        nextControl=Translation2d(waypoint.nextControl.X(), self.flip_Y_coord(waypoint.nextControl.Y()))
                     ))
         new_path = PathPlannerPath(new_waypoints, self.path_constraints, ideal_starting_state=ideal_start, goal_end_state=goal_end)
-        return (FollowPathCommand(
+        return FollowPathCommand(
             new_path,
             self.drivetrain.get_pose, # Robot pose supplier
             self.drivetrain.get_robot_relative_speeds, # ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
@@ -242,7 +249,7 @@ class Robot(CoroutineRobot):
             self.pathplanner_config, # The robot configuration
             self.drivetrain.shouldFlipPath, # Supplier to control path flipping based on alliance color
             self.drivetrain # Reference to this subsystem to set requirements
-        ))
+        )
 
     def flip_3_piece_auto(self, left_side : bool):
         if not left_side:
@@ -265,38 +272,31 @@ class Robot(CoroutineRobot):
             self.score_3_right_branch = True
             self.score_4_face = 1
             self.score_4_right_branch = False
-            new_path_commands = []
-            for command in self.autoroutines.three_piece_auto():
-                if type(command) == PathPlannerPath:
-                    new_path_commands.append(self.flip_path_cmd_across_x)
-            self.autoroutines.p_for_3p = new_path_commands
+            for idx, command in enumerate(self.autoroutines.p_for_3p):
+                self.autoroutines.p_for_3p[idx] = self.flip_path_cmd_across_x(command)
 
 
-
-
-    def flip_3_piece_to_f5(self, quadrant : int):
-        '''FieldLength, 0 - quadrant 1;
-            FieldLength, FieldWidth - quadrant 2;
-            0, FieldWidth - quadrant 3;
-            0,0 - quadrant 4;'''
-        auto = self.autoroutines.three_piece_to_f5()
-        if quadrant == 4:
+    def flip_3_piece_to_f5(self, left_side : bool):
+        if not left_side:
             self.score_1_f5_face = 5
+            self.score_1_f5_right_branch = False
+            self.score_2_face = 6
+            self.score_2_right_branch = True
+            self.score_3_face = 6
+            self.score_3_right_branch = False
             self.left_source_auto = False
-        elif quadrant == 3:
-            self.new_path_commands = []
-            for command in auto:
-                if type(command) == FollowPathCommand:
-                    #mirror across x axis
-                    self.new_path_commands.append(self.flip_path_cmd_across_x(command))
-                elif type(command) == CoroutineCommand:
-                    if "score_piece_1_f5" in command.getName():
-                        self.score_1_f5_face = 3
-                    elif "score_piece_2" in command.getName() or "score_piece_3" in command.getName() or "reset_robot_after" in command.getName():
-                        pass
-                    elif "intake" in command.getName():
-                        self.left_source_auto = True
-            self.autoroutines.p_for_f5 = self.new_path_commands
+        else:
+            self.score_1_f5_face = 3
+            self.score_1_f5_right_branch = True
+            self.score_2_face = 2
+            self.score_2_right_branch = False
+            self.score_3_face = 2
+            self.score_3_right_branch = True
+            self.left_source_auto = False
+            for idx, command in enumerate(self.autoroutines.p_for_f5):
+                #     #mirror across x axis
+                print("pathplanner command ", idx + 1)
+                self.autoroutines.p_for_f5[idx] = self.flip_path_cmd_across_x(command)
 
     def followPathCommand(self, pathName: str, pathConstraints=None):
         path = PathPlannerPath.fromPathFile(pathName)
@@ -344,7 +344,6 @@ class Robot(CoroutineRobot):
 
     ### TELEOPERATED ###
     def teleop_mode(self):
-        self.leds.set_mode(self.leds.MODE_ODOMETRY)
         self.scheduler.cancelAll()
         # self.mechanisms_at_default = True
         self.funnel_intake.is_intaking = False
