@@ -197,9 +197,9 @@ class PoseEstimator(Subsystem):
 
         # # Update with positionon robot
         ROBOT_TO_CAM4 = Transform3d(
-            Translation3d(-0.302, 0.232, 0.771),  # X  # Y  # Z
+            Translation3d(-0.302, 0.214, 0.773),  # X  # Y  # Z
             Rotation3d(
-                0.0,
+                np.deg2rad(38.0),
                 0.0,
                 np.deg2rad(75.0),
             ),  # Roll  # Pitch  # Yaw
