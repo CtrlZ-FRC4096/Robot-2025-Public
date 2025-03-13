@@ -38,8 +38,20 @@ class AutoRoutines:
         self.p_4 = self.robot.followPathCommand("3P_4")
         self.p_5 = self.robot.followPathCommand("3P_5")
         self.p_6 = self.robot.followPathCommand("3P_6")
-
         self.p_2_f5 = self.robot.followPathCommand("f5_intake")
+
+        self.p_for_f5 = [
+            self.p_2_f5,
+            self.p_3,
+            self.p_5
+        ]
+        self.p_for_3p = [
+            self.p_2,
+            self.p_3,
+            self.p_5,
+            self.p_6,
+        ]
+
 
     def three_piece_no_pathplanner(self):
         return SequentialCommandGroup(
@@ -81,17 +93,17 @@ class AutoRoutines:
         return SequentialCommandGroup(
             self.robot.coroutines.score_piece_1.withTimeout(1.37),
             self.robot.coroutines.reset_robot_after_scoring_1,
-            self.p_2,
+            self.p_for_3p[0],
             self.robot.coroutines.intake_coral_1,
-            self.p_3,
+            self.p_for_3p[1],
             self.robot.coroutines.score_piece_2,
             self.robot.coroutines.reset_robot_after_scoring_2,
             self.robot.coroutines.intake_coral_2,
-            self.p_5,
+            self.p_for_3p[2],
             self.robot.coroutines.score_piece_3,
             self.robot.coroutines.reset_robot_after_scoring_3,
             self.robot.coroutines.intake_coral_3,
-            self.p_6,
+            self.p_for_3p[3],
             self.robot.coroutines.score_piece_4,
         )
 
@@ -99,13 +111,13 @@ class AutoRoutines:
         return SequentialCommandGroup(
             self.robot.coroutines.score_piece_1_f5.withTimeout(1.7), #CHANGE TIME
             self.robot.coroutines.reset_robot_after_scoring_1,
-            self.p_2_f5,
+            self.p_for_f5[0],
             self.robot.coroutines.intake_coral_1,
-            self.p_3,
+            self.p_for_f5[1],
             self.robot.coroutines.score_piece_2,
             self.robot.coroutines.reset_robot_after_scoring_2,
             self.robot.coroutines.intake_coral_2,
-            self.p_5,
+            self.p_for_f5[2],
             self.robot.coroutines.score_piece_3,
             self.robot.coroutines.reset_robot_after_scoring_3,
         )

@@ -120,9 +120,9 @@ class Coroutines:
             robot.at_scoring_position = False
             robot.score_piece = False
             robot.final_lineup_pose = robot.poseEstimator.get_path_to_reef(
-                True,
-                robot.poseEstimator.calculate_closest_reef_tag()[1],
-            	robot.right_branch,
+                True if robot.score_1_face in [4,6] else False, # CHANGE WHEN WE HAVE FIELD CALIBRATED
+                robot.score_1_face,
+            	robot.score_1_right_branch,
                 do_manip_offset=True
             )
             robot.mechanisms_at_default = False
@@ -141,9 +141,9 @@ class Coroutines:
             robot.at_scoring_position = False
             robot.score_piece = False
             robot.final_lineup_pose = robot.poseEstimator.get_path_to_reef(
-                True,
-                6,
-            	True,
+                True if robot.score_2_face in [4,6] else False, # CHANGE WHEN WE HAVE FIELD CALIBRATED
+                robot.score_2_face,
+            	robot.score_2_right_branch,
                 do_manip_offset=True
             )
             robot.mechanisms_at_default = False
@@ -162,9 +162,9 @@ class Coroutines:
             robot.at_scoring_position = False
             robot.score_piece = False
             robot.final_lineup_pose = robot.poseEstimator.get_path_to_reef(
-                True,
-                6,
-            	False,
+                True if robot.score_3_face in [4,6] else False, # CHANGE WHEN WE HAVE FIELD CALIBRATED
+                robot.score_3_face,
+            	robot.score_3_right_branch,
                 do_manip_offset=True
             )
             robot.mechanisms_at_default = False
@@ -183,9 +183,9 @@ class Coroutines:
             robot.at_scoring_position = False
             robot.score_piece = False
             robot.final_lineup_pose = robot.poseEstimator.get_path_to_reef(
-                True,
-                1,
-            	True,
+                True if robot.score_4_face in [4,6] else False, # CHANGE WHEN WE HAVE FIELD CALIBRATED
+                robot.score_4_face,
+            	robot.score_4_right_branch,
                 do_manip_offset=True
             )
             robot.mechanisms_at_default = False
@@ -307,7 +307,7 @@ class Coroutines:
         @commandify
         def intake_coral_1():
             yield
-            robot.final_lineup_pose = robot.poseEstimator.get_path_to_source(False, 1, extra_dist_offset=-6.0)
+            robot.final_lineup_pose = robot.poseEstimator.get_path_to_source(robot.left_source_auto, 1, extra_dist_offset=-6.0)
             robot.mechanisms_at_default = False
             robot.at_scoring_position = False
             robot.score_piece = False
@@ -324,7 +324,7 @@ class Coroutines:
         @commandify
         def intake_coral_2():
             yield
-            robot.final_lineup_pose = robot.poseEstimator.get_path_to_source(False, 1, extra_dist_offset=-6.0) # CHANGE TO POSITION ON SOURCE from OI
+            robot.final_lineup_pose = robot.poseEstimator.get_path_to_source(robot.left_source_auto, 1, extra_dist_offset=-6.0) # CHANGE TO POSITION ON SOURCE from OI
             robot.mechanisms_at_default = False
             robot.at_scoring_position = False
             robot.score_piece = False
@@ -341,7 +341,7 @@ class Coroutines:
         @commandify
         def intake_coral_3():
             yield
-            robot.final_lineup_pose = robot.poseEstimator.get_path_to_source(False, 1, extra_dist_offset=-6.0) # CHANGE TO POSITION ON SOURCE from OI
+            robot.final_lineup_pose = robot.poseEstimator.get_path_to_source(robot.left_source_auto, 1, extra_dist_offset=-6.0) # CHANGE TO POSITION ON SOURCE from OI
             robot.mechanisms_at_default = False
             robot.at_scoring_position = False
             robot.score_piece = False
