@@ -108,7 +108,7 @@ class Robot(CoroutineRobot):
 
         # subsystems
         self.drivetrain = subsystems.drivetrain.Drivetrain(self)
-        # self.leds = subsystems.leds.LEDs(self)
+        self.leds = subsystems.leds.LEDs(self)
         self.poseEstimator = subsystems.poseEstimator.PoseEstimator(self)
         self.funnel_intake = subsystems.funnel_intake.FunnelIntake(self)
         self.elevator = subsystems.elevator.Elevator(self)
@@ -117,7 +117,7 @@ class Robot(CoroutineRobot):
 
         self.subsystems = [
             self.drivetrain,
-            # self.leds,
+            self.leds,
             self.poseEstimator,
             self.funnel_intake,
             self.elevator,
@@ -183,7 +183,7 @@ class Robot(CoroutineRobot):
 
         @self.addPeriodic(period=0.05, offset=-0.01)
         def _leds():
-            # self.leds.periodicX()
+            self.leds.periodicX()
             pass
 
         self.in_autonomous_mode = False

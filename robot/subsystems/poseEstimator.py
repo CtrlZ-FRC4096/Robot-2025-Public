@@ -559,7 +559,10 @@ class PoseEstimator(Subsystem):
                     .norm()
                     <= 0.5
                 ):
+                    self.robot.leds.mode = self.robot.leds.MODE_ODOMETRY
                     self.poseConverge = False
+                else:
+                    self.robot.leds.mode = self.robot.leds.MODE_LOST_ODOMETRY
                 self.camTargetsVisible = True
             # self.telemetry.addVisionObservations(observations) #Might need later https://github.com/RobotCasserole1736/RobotCasserole2024/blob/fa033322e6f4efe87e8b1af938d8a3f69599f29b/drivetrain/poseEstimation/drivetrainPoseTelemetry.py#L15
 

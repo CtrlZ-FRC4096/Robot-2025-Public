@@ -190,17 +190,15 @@ class OI:
 
         @self.driver1.X.whenPressed  # Manual elevator raise
         def _():
+            self.robot.leds.mode = self.robot.leds.MODE_LOCKED_ON
             self.robot.manual_scoring = True
             self.robot.mechanisms_at_default = False
 
-        @self.driver1.Y.whenHeld
+        @self.driver1.Y.whenPressed
         def _():
             self.robot.mechanisms_at_default = True
             self.robot.manual_scoring = False
-
-        @self.driver1.Y.whenReleased
-        def _():
-            self.robot.score_piece = False
+            self.robot.leds.mode = self.robot.leds.MODE_ODOMETRY
 
         @self.driver1.POV.DOWN.whenPressed  # Reset Gyro
         def _():
@@ -222,6 +220,7 @@ class OI:
 
         @self.driver1.RIGHT_BUMPER.whenPressed  # begin intake process
         def _():
+            self.robot.leds.mode = self.robot.leds.MODE_INTAKING
             self.robot.mechanisms_at_default = False
             self.robot.funnel_intake.is_intaking = True
             self.robot.end_effector.is_intaking = True
@@ -231,12 +230,14 @@ class OI:
 
         @self.driver1.LEFT_BUMPER.whenPressed  # manual end to intake process
         def _():
+            self.robot.leds.mode = self.robot.leds.MODE_ODOMETRY
             self.robot.funnel_intake.is_intaking = False
             self.robot.end_effector.is_intaking = False
             self.robot.mechanisms_at_default = True
 
         @self.driver1.LEFT_TRIGGER_AS_BUTTON.whenHeld #run profiled pid to nearest source
         def _():
+            self.robot.leds.mode = self.robot.leds.MODE_INTAKING
             self.robot.mechanisms_at_default = False
             self.robot.at_scoring_position = False
             self.robot.score_piece = False
@@ -248,6 +249,7 @@ class OI:
 
         @self.driver1.LEFT_TRIGGER_AS_BUTTON.whenReleased #stop pid
         def _():
+            self.robot.leds.mode = self.robot.leds.MODE_ODOMETRY
             self.robot.mechanisms_at_default = True
             self.robot.running_pid_lineup = False
             self.robot.score_intent = False
@@ -256,6 +258,7 @@ class OI:
 
         @self.driver1.RIGHT_TRIGGER_AS_BUTTON.whenHeld  # Run profiled PID to tag
         def _():
+            self.robot.leds.mode = self.robot.leds.MODE_LOCKED_ON
             self.robot.funnel_intake.is_intaking = False
             self.robot.end_effector.is_intaking = False
             self.robot.at_scoring_position = False
@@ -275,13 +278,14 @@ class OI:
 
         @self.driver1.RIGHT_TRIGGER_AS_BUTTON.whenReleased  # stop profiled PID
         def _():
+            self.robot.leds.mode = self.robot.leds.MODE_ODOMETRY
             self.robot.mechanisms_at_default = True
             self.robot.running_pid_lineup = False
             self.robot.score_intent = False
             self.robot.at_scoring_position = False
             self.robot_oriented_angle = self.robot.poseEstimator.getYaw().degrees()
             self.robot.end_effector.stop()
-            self.robot.drivetrain.stop() #May or may not be needed to stop the robot from tracking the PID
+            self.robot.drivetrain.stop() # May or may not be needed to stop the robot from tracking the PID
 
         @self.driver2.Y.whenPressed # L4
         def _():

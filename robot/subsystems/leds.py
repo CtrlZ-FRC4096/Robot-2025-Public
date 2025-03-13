@@ -20,6 +20,7 @@ class LEDs(Subsystem):
     MODE_LOST_ODOMETRY = "lost odometry" # orange, solid
     # if both odometry and cams are lost, the color is red, blinking
     MODE_LOCKED_ON = "locked on" # white, solid
+    MODE_INTAKING = "intaking" # yellow, solid
 
     # RGB Colors
     COLOR_WHITE = (255, 255, 255)
@@ -42,6 +43,16 @@ class LEDs(Subsystem):
 
         self.led_strip_1.setLength(NUM_LEDS)  # check this
         self.led_strip_2.setLength(NUM_LEDS)
+
+        self.data = []
+        for i in range(NUM_LEDS):
+            self.data.append(wpilib.AddressableLED.LEDData(0, 0, 0))
+
+        self.led_strip_1.setData(self.data)
+        self.led_strip_1.start()
+
+        self.led_strip_2.setData(self.data)
+        self.led_strip_2.start()
 
         # States & timers related to patterns below
         self.timer1 = wpilib.Timer()
@@ -68,11 +79,13 @@ class LEDs(Subsystem):
         for led in self.data:
             led.setRGB(*color)
 
-        self.led.setData(self.data)
+        self.led_strip_1.setData(self.data)
+        self.led_strip_2.setData(self.data)
 
     def clear(self):
         self.fill((0, 0, 0))
-        self.led.setData(self.data)
+        self.led_strip_1.setData(self.data)
+        self.led_strip_2.setData(self.data)
 
     def pattern_scroll(self, colors, steps=8):
         multiplier = 0.7
@@ -99,7 +112,8 @@ class LEDs(Subsystem):
         if i > 0:
             self.data[i - 1].setRGB(0, 0, 0)
 
-        self.led.setData(self.data)
+        self.led_strip_1.setData(self.data)
+        self.led_strip_2.setData(self.data)
 
         self.scroll_pos += 1
 
@@ -151,6 +165,9 @@ class LEDs(Subsystem):
 
         elif self.mode == self.MODE_LOCKED_ON:
             self.fill(self.COLOR_WHITE)
+        
+        elif self.mode == self.MODE_INTAKING:
+            self.fill(self.COLOR_YELLOW)
 
         else:
             pass
