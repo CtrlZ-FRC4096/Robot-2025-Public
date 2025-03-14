@@ -17,7 +17,8 @@ from collections import deque
 
 from phoenix6.hardware import CANrange
 from phoenix6.configs import CANcoderConfigurator
-from phoenix6.configs.config_groups import ProximityParamsConfigs
+from phoenix6.configs.config_groups import ProximityParamsConfigs, ToFParamsConfigs, FovParamsConfigs
+from phoenix6.signals import UpdateModeValue
 from robot_scoring_positions import RobotScoringPositions
 import wpilib
 
@@ -103,8 +104,18 @@ class EndEffector(Subsystem):
 
         self.end_effector_reef_alignment_can_range = CANrange(const.END_EFFECTOR_REEF_ALIGNMENT_CANRANGE, "rio")
         self.end_effector_reef_alignment_can_range_config = configs.CANrangeConfiguration()
+        self.end_effector_reef_alignment_can_range_t_of_config = ToFParamsConfigs()
+        self.end_effector_reef_alignment_can_range_t_of_config.update_frequency = 50 # hz
+        self.end_effector_reef_alignment_can_range_t_of_config.update_mode = UpdateModeValue.SHORT_RANGE_USER_FREQ
+        self.end_effector_reef_alignment_can_range_config.with_to_f_params(self.end_effector_reef_alignment_can_range_t_of_config)
+
+        self.end_effector_reef_alignment_can_range_fov_config = FovParamsConfigs()
+        self.end_effector_reef_alignment_can_range_fov_config.fov_range_x = 10.0
+        self.end_effector_reef_alignment_can_range_fov_config.fov_range_y = 10.0
+        self.end_effector_reef_alignment_can_range_config.with_fov_params(self.end_effector_reef_alignment_can_range_fov_config)
+
         self.end_effector_reef_alignment_can_range_prox_config = ProximityParamsConfigs()
-        self.end_effector_reef_alignment_can_range_prox_config.proximity_threshold = 0.08
+        self.end_effector_reef_alignment_can_range_prox_config.proximity_threshold = 0.08 # need to configure this value
         self.end_effector_reef_alignment_can_range_config.with_proximity_params(self.end_effector_reef_alignment_can_range_prox_config)
 
         self.end_effector_reef_alignment_can_range.configurator.apply(self.end_effector_reef_alignment_can_range_config)
