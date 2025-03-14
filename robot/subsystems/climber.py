@@ -37,7 +37,7 @@ class Climber(Subsystem):
         climber_arm_motor_config.slot0.k_s = 0.0
 
         ## Next we will adjust k_p until the elevator moves to the correct position and slightly overshoots/oscillates
-        climber_arm_motor_config.slot0.k_p = 4.0
+        climber_arm_motor_config.slot0.k_p = 10.0
         ## Next we will adjust k_d until the elevator moves to the correct position without overshooting/oscillating
         climber_arm_motor_config.slot0.k_d = 0.0
 
@@ -86,8 +86,18 @@ class Climber(Subsystem):
 
     def periodic(self):
         if self.robot.is_climbing:
-            self.climb()
-
+            # self.climb()
+            if self.robot.retract_climber:
+                self.set_climber_position(RobotScoringPositions.climber_climb_position)
+            else:
+                if (self.robot.end_effector.get_position() >= RobotScoringPositions.min_end_effector_position_to_climb) and (self.robot.elevator.get_height() >= RobotScoringPositions.min_elevator_climb_height):
+                    self.set_climber_position(RobotScoringPositions.climber_up_position)
+                else:
+                    self.robot.elevator.set_elevator_height(RobotScoringPositions.elevator_climb_height)
+                    self.robot.end_effector.set_end_effector_position(RobotScoringPositions.end_effector_climbing_position)
+        elif self.robot.mechanisms_at_default:
+            if (self.robot.end_effector.get_position() >= RobotScoringPositions.min_end_effector_position_to_climb) and (self.robot.elevator.get_height() >= RobotScoringPositions.min_elevator_climb_height):
+                self.set_climber_position(0.0)
 
     def log(self):
-        pass
+        SmartDashboard.putNumber("climber position", self.get_position())

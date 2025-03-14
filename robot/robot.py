@@ -173,6 +173,7 @@ class Robot(CoroutineRobot):
         self.right_branch = True
         self.end_effector_canrange_for_reef_returning_bad_values = False
         self.is_climbing = False
+        self.retract_climber = False
 
 
 

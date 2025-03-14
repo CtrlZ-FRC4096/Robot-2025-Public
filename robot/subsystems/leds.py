@@ -39,10 +39,10 @@ class LEDs(Subsystem):
         self.mode = self.MODE_ODOMETRY
 
         self.led_strip_1 = wpilib.AddressableLED(port=PWM_PORT_STRIP_1)  # check this
-        self.led_strip_2 = wpilib.AddressableLED(port=PWM_PORT_STRIP_2)
+        # self.led_strip_2 = wpilib.AddressableLED(port=PWM_PORT_STRIP_2)
 
         self.led_strip_1.setLength(NUM_LEDS)  # check this
-        self.led_strip_2.setLength(NUM_LEDS)
+        # self.led_strip_2.setLength(NUM_LEDS)
 
         self.data = []
         for i in range(NUM_LEDS):
@@ -51,8 +51,8 @@ class LEDs(Subsystem):
         self.led_strip_1.setData(self.data)
         self.led_strip_1.start()
 
-        self.led_strip_2.setData(self.data)
-        self.led_strip_2.start()
+        # self.led_strip_2.setData(self.data)
+        # self.led_strip_2.start()
 
         # States & timers related to patterns below
         self.timer1 = wpilib.Timer()
@@ -80,12 +80,12 @@ class LEDs(Subsystem):
             led.setRGB(*color)
 
         self.led_strip_1.setData(self.data)
-        self.led_strip_2.setData(self.data)
+        # self.led_strip_2.setData(self.data)
 
     def clear(self):
         self.fill((0, 0, 0))
         self.led_strip_1.setData(self.data)
-        self.led_strip_2.setData(self.data)
+        # self.led_strip_2.setData(self.data)
 
     def pattern_scroll(self, colors, steps=8):
         multiplier = 0.7
@@ -113,7 +113,7 @@ class LEDs(Subsystem):
             self.data[i - 1].setRGB(0, 0, 0)
 
         self.led_strip_1.setData(self.data)
-        self.led_strip_2.setData(self.data)
+        # self.led_strip_2.setData(self.data)
 
         self.scroll_pos += 1
 
@@ -165,7 +165,7 @@ class LEDs(Subsystem):
 
         elif self.mode == self.MODE_LOCKED_ON:
             self.fill(self.COLOR_WHITE)
-        
+
         elif self.mode == self.MODE_INTAKING:
             self.fill(self.COLOR_YELLOW)
 
