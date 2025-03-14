@@ -78,6 +78,8 @@ from photoncamera import WrapperedPhotonCamera
 from wpimath.units import degreesToRadians, inchesToMeters
 from robotpy_apriltag import AprilTagField, AprilTagFieldLayout
 
+from robot_scoring_positions import RobotScoringPositions
+
 
 class PoseEstimator(Subsystem):
     def __init__(self, robot: "Robot"):
@@ -499,6 +501,13 @@ class PoseEstimator(Subsystem):
         return (closest_face % 2) + 2 # CHANGE THIS BACK TO + 2
 
     def periodic(self):
+        if self.robot.descoring_algae:
+            algae_height_at_closest_side = self.robot.poseEstimator.calculate_algae_height_at_closest_side()
+            if algae_height_at_closest_side == 3:
+                self.robot.score_state = RobotScoringPositions.Descore_Algae_L3
+            elif algae_height_at_closest_side == 2:
+                self.robot.score_state = RobotScoringPositions.Descore_Algae_L2
+                
         allianceColor = DriverStation.getAlliance()
         self.single_tag_IDs = set()
         single_tag_poses = []

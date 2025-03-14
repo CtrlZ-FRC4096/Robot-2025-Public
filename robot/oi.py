@@ -220,6 +220,7 @@ class OI:
 
         @self.driver1.RIGHT_BUMPER.whenPressed  # begin intake process
         def _():
+            self.robot.descoring_algae = False
             self.robot.leds.mode = self.robot.leds.MODE_INTAKING
             self.robot.mechanisms_at_default = False
             self.robot.funnel_intake.is_intaking = True
@@ -237,6 +238,7 @@ class OI:
 
         @self.driver1.LEFT_TRIGGER_AS_BUTTON.whenHeld #run profiled pid to nearest source
         def _():
+            self.robot.descoring_algae = False
             self.robot.leds.mode = self.robot.leds.MODE_INTAKING
             self.robot.mechanisms_at_default = False
             self.robot.at_scoring_position = False
@@ -258,6 +260,7 @@ class OI:
 
         @self.driver1.RIGHT_TRIGGER_AS_BUTTON.whenHeld  # Run profiled PID to tag
         def _():
+            self.robot.descoring_algae = False
             self.robot.leds.mode = self.robot.leds.MODE_LOCKED_ON
             self.robot.funnel_intake.is_intaking = False
             self.robot.end_effector.is_intaking = False
@@ -348,6 +351,7 @@ class OI:
             self.robot.running_pid_lineup = False
             self.robot.funnel_intake.is_intaking = False
             self.robot.end_effector.is_intaking = False
+            self.robot.descoring_algae = False
 
         @self.driver2.BACK.whenPressed # raise all setpoints
         def _():
@@ -385,6 +389,7 @@ class OI:
             self.robot.end_effector.is_intaking = False
             self.robot.manual_scoring = True
             self.robot.score_piece = True
+            self.robot.descoring_algae = True
 
             algae_height_at_closest_side = self.robot.poseEstimator.calculate_algae_height_at_closest_side()
             if algae_height_at_closest_side == 3:
@@ -394,6 +399,7 @@ class OI:
 
         @self.driver2.LEFT_BUMPER.whenReleased
         def _():
+            self.robot.descoring_algae = False
             self.robot.mechanisms_at_default = True
             self.robot.score_intent = False
             self.robot.manual_scoring = False

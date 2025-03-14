@@ -174,7 +174,7 @@ class Robot(CoroutineRobot):
         self.end_effector_canrange_for_reef_returning_bad_values = False
         self.is_climbing = False
         self.retract_climber = False
-
+        self.descoring_algae = False
 
 
         @self.addPeriodic(period=0.25, offset=0)
@@ -352,6 +352,7 @@ class Robot(CoroutineRobot):
         self.running_pid_lineup = False
         self.score_intent = False
         self.in_autonomous_mode = False
+        self.funnel_intake.piece_passing_through = False
         self.oi.robot_oriented_angle = self.poseEstimator.getYaw().degrees()
 
         while True:

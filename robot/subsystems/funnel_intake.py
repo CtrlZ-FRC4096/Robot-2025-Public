@@ -74,6 +74,7 @@ class FunnelIntake(Subsystem):
         if self.robot.in_autonomous_mode:
             self.piece_detected_in_funnel.append(self.funnel_cannrange.get_is_detected().value)
             self.piece_passing_through = all(self.piece_detected_in_funnel)
+            
         if self.is_intaking:
             self.intake(55)
         elif self.robot.score_piece:
