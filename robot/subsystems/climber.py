@@ -93,6 +93,11 @@ class Climber(Subsystem):
                 if (self.robot.end_effector.get_position() >= RobotScoringPositions.min_end_effector_position_to_climb) and (self.robot.elevator.get_height() >= RobotScoringPositions.min_elevator_climb_height):
                     self.set_climber_position(RobotScoringPositions.climber_up_position)
                 else:
+                    self.is_intaking = False
+                    self.robot.manual_scoring = False
+                    self.robot.running_pid_lineup = False
+                    self.robot.score_intent = False
+                    self.robot.at_scoring_position = False
                     self.robot.elevator.set_elevator_height(RobotScoringPositions.elevator_climb_height)
                     self.robot.end_effector.set_end_effector_position(RobotScoringPositions.end_effector_climbing_position)
         elif self.robot.mechanisms_at_default:
