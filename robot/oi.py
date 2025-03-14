@@ -289,15 +289,21 @@ class OI:
 
         @self.driver2.Y.whenPressed # L4
         def _():
-            self.robot.score_state = RobotScoringPositions.L4_Scoring
+            if self.robot.is_climbing:
+                self.robot.retract_climber = False
+            else:
+                self.robot.score_state = RobotScoringPositions.L4_Scoring
 
         @self.driver2.B.whenPressed #L3
         def _():
             self.robot.score_state = RobotScoringPositions.L3_Scoring
 
-        @self.driver2.A.whenPressed # L2
+        @self.driver2.A.whenPressed # L2 and retract climber
         def _():
-            self.robot.score_state = RobotScoringPositions.L2_Scoring
+            if self.robot.is_climbing:
+                self.robot.retract_climber = True
+            else:
+                self.robot.score_state = RobotScoringPositions.L2_Scoring
 
         @self.driver2.X.whenPressed # L1
         def _():
@@ -399,7 +405,7 @@ class OI:
 
             self.robot.score_state = RobotScoringPositions.L4_Scoring
 
-        @self.driver2.RIGHT_BUMPER.whenPressed # climb
+        @self.driver2.RIGHT_BUMPER.whenHeld # climb
         def _():
             self.robot.mechanisms_at_default = False
             self.robot.score_intent = False
@@ -408,6 +414,17 @@ class OI:
             self.robot.funnel_intake.is_intaking = False
             self.robot.end_effector.is_intaking = False
             self.robot.is_climbing = True
+
+        @self.driver2.RIGHT_BUMPER.whenReleased
+        def _():
+            self.robot.mechanisms_at_default = True
+            self.robot.score_intent = False
+            self.robot.manual_scoring = False
+            self.robot.running_pid_lineup = False
+            self.robot.funnel_intake.is_intaking = False
+            self.robot.end_effector.is_intaking = False
+            self.robot.is_climbing = False
+            self.robot.retract_climber = False
 
 
 
