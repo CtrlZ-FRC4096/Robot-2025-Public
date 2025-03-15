@@ -254,7 +254,7 @@ class OI:
             self.robot.end_effector.is_intaking = True
             self.robot.running_pid_lineup = True
             self.robot.score_intent = False
-            self.robot.final_lineup_pose = self.robot.poseEstimator.get_path_to_source(self.robot.poseEstimator.calculate_closest_source()[0], self.robot.position_on_source)
+            self.robot.final_lineup_pose = self.robot.poseEstimator.get_path_to_source(self.robot.poseEstimator.calculate_closest_source()[0], self.robot.position_on_source, extra_dist_offset=-3.0)
 
         @self.driver1.LEFT_TRIGGER_AS_BUTTON.whenReleased #stop pid
         def _():
