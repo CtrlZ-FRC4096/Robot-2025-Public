@@ -105,18 +105,14 @@ class EndEffector(Subsystem):
         self.end_effector_reef_alignment_can_range = CANrange(const.END_EFFECTOR_REEF_ALIGNMENT_CANRANGE, "rio")
         self.end_effector_reef_alignment_can_range_config = configs.CANrangeConfiguration()
         self.end_effector_reef_alignment_can_range_t_of_config = ToFParamsConfigs()
-        self.end_effector_reef_alignment_can_range_t_of_config.update_frequency = 50 # hz
+        self.end_effector_reef_alignment_can_range_t_of_config.update_frequency = 20 # hz
         self.end_effector_reef_alignment_can_range_t_of_config.update_mode = UpdateModeValue.SHORT_RANGE_USER_FREQ
         self.end_effector_reef_alignment_can_range_config.with_to_f_params(self.end_effector_reef_alignment_can_range_t_of_config)
 
         self.end_effector_reef_alignment_can_range_fov_config = FovParamsConfigs()
-        self.end_effector_reef_alignment_can_range_fov_config.fov_range_x = 10.0
-        self.end_effector_reef_alignment_can_range_fov_config.fov_range_y = 10.0
+        self.end_effector_reef_alignment_can_range_fov_config.fov_center_x = -2.0
+        self.end_effector_reef_alignment_can_range_fov_config.fov_range_x = 6.75
         self.end_effector_reef_alignment_can_range_config.with_fov_params(self.end_effector_reef_alignment_can_range_fov_config)
-
-        self.end_effector_reef_alignment_can_range_prox_config = ProximityParamsConfigs()
-        self.end_effector_reef_alignment_can_range_prox_config.proximity_threshold = 0.08 # need to configure this value
-        self.end_effector_reef_alignment_can_range_config.with_proximity_params(self.end_effector_reef_alignment_can_range_prox_config)
 
         self.end_effector_reef_alignment_can_range.configurator.apply(self.end_effector_reef_alignment_can_range_config)
 
@@ -136,7 +132,7 @@ class EndEffector(Subsystem):
         for i in range(deque_length):
             self.piece_detected.append(False)
 
-        reef_deque_length = 2
+        reef_deque_length = 3
         self.reef_detected = deque(maxlen=reef_deque_length)
         for i in range(reef_deque_length):
             self.reef_detected.append(False)
@@ -181,7 +177,8 @@ class EndEffector(Subsystem):
         return all(self.reef_detected)
 
     def periodic(self):
-        self.reef_detected.appendleft(self.end_effector_reef_alignment_can_range.get_is_detected().value)
+        if self.robot.score_state.number == 4 and (self.robot.score_intent or self.robot.manual_scoring) and (abs(self.robot.score_state.elevator_height-self.robot.elevator.get_height()) <= 0.2) and (abs(self.robot.end_effector.get_position() - self.robot.score_state.end_effector_position) <= 0.2):
+            self.reef_detected.appendleft(0.2 <= self.end_effector_reef_alignment_can_range.get_distance().value <= 0.39)
         if self.robot.score_piece or ((self.robot.at_scoring_position or self.lined_up_with_reef()) and abs(self.robot.score_state.elevator_height-self.robot.elevator.get_height()) <= 0.2 and abs(self.robot.end_effector.get_position() - self.robot.score_state.end_effector_position) <= 0.2): # manual vs automated
             self.set_outtake_motor_speed(self.robot.score_state.end_effector_outtake_speed)
             self.robot.has_coral = False
@@ -224,6 +221,7 @@ class EndEffector(Subsystem):
 
 
     def log(self):
+        SmartDashboard.putNumber("end effector reef canrange distance", self.end_effector_reef_alignment_can_range.get_distance().value)
         SmartDashboard.putNumber("end effector position (in)", self.get_position())
         SmartDashboard.putNumber("end effector command position (in)", self.command_position)
         SmartDashboard.putBoolean("end effector is intaking", self.is_intaking)
