@@ -268,12 +268,14 @@ class OI:
             self.robot.leds.mode = self.robot.leds.MODE_LOCKED_ON
             self.robot.funnel_intake.is_intaking = False
             self.robot.end_effector.is_intaking = False
+            self.robot.funnel_intake.stop()
+            self.robot.end_effector.stop()
             self.robot.raise_elevator_slightly_for_L1 = False
             self.robot.at_scoring_position = False
             self.robot.score_piece = False
             if self.robot.score_state.number == 1:
                 # self.robot.final_lineup_pose = self.robot.poseEstimator.get_path_to_closest_L1()
-                self.robot.final_lineup_pose = self.robot.poseEstimator.get_path_to_reef(False, self.robot.poseEstimator.calculate_closest_reef_tag()[1], self.robot.right_branch, do_manip_offset=False, do_side_offset=True)
+                self.robot.final_lineup_pose = self.robot.poseEstimator.get_path_to_reef(True, self.robot.poseEstimator.calculate_closest_reef_tag()[1], self.robot.right_branch, do_manip_offset=False, do_side_offset=False)
             else:
                 self.robot.final_lineup_pose = self.robot.poseEstimator.get_path_to_reef(
                     True, # change to true if wanting to use calibrated field
@@ -382,7 +384,7 @@ class OI:
             RobotScoringPositions.Descore_Algae_L3.elevator_height -= 0.5
             RobotScoringPositions.Descore_Algae_L2.elevator_height -= 0.5
 
-        @self.driver2.RIGHT_TRIGGER_AS_BUTTON.whenPressed # ignore
+        @self.driver2.RIGHT_JOY_DOWN.whenPressed # ignore
         def _():
             self.robot.end_effector_canrange_for_reef_returning_bad_values = not self.robot.end_effector_canrange_for_reef_returning_bad_values
 

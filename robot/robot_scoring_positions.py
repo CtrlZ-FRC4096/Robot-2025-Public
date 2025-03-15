@@ -14,10 +14,10 @@ class RobotScoringPositions:
 	climber_climb_position = 0.1
 	climber_default_position = 0.0
 	piece_touching_L1_rim_torque_current = 15.0
-	L1_elevator_raise_height = 3.0
+	L1_elevator_raise_height = 8.0
 	class L1_Scoring:
-		elevator_height = 15.0
-		end_effector_outtake_speed = 15
+		elevator_height = 10.0
+		end_effector_outtake_speed = 12.0
 		end_effector_position = 10.0
 		number = 1
 	class L2_Scoring:

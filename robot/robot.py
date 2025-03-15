@@ -171,6 +171,8 @@ class Robot(CoroutineRobot):
         self.score_intent = False
         self.final_lineup_pose = Pose2d()
         self.right_branch = True
+        self.previous_right_branch = True
+
         self.end_effector_canrange_for_reef_returning_bad_values = False
         self.is_climbing = False
         self.retract_climber = False

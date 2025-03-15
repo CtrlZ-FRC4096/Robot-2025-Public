@@ -133,7 +133,10 @@ class Elevator(Subsystem):
             """
             self.robot.end_effector.set_end_effector_position(self.robot.score_state.end_effector_position) # set end effector to scoring position
             if self.robot.end_effector.get_position() >= RobotScoringPositions.min_end_effector_position_to_move_elevator_up:
-                self.set_elevator_height(self.robot.score_state.elevator_height) # raise elevator to scoring height
+                if self.robot.raise_elevator_slightly_for_L1:
+                        self.set_elevator_height(RobotScoringPositions.L1_Scoring.elevator_height + RobotScoringPositions.L1_elevator_raise_height) # raise elevator to slightly above scoring height to flip piece in
+                else:
+                    self.set_elevator_height(self.robot.score_state.elevator_height) # raise elevator to scoring height
         elif self.robot.is_climbing:
             self.robot.end_effector.set_end_effector_position(RobotScoringPositions.end_effector_climbing_position) # set end effector to climbing position
             if self.robot.end_effector.get_position() >= RobotScoringPositions.min_end_effector_position_to_move_elevator_up:

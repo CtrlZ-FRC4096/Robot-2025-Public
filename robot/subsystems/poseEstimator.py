@@ -301,7 +301,7 @@ class PoseEstimator(Subsystem):
         if self.min_trans_speed > 0.0:
             return self.max_trans_speed / self.min_trans_speed
         else:
-            return
+            return 0.0
 
     def get_jerk_val(self):
         cur_accel_x = self.gyro.get_acceleration_x().value
@@ -427,7 +427,7 @@ class PoseEstimator(Subsystem):
 
             return target_pose_3
         else:
-            return 0.0
+            return Pose2d(target_pose_face.translation(), Rotation2d.fromDegrees(angle_face.degrees() - 90))
 
     def calculate_closest_source(self):
         '''
@@ -507,7 +507,17 @@ class PoseEstimator(Subsystem):
                 self.robot.score_state = RobotScoringPositions.Descore_Algae_L3
             elif algae_height_at_closest_side == 2:
                 self.robot.score_state = RobotScoringPositions.Descore_Algae_L2
-                
+
+        if (self.robot.score_intent) and (self.robot.previous_right_branch != self.robot.right_branch):
+            self.robot.previous_right_branch = self.robot.right_branch
+            self.robot.final_lineup_pose = self.get_path_to_reef(
+                    True, # change to true if wanting to use calibrated field
+                    self.calculate_closest_reef_tag()[1],
+                    self.robot.right_branch,
+                    do_manip_offset=True,
+                )
+
+
         allianceColor = DriverStation.getAlliance()
         self.single_tag_IDs = set()
         single_tag_poses = []
@@ -607,13 +617,16 @@ class PoseEstimator(Subsystem):
             self.curEstPoseGlobal = possible_pose_global
         if self.candidate_pose_OK(possible_pose_single_tag):
             self.curEstPoseSingleTag = possible_pose_single_tag
+
+
         if self.robot.running_pid_lineup:
-            if not self.useSingleTag():
-                self.curEstPose = self.curEstPoseGlobal
-                self.single_tag = False
-            else:
+            if (self.useSingleTag() and self.robot.score_intent) or True:
+                # (((self.robot.final_lineup_pose.translation() - FieldConstants.flip_Translation2d(FieldConstants.CoralStation.rightCenterFace.translation())).norm() < 0.75) or ((self.robot.final_lineup_pose.translation() - FieldConstants.flip_Translation2d(FieldConstants.CoralStation.leftCenterFace.translation())).norm() < 0.75))
                 self.curEstPose = self.curEstPoseSingleTag
                 self.single_tag = True
+            else:
+                self.curEstPose = self.curEstPoseGlobal
+                self.single_tag = False
         else:
             self.curEstPose = self.curEstPoseGlobal
             self.single_tag = False

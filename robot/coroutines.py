@@ -90,7 +90,7 @@ class Coroutines:
             yield from robot.wait(robot.wait_score_1_2p)
 
         self.wait_2p_after_score_1 = (wait_2p_after_score_1)
-        
+
 
         @commandify
         def score_left_branch_1():
@@ -128,7 +128,7 @@ class Coroutines:
             robot.at_scoring_position = False
             robot.score_piece = False
             robot.final_lineup_pose = robot.poseEstimator.get_path_to_reef(
-                True if robot.score_1_face in [4,6] else False, # CHANGE WHEN WE HAVE FIELD CALIBRATED
+                True if robot.score_1_face in [1,5,4,6] else False, # CHANGE WHEN WE HAVE FIELD CALIBRATED
                 robot.score_1_face,
             	robot.score_1_right_branch,
                 do_manip_offset=True
@@ -150,7 +150,7 @@ class Coroutines:
             robot.at_scoring_position = False
             robot.score_piece = False
             robot.final_lineup_pose = robot.poseEstimator.get_path_to_reef(
-                True if robot.score_2_face in [4,6] else False, # CHANGE WHEN WE HAVE FIELD CALIBRATED
+                True if robot.score_2_face in [1,5,4,6] else False, # CHANGE WHEN WE HAVE FIELD CALIBRATED
                 robot.score_2_face,
             	robot.score_2_right_branch,
                 do_manip_offset=True
@@ -172,7 +172,7 @@ class Coroutines:
             robot.at_scoring_position = False
             robot.score_piece = False
             robot.final_lineup_pose = robot.poseEstimator.get_path_to_reef(
-                True if robot.score_3_face in [4,6] else False, # CHANGE WHEN WE HAVE FIELD CALIBRATED
+                True if robot.score_3_face in [1,5,4,6] else False, # CHANGE WHEN WE HAVE FIELD CALIBRATED
                 robot.score_3_face,
             	robot.score_3_right_branch,
                 do_manip_offset=True
@@ -194,7 +194,7 @@ class Coroutines:
             robot.at_scoring_position = False
             robot.score_piece = False
             robot.final_lineup_pose = robot.poseEstimator.get_path_to_reef(
-                True if robot.score_4_face in [4,6] else False, # CHANGE WHEN WE HAVE FIELD CALIBRATED
+                True if robot.score_4_face in [1,5,4,6] else False, # CHANGE WHEN WE HAVE FIELD CALIBRATED
                 robot.score_4_face,
             	robot.score_4_right_branch,
                 do_manip_offset=True
@@ -214,7 +214,7 @@ class Coroutines:
             robot.at_scoring_position = False
             robot.score_piece = False
             robot.final_lineup_pose = robot.poseEstimator.get_path_to_reef(
-                True if robot.score_1_f5_face in [4,6] else False, # CHANGE WHEN WE HAVE FIELD CALIBRATED
+                True if robot.score_1_f5_face in [1,4,5,6] else False, # CHANGE WHEN WE HAVE FIELD CALIBRATED
                 robot.score_1_f5_face,
             	robot.score_1_f5_right_branch,
                 do_manip_offset=True
@@ -366,7 +366,7 @@ class Coroutines:
                 if robot.funnel_intake.piece_passing_through or robot.has_coral:
                     robot.running_pid_lineup = False
                     break
-        
+
         @commandify
         def intake_coral_2p_1():
             yield

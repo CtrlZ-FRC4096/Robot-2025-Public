@@ -136,6 +136,7 @@ class EndEffector(Subsystem):
         for i in range(reef_deque_length):
             self.reef_detected.append(False)
 
+
         self.end_effector_extension_encoder = wpilib.DutyCycleEncoder(1)
 
         # value_at_0 = 10.0
@@ -173,14 +174,15 @@ class EndEffector(Subsystem):
         # once we get function working use this piece in EE periodic: (self.lined_up_with_reef() and (self.robot.manual_scoring or self.robot.score_intent)) or
         if self.robot.end_effector_canrange_for_reef_returning_bad_values:
             return False
-        return all(self.reef_detected)
+        return (self.robot.score_state.number == 4) and (all(self.reef_detected)) and (len(self.reef_detected) > 0)
 
     def periodic(self):
         if self.robot.score_state.number == 4 and (self.robot.score_intent or self.robot.manual_scoring) and (abs(self.robot.score_state.elevator_height-self.robot.elevator.get_height()) <= 0.2) and (abs(self.robot.end_effector.get_position() - self.robot.score_state.end_effector_position) <= 0.2):
-            self.reef_detected.appendleft(0.2 <= self.end_effector_reef_alignment_can_range.get_distance().value <= 0.39)
+            self.reef_detected.appendleft(0.2 <= self.end_effector_reef_alignment_can_range.get_distance().value <= 0.42)
 
-        if self.robot.score_piece or ((self.robot.at_scoring_position or self.lined_up_with_reef()) and abs(self.robot.score_state.elevator_height-self.robot.elevator.get_height()) <= 0.2 and abs(self.robot.end_effector.get_position() - self.robot.score_state.end_effector_position) <= 0.2): # manual vs automated
+        if (self.robot.score_piece) or ((self.robot.at_scoring_position or self.lined_up_with_reef()) and (abs(self.robot.score_state.elevator_height-self.robot.elevator.get_height()) <= 0.2) and (abs(self.robot.end_effector.get_position() - self.robot.score_state.end_effector_position) <= 0.2)): # manual vs automated
             self.set_outtake_motor_speed(self.robot.score_state.end_effector_outtake_speed)
+            self.reef_detected.clear()
             if self.robot.score_state.number == 1 and self.outtake_motor.get_torque_current().value >= RobotScoringPositions.piece_touching_L1_rim_torque_current:
                 self.robot.raise_elevator_slightly_for_L1 = True
             self.robot.has_coral = False
@@ -225,6 +227,8 @@ class EndEffector(Subsystem):
 
 
     def log(self):
+        SmartDashboard.putBoolean("lined up with reef", self.lined_up_with_reef())
+        SmartDashboard.putBoolean("ignore EE canrange for reef alignment", self.robot.end_effector_canrange_for_reef_returning_bad_values)
         SmartDashboard.putNumber("end effector reef canrange distance", self.end_effector_reef_alignment_can_range.get_distance().value)
         SmartDashboard.putNumber("end effector position (in)", self.get_position())
         SmartDashboard.putNumber("end effector command position (in)", self.command_position)
