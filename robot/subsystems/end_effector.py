@@ -201,6 +201,7 @@ class EndEffector(Subsystem):
                 self.robot.running_pid_lineup = False
                 self.robot.score_intent = False
                 self.robot.manual_scoring = False
+                self.robot.raise_elevator_slightly_for_L1 = True
                 self.robot.is_climbing = False
                 self.robot.at_scoring_position = False
                 self.robot.elevator.set_elevator_height(RobotScoringPositions.elevator_intake_height)
@@ -209,6 +210,7 @@ class EndEffector(Subsystem):
                 self.set_end_effector_position(RobotScoringPositions.end_effector_climbing_position)
             else:
                 self.is_intaking = False
+                self.robot.raise_elevator_slightly_for_L1 = True
                 self.robot.manual_scoring = False
                 self.robot.running_pid_lineup = False
                 self.robot.score_intent = False
