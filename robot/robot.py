@@ -158,8 +158,8 @@ class Robot(CoroutineRobot):
         self.path_constraints = PathConstraints(4.0, 4.0, degreesToRadians(540), degreesToRadians(540))
 
         self.autoroutines = autoroutines.AutoRoutines(self)
-        self.flip_3_piece_to_f5(False)
-        self.auto = self.autoroutines.three_piece_to_f5()
+        self.flip_2_piece_delay_auto(True)
+        self.auto = self.autoroutines.two_piece_delayed()
 
         DataLogManager.start()
         DriverStation.startDataLog(DataLogManager.getLog())
@@ -252,6 +252,25 @@ class Robot(CoroutineRobot):
             self.drivetrain.shouldFlipPath, # Supplier to control path flipping based on alliance color
             self.drivetrain # Reference to this subsystem to set requirements
         )
+
+    def flip_2_piece_delay_auto(self, left_side : bool):
+        if not left_side:
+            self.score_1_face = 4
+            self.score_1_right_branch = False
+            self.left_source_auto = False
+            self.score_2_face = 4
+            self.score_2_right_branch = True
+            self.wait_score_1_2p = 1.0
+        else:
+            self.left_source_auto = True
+            self.score_1_face = 4
+            self.score_1_right_branch = True
+            self.score_2_face = 4
+            self.score_2_right_branch = False
+            self.wait_score_1_2p = 1.0
+            for idx, command in enumerate(self.autoroutines.p_for_2p):
+                self.autoroutines.p_for_2p[idx] = self.flip_path_cmd_across_x(command)
+
 
     def flip_3_piece_auto(self, left_side : bool):
         if not left_side:

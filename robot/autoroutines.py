@@ -11,8 +11,9 @@ from wpimath.trajectory import TrapezoidProfile
 from wpilibextra.coroutine.coroutine_command import autoroutine2command
 from wpilib import Timer
 import wpimath.geometry
+from wpimath.units import degreesToRadians
 import const
-from pathplannerlib.path import PathConstraints
+from pathplannerlib.path import PathConstraints, PathPlannerPath
 
 # from commands import autonomous
 # from commands.autonomous import DriveTrajectory
@@ -39,7 +40,15 @@ class AutoRoutines:
         self.p_5 = self.robot.followPathCommand("3P_5")
         self.p_6 = self.robot.followPathCommand("3P_6")
         self.p_2_f5 = self.robot.followPathCommand("f5_intake")
-
+        
+        self.p_1_2p = self.robot.followPathCommand("2P_1",  PathConstraints(4.0, 4.0, degreesToRadians(540), degreesToRadians(540)))
+        self.p_2_2p = self.robot.followPathCommand("2P_2",  PathConstraints(4.0, 4.0, degreesToRadians(540), degreesToRadians(540)))
+        self.p_3_2p = self.robot.followPathCommand("2P_3",  PathConstraints(4.0, 4.0, degreesToRadians(540), degreesToRadians(540)))
+        self.p_for_2p = [
+            self.p_1_2p,
+            self.p_2_2p,
+            self.p_3_2p,
+        ]
         self.p_for_f5 = [
             self.p_2_f5,
             self.p_3,
@@ -87,6 +96,18 @@ class AutoRoutines:
             self.robot.followPathCommand("right source to face 1"),
             self.robot.followPathCommand("face 1 to right source"),
             self.robot.followPathCommand("right source to face 6"),
+        )
+    def two_piece_delayed(self):
+        return SequentialCommandGroup(
+            self.robot.coroutines.score_piece_1.withTimeout(1.4),
+            self.robot.coroutines.reset_robot_after_scoring_1,
+            self.robot.coroutines.wait_2p_after_score_1,
+            self.p_for_2p[0],
+            self.robot.coroutines.intake_coral_2p_1,
+            self.p_for_2p[1],
+            self.robot.coroutines.score_piece_2,
+            self.robot.coroutines.reset_robot_after_scoring_2,
+            self.p_for_2p[2],
         )
 
     def three_piece_auto(self):

@@ -85,6 +85,14 @@ class Coroutines:
         self.reset_robot_after_scoring_3 = (reset_robot_after_scoring_3)
 
         @commandify
+        def wait_2p_after_score_1():
+            yield
+            yield from robot.wait(robot.wait_score_1_2p)
+
+        self.wait_2p_after_score_1 = (wait_2p_after_score_1)
+        
+
+        @commandify
         def score_left_branch_1():
             yield
             robot.right_branch = False
@@ -358,10 +366,28 @@ class Coroutines:
                 if robot.funnel_intake.piece_passing_through or robot.has_coral:
                     robot.running_pid_lineup = False
                     break
+        
+        @commandify
+        def intake_coral_2p_1():
+            yield
+            robot.final_lineup_pose = robot.poseEstimator.get_path_to_source(robot.left_source_auto, 3, extra_dist_offset=-6.0)
+            robot.mechanisms_at_default = False
+            robot.at_scoring_position = False
+            robot.score_piece = False
+            robot.funnel_intake.is_intaking = True
+            robot.end_effector.is_intaking = True
+            robot.running_pid_lineup = True
+            robot.score_intent = False
+            while True:
+                yield
+                if robot.funnel_intake.piece_passing_through or robot.has_coral:
+                    robot.running_pid_lineup = False
+                    break
 
         self.intake_coral_1 = (intake_coral_1)
         self.intake_coral_2 = (intake_coral_2)
         self.intake_coral_3 = (intake_coral_3)
+        self.intake_coral_2p_1 = (intake_coral_2p_1)
 
         @commandify
         def reset_robot_after_intaking_1():
