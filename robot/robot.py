@@ -158,8 +158,8 @@ class Robot(CoroutineRobot):
         self.path_constraints = PathConstraints(4.0, 4.0, degreesToRadians(540), degreesToRadians(540))
 
         self.autoroutines = autoroutines.AutoRoutines(self)
-        self.flip_2_piece_delay_auto(True)
-        self.auto = self.autoroutines.two_piece_delayed()
+        self.flip_3_piece_to_f5(False)
+        self.auto = self.autoroutines.three_piece_to_f5()
 
         DataLogManager.start()
         DriverStation.startDataLog(DataLogManager.getLog())
