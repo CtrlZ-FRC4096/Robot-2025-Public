@@ -114,16 +114,16 @@ class Elevator(Subsystem):
             ## Stop the motors and set the position to 0 or the maximum height
             ## Hopefully this prevents the elevator from breaking
         if self.robot.score_intent:
-            """
-            TODO: We need to make sure that this if statement logic is correct.
-            """
             if (self.robot.poseEstimator.curEstPoseSingleTag.translation() - self.robot.final_lineup_pose.translation()).norm() < RobotScoringPositions.elevator_raise_threshold and (self.robot.end_effector.get_position() >= RobotScoringPositions.min_end_effector_position_to_move_elevator_up):
                 # if we are close to the scoring position and there are no obstacles, begin raising the elevator
                 self.in_proximity_to_begin_raising_elevator = True # just for logging purposes
 
                 self.robot.end_effector.set_end_effector_position(self.robot.score_state.end_effector_position) # set end effector to scoring position
                 if self.robot.end_effector.get_position() >= RobotScoringPositions.min_end_effector_position_to_move_elevator_up:
-                    self.set_elevator_height(self.robot.score_state.elevator_height) # raise elevator to scoring height
+                    if self.robot.raise_elevator_slightly_for_L1:
+                        self.set_elevator_height(RobotScoringPositions.L1_Scoring.elevator_height + 0.5) # raise elevator to slightly above scoring height to flip piece in
+                    else:
+                        self.set_elevator_height(self.robot.score_state.elevator_height) # raise elevator to scoring height
             else:
                 self.in_proximity_to_begin_raising_elevator = False
                 self.robot.end_effector.set_end_effector_position(self.robot.score_state.end_effector_position)

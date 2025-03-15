@@ -191,12 +191,14 @@ class OI:
         @self.driver1.X.whenPressed  # Manual elevator raise
         def _():
             self.robot.leds.mode = self.robot.leds.MODE_LOCKED_ON
+            self.robot.raise_elevator_slightly_for_L1 = False
             self.robot.manual_scoring = True
             self.robot.mechanisms_at_default = False
 
         @self.driver1.Y.whenPressed
         def _():
             self.robot.mechanisms_at_default = True
+            self.robot.raise_elevator_slightly_for_L1 = False
             self.robot.manual_scoring = False
             self.robot.leds.mode = self.robot.leds.MODE_ODOMETRY
 
@@ -221,6 +223,7 @@ class OI:
         @self.driver1.RIGHT_BUMPER.whenPressed  # begin intake process
         def _():
             self.robot.descoring_algae = False
+            self.robot.raise_elevator_slightly_for_L1 = False
             self.robot.leds.mode = self.robot.leds.MODE_INTAKING
             self.robot.mechanisms_at_default = False
             self.robot.funnel_intake.is_intaking = True
@@ -239,6 +242,7 @@ class OI:
         @self.driver1.LEFT_TRIGGER_AS_BUTTON.whenHeld #run profiled pid to nearest source
         def _():
             self.robot.descoring_algae = False
+            self.robot.raise_elevator_slightly_for_L1 = False
             self.robot.leds.mode = self.robot.leds.MODE_INTAKING
             self.robot.mechanisms_at_default = False
             self.robot.at_scoring_position = False
@@ -264,10 +268,12 @@ class OI:
             self.robot.leds.mode = self.robot.leds.MODE_LOCKED_ON
             self.robot.funnel_intake.is_intaking = False
             self.robot.end_effector.is_intaking = False
+            self.robot.raise_elevator_slightly_for_L1 = False
             self.robot.at_scoring_position = False
             self.robot.score_piece = False
             if self.robot.score_state.number == 1:
-                self.robot.final_lineup_pose = self.robot.poseEstimator.get_path_to_closest_L1()
+                # self.robot.final_lineup_pose = self.robot.poseEstimator.get_path_to_closest_L1()
+                self.robot.final_lineup_pose = self.robot.poseEstimator.get_path_to_reef(False, self.robot.poseEstimator.calculate_closest_reef_tag()[1], self.robot.right_branch, do_manip_offset=False, do_side_offset=True)
             else:
                 self.robot.final_lineup_pose = self.robot.poseEstimator.get_path_to_reef(
                     True, # change to true if wanting to use calibrated field
@@ -282,6 +288,7 @@ class OI:
         @self.driver1.RIGHT_TRIGGER_AS_BUTTON.whenReleased  # stop profiled PID
         def _():
             self.robot.leds.mode = self.robot.leds.MODE_ODOMETRY
+            self.robot.raise_elevator_slightly_for_L1 = False
             self.robot.mechanisms_at_default = True
             self.robot.running_pid_lineup = False
             self.robot.score_intent = False

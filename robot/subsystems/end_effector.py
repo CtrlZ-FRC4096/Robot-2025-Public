@@ -122,7 +122,6 @@ class EndEffector(Subsystem):
 
         self.commanded_outtake_motor_speed = 0.0
 
-        self.piece_passing_through_now = False
         self.piece_passing_through_previous_tick = False
 
         self.max_extension = 10.5
@@ -179,8 +178,11 @@ class EndEffector(Subsystem):
     def periodic(self):
         if self.robot.score_state.number == 4 and (self.robot.score_intent or self.robot.manual_scoring) and (abs(self.robot.score_state.elevator_height-self.robot.elevator.get_height()) <= 0.2) and (abs(self.robot.end_effector.get_position() - self.robot.score_state.end_effector_position) <= 0.2):
             self.reef_detected.appendleft(0.2 <= self.end_effector_reef_alignment_can_range.get_distance().value <= 0.39)
+
         if self.robot.score_piece or ((self.robot.at_scoring_position or self.lined_up_with_reef()) and abs(self.robot.score_state.elevator_height-self.robot.elevator.get_height()) <= 0.2 and abs(self.robot.end_effector.get_position() - self.robot.score_state.end_effector_position) <= 0.2): # manual vs automated
             self.set_outtake_motor_speed(self.robot.score_state.end_effector_outtake_speed)
+            if self.robot.score_state.number == 1 and self.outtake_motor.get_torque_current().value >= RobotScoringPositions.piece_touching_L1_rim_torque_current:
+                self.robot.raise_elevator_slightly_for_L1 = True
             self.robot.has_coral = False
         elif self.is_intaking:
             if self.robot.elevator.get_height() <= RobotScoringPositions.min_elevator_height_to_bring_in_end_effector:

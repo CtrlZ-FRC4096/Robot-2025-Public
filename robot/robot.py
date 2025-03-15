@@ -175,6 +175,7 @@ class Robot(CoroutineRobot):
         self.is_climbing = False
         self.retract_climber = False
         self.descoring_algae = False
+        self.raise_elevator_slightly_for_L1 = False
 
 
         @self.addPeriodic(period=0.25, offset=0)
