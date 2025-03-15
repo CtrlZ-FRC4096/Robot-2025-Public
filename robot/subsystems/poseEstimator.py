@@ -620,7 +620,7 @@ class PoseEstimator(Subsystem):
 
 
         if self.robot.running_pid_lineup:
-            if (self.useSingleTag() and self.robot.score_intent) or True:
+            if self.useSingleTag() or self.robot.is_intaking:
                 # (((self.robot.final_lineup_pose.translation() - FieldConstants.flip_Translation2d(FieldConstants.CoralStation.rightCenterFace.translation())).norm() < 0.75) or ((self.robot.final_lineup_pose.translation() - FieldConstants.flip_Translation2d(FieldConstants.CoralStation.leftCenterFace.translation())).norm() < 0.75))
                 self.curEstPose = self.curEstPoseSingleTag
                 self.single_tag = True

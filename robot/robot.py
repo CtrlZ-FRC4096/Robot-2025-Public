@@ -179,6 +179,8 @@ class Robot(CoroutineRobot):
         self.descoring_algae = False
         self.raise_elevator_slightly_for_L1 = False
 
+        self.is_intaking = False
+
 
         @self.addPeriodic(period=0.25, offset=0)
         def _():

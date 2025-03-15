@@ -222,6 +222,7 @@ class OI:
 
         @self.driver1.RIGHT_BUMPER.whenPressed  # begin intake process
         def _():
+            self.robot.is_intaking = True
             self.robot.descoring_algae = False
             self.robot.raise_elevator_slightly_for_L1 = False
             self.robot.leds.mode = self.robot.leds.MODE_INTAKING
@@ -234,6 +235,7 @@ class OI:
 
         @self.driver1.LEFT_BUMPER.whenPressed  # manual end to intake process
         def _():
+            self.robot.is_intaking = False
             self.robot.leds.mode = self.robot.leds.MODE_ODOMETRY
             self.robot.funnel_intake.is_intaking = False
             self.robot.end_effector.is_intaking = False
@@ -241,6 +243,7 @@ class OI:
 
         @self.driver1.LEFT_TRIGGER_AS_BUTTON.whenHeld #run profiled pid to nearest source
         def _():
+            self.robot.is_intaking = True
             self.robot.descoring_algae = False
             self.robot.raise_elevator_slightly_for_L1 = False
             self.robot.leds.mode = self.robot.leds.MODE_INTAKING
@@ -255,6 +258,7 @@ class OI:
 
         @self.driver1.LEFT_TRIGGER_AS_BUTTON.whenReleased #stop pid
         def _():
+            self.robot.is_intaking = False
             self.robot.leds.mode = self.robot.leds.MODE_ODOMETRY
             self.robot.mechanisms_at_default = True
             self.robot.running_pid_lineup = False
@@ -264,6 +268,7 @@ class OI:
 
         @self.driver1.RIGHT_TRIGGER_AS_BUTTON.whenHeld  # Run profiled PID to tag
         def _():
+            self.robot.is_intaking = False
             self.robot.descoring_algae = False
             self.robot.leds.mode = self.robot.leds.MODE_LOCKED_ON
             self.robot.funnel_intake.is_intaking = False
@@ -355,6 +360,7 @@ class OI:
         @self.driver1.BACK.whenPressed
         def _():
             self.robot.mechanisms_at_default = True
+            self.robot.is_intaking = False
             self.robot.score_intent = False
             self.robot.manual_scoring = False
             self.robot.running_pid_lineup = False
@@ -391,6 +397,7 @@ class OI:
         @self.driver2.LEFT_BUMPER.whenHeld # descore algae
         def _():
             self.robot.mechanisms_at_default = False
+            self.robot.is_intaking = False
             self.robot.score_intent = False
             self.robot.manual_scoring = False
             self.robot.running_pid_lineup = False
