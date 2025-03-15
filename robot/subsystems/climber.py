@@ -64,7 +64,7 @@ class Climber(Subsystem):
 
         self.climber_arm_motor.configurator.apply(climber_arm_motor_config)
 
-        self.gear_ratio = 268.8 # need to adjust if using something else
+        self.gear_ratio = 315.0 # need to adjust if using something else
         self.command_position = 0.0
         self.request = controls.MotionMagicVoltage(0, enable_foc=True)
 

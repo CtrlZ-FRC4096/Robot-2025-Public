@@ -10,8 +10,8 @@ class RobotScoringPositions:
 	elevator_climb_height = 13.0
 	min_end_effector_position_to_climb = 7.7
 	min_elevator_climb_height = 10.0
-	climber_up_position = 0.5577
-	climber_climb_position = 0.2072
+	climber_up_position = 0.5396
+	climber_climb_position = 0.1
 	climber_default_position = 0.0
 	class L1_Scoring:
 		elevator_height = 15.0
