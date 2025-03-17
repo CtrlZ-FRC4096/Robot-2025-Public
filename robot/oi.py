@@ -299,6 +299,7 @@ class OI:
             self.robot.mechanisms_at_default = True
             self.robot.running_pid_lineup = False
             self.robot.score_intent = False
+            self.robot.manual_scoring = False
             self.robot.at_scoring_position = False
             self.robot_oriented_angle = self.robot.poseEstimator.getYaw().degrees()
             self.robot.end_effector.stop()
