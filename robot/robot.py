@@ -158,8 +158,8 @@ class Robot(CoroutineRobot):
         self.path_constraints = PathConstraints(4.0, 4.0, degreesToRadians(540), degreesToRadians(540))
 
         self.autoroutines = autoroutines.AutoRoutines(self)
-        self.flip_3_piece_to_f5(False)
-        self.auto = self.autoroutines.three_piece_to_f5()
+        self.flip_3_piece_f1(False)
+        self.auto = self.autoroutines.three_piece_f1()
 
         DataLogManager.start()
         DriverStation.startDataLog(DataLogManager.getLog())
@@ -300,7 +300,26 @@ class Robot(CoroutineRobot):
             for idx, command in enumerate(self.autoroutines.p_for_3p):
                 self.autoroutines.p_for_3p[idx] = self.flip_path_cmd_across_x(command)
 
-
+    def flip_3_piece_f1(self, left_side : bool):
+        if not left_side:
+            self.left_source_auto = False
+            self.score_1_face = 5
+            self.score_1_right_branch = False
+            self.score_2_face = 1
+            self.score_2_right_branch = True
+            self.score_3_face = 1
+            self.score_3_right_branch = False
+        else:
+            self.left_source_auto = True
+            self.score_1_face = 3
+            self.score_1_right_branch = True
+            self.score_2_face = 1
+            self.score_2_right_branch = False
+            self.score_3_face = 1
+            self.score_3_right_branch = True
+            for idx, command in enumerate(self.autoroutines.p_for_3p_f1):
+                self.autoroutines.p_for_3p_f1[idx] = self.flip_path_cmd_across_x(command)
+            
     def flip_3_piece_to_f5(self, left_side : bool):
         if not left_side:
             self.score_1_f5_face = 5
@@ -320,7 +339,7 @@ class Robot(CoroutineRobot):
             self.left_source_auto = False
             for idx, command in enumerate(self.autoroutines.p_for_f5):
                 #     #mirror across x axis
-                print("pathplanner command ", idx + 1)
+                # print("pathplanner command ", idx + 1)
                 self.autoroutines.p_for_f5[idx] = self.flip_path_cmd_across_x(command)
 
     def followPathCommand(self, pathName: str, pathConstraints=None):

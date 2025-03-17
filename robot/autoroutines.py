@@ -39,20 +39,32 @@ class AutoRoutines:
         self.p_4 = self.robot.followPathCommand("3P_4")
         self.p_5 = self.robot.followPathCommand("3P_5")
         self.p_6 = self.robot.followPathCommand("3P_6")
+        self.p_7 = self.robot.followPathCommand("3P_7")
         self.p_2_f5 = self.robot.followPathCommand("f5_intake")
         
         self.p_1_2p = self.robot.followPathCommand("2P_1",  PathConstraints(4.0, 4.0, degreesToRadians(540), degreesToRadians(540)))
         self.p_2_2p = self.robot.followPathCommand("2P_2",  PathConstraints(4.0, 4.0, degreesToRadians(540), degreesToRadians(540)))
         self.p_3_2p = self.robot.followPathCommand("2P_3",  PathConstraints(4.0, 4.0, degreesToRadians(540), degreesToRadians(540)))
+        self.p_3p_f1_3 = self.robot.followPathCommand("3P_F1_3")
+        self.p_3p_f1_4 = self.robot.followPathCommand("3P_F1_4")
+        self.p_3p_f1_5 = self.robot.followPathCommand("3P_F1_5")
         self.p_for_2p = [
             self.p_1_2p,
             self.p_2_2p,
             self.p_3_2p,
         ]
+        self.p_for_3p_f1 = [
+            self.p_2_f5,
+            self.p_6,
+            self.p_3p_f1_3,
+            self.p_3p_f1_4,
+            self.p_3p_f1_5,
+        ]
         self.p_for_f5 = [
             self.p_2_f5,
             self.p_3,
-            self.p_5
+            self.p_5,
+            self.p_7,
         ]
         self.p_for_3p = [
             self.p_2,
@@ -85,6 +97,24 @@ class AutoRoutines:
             self.robot.coroutines.score_L4_3,
             self.robot.coroutines.score_3_piece_auto_no_closest_tag_3.withTimeout(5.0),
             self.robot.coroutines.reset_robot_after_scoring_3,
+        )
+
+    def three_piece_f1(self):
+        return SequentialCommandGroup(
+            self.robot.coroutines.score_piece_1.withTimeout(1.5),
+            self.robot.coroutines.reset_robot_after_scoring_1,
+            self.p_for_3p_f1[0],
+            self.robot.coroutines.intake_coral_1,
+            self.p_for_3p_f1[1],
+            self.robot.coroutines.score_piece_2,
+            self.robot.coroutines.reset_robot_after_scoring_2,
+            # self.p_for_3p_f1[2],
+            self.robot.coroutines.intake_coral_2,
+            self.p_for_3p_f1[3],
+            self.robot.coroutines.score_piece_3,
+            self.robot.coroutines.reset_robot_after_scoring_3,
+            # self.p_for_3p_f1[4],
+            self.robot.coroutines.intake_coral_3,
         )
 
     def four_piece_auto_test(self):
@@ -141,6 +171,9 @@ class AutoRoutines:
             self.p_for_f5[2],
             self.robot.coroutines.score_piece_3,
             self.robot.coroutines.reset_robot_after_scoring_3,
+            # self.p_for_f5[3],
+            self.robot.coroutines.intake_coral_3
+
         )
 
     def tush_push_auto(self):

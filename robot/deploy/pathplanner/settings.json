@@ -3,9 +3,10 @@
   "robotLength": 0.9,
   "holonomicMode": true,
   "pathFolders": [
+    "2 piece auto",
     "3 Piece Auto",
     "4 Piece Auto Test (No Commands)",
-    "2 piece auto",
+    "3 Piece to F1",
     "Tush Push Auto"
   ],
   "autoFolders": [
