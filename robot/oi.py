@@ -158,8 +158,8 @@ class OI:
 						or abs(self.driver1.RIGHT_JOY_X()) > 0.1
 						or abs(self.driver1.RIGHT_JOY_Y()) > 0.1
 					):
-                        forward_back *= 0.22
-                        left_right *= 0.22
+                        forward_back *= 0.3
+                        left_right *= 0.3
                         self.robot.drivetrain.go_to_pose_profiled_pid(self.robot.final_lineup_pose, forward_back, left_right, rotate)
                     else:
                         self.robot.drivetrain.go_to_pose_profiled_pid(self.robot.final_lineup_pose)
@@ -243,18 +243,19 @@ class OI:
 
         @self.driver1.LEFT_TRIGGER_AS_BUTTON.whenHeld #run profiled pid to nearest source
         def _():
+            self.robot.final_lineup_pose = self.robot.poseEstimator.get_path_to_source(self.robot.poseEstimator.calculate_closest_source()[0], self.robot.position_on_source, extra_dist_offset=-3.0)
+            self.robot.score_intent = False
+            self.robot.running_pid_lineup = True
             self.robot.is_intaking = True
             self.robot.descoring_algae = False
             self.robot.raise_elevator_slightly_for_L1 = False
-            self.robot.leds.mode = self.robot.leds.MODE_INTAKING
             self.robot.mechanisms_at_default = False
             self.robot.at_scoring_position = False
             self.robot.score_piece = False
             self.robot.funnel_intake.is_intaking = True
             self.robot.end_effector.is_intaking = True
-            self.robot.running_pid_lineup = True
-            self.robot.score_intent = False
-            self.robot.final_lineup_pose = self.robot.poseEstimator.get_path_to_source(self.robot.poseEstimator.calculate_closest_source()[0], self.robot.position_on_source, extra_dist_offset=-3.0)
+            self.robot.leds.mode = self.robot.leds.MODE_INTAKING
+
 
         @self.driver1.LEFT_TRIGGER_AS_BUTTON.whenReleased #stop pid
         def _():
@@ -302,8 +303,8 @@ class OI:
             self.robot.manual_scoring = False
             self.robot.at_scoring_position = False
             self.robot_oriented_angle = self.robot.poseEstimator.getYaw().degrees()
-            self.robot.end_effector.stop()
-            self.robot.drivetrain.stop() # May or may not be needed to stop the robot from tracking the PID
+            # self.robot.end_effector.stop()
+            # self.robot.drivetrain.stop() # May or may not be needed to stop the robot from tracking the PID
 
         @self.driver2.Y.whenPressed # L4
         def _():
@@ -371,6 +372,7 @@ class OI:
 
         @self.driver2.BACK.whenPressed # raise all setpoints
         def _():
+            self.robot.raise_setpoints += 1
             RobotScoringPositions.elevator_intake_height += 0.1
             RobotScoringPositions.elevator_climb_height += 0.2
             RobotScoringPositions.L1_Scoring.elevator_height += 0.5
@@ -382,6 +384,7 @@ class OI:
 
         @self.driver2.START.whenPressed # lower all setpoints
         def _():
+            self.robot.raise_setpoints -= 1
             RobotScoringPositions.elevator_intake_height -= 0.1
             RobotScoringPositions.elevator_climb_height -= 0.2
             RobotScoringPositions.L1_Scoring.elevator_height -= 0.5

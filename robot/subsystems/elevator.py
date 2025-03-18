@@ -146,6 +146,7 @@ class Elevator(Subsystem):
                 self.set_elevator_height(RobotScoringPositions.elevator_intake_height) # set elevator to intake height
 
     def log(self):
+        SmartDashboard.putNumber("raise setpoints value", self.robot.raise_setpoints)
         SmartDashboard.putNumber("Current elevator height: ", self.get_height())
         SmartDashboard.putNumber("Commanded elevator height: ", self.command_height)
         SmartDashboard.putBoolean("closer than 2 meters", self.in_proximity_to_begin_raising_elevator)

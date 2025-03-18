@@ -180,6 +180,7 @@ class Robot(CoroutineRobot):
         self.raise_elevator_slightly_for_L1 = False
 
         self.is_intaking = False
+        self.raise_setpoints = 0.0
 
 
         @self.addPeriodic(period=0.25, offset=0)
@@ -264,7 +265,7 @@ class Robot(CoroutineRobot):
             self.left_source_auto = False
             self.score_2_face = 4
             self.score_2_right_branch = True
-            self.wait_score_1_2p = 1.0
+            self.wait_score_1_2p = 0.0
         else:
             self.left_source_auto = True
             self.score_1_face = 4
@@ -319,7 +320,7 @@ class Robot(CoroutineRobot):
             self.score_3_right_branch = True
             for idx, command in enumerate(self.autoroutines.p_for_3p_f1):
                 self.autoroutines.p_for_3p_f1[idx] = self.flip_path_cmd_across_x(command)
-            
+
     def flip_3_piece_to_f5(self, left_side : bool):
         if not left_side:
             self.score_1_f5_face = 5
