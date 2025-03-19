@@ -160,9 +160,9 @@ class Robot(CoroutineRobot):
         self.path_constraints = PathConstraints(4.0, 4.0, degreesToRadians(540), degreesToRadians(540))
 
         self.autoroutines = autoroutines.AutoRoutines(self)
-        self.flip_3_piece_f1(False) # LEFT SIDE -> TRUE; RIGHT SIDE -> False
+        self.flip_3_piece_to_f5(False) # LEFT SIDE -> TRUE; RIGHT SIDE -> False
         # SIDES ARE BASED OFF THE SIDE CURRENTLY ON, NOT FROM (0,0) (Blue alliance perspective) 
-        self.auto = self.autoroutines.three_piece_f1()
+        self.auto = self.autoroutines.three_piece_to_f5()
 
         DataLogManager.start()
         DriverStation.startDataLog(DataLogManager.getLog())
@@ -218,11 +218,6 @@ class Robot(CoroutineRobot):
         return FieldConstants.fieldLength - x
     def flip_Y_coord(self, y):
         return FieldConstants.fieldWidth - y
-
-    def flip_Rotation2d(self, rotation : Rotation2d):
-        return (
-            rotation.rotateBy(Rotation2d.fromDegrees(180))
-            )
 
 
     def flip_path_cmd_across_x(self, cmd_path : FollowPathCommand):
@@ -344,18 +339,18 @@ class Robot(CoroutineRobot):
 
     def flip_3_piece_to_f5(self, left_side : bool):
         if not left_side:
-            self.score_1_f5_face = 5
+            self.score_1_face = 5
             self.auto_position_source = 3
-            self.score_1_f5_right_branch = False
+            self.score_1_right_branch = False
             self.score_2_face = 6
             self.score_2_right_branch = True
             self.score_3_face = 6
             self.score_3_right_branch = False
             self.left_source_auto = False
         else:
-            self.score_1_f5_face = 3
+            self.score_1_face = 3
             self.auto_position_source = 3
-            self.score_1_f5_right_branch = True
+            self.score_1_right_branch = True
             self.score_2_face = 2
             self.score_2_right_branch = False
             self.score_3_face = 2
