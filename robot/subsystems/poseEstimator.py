@@ -516,6 +516,14 @@ class PoseEstimator(Subsystem):
                     self.robot.right_branch,
                     do_manip_offset=True,
                 )
+        
+        if (self.robot.is_intaking) and (self.robot.previous_position_on_source != self.robot.position_on_source):
+            self.robot.previous_position_on_source = self.robot.position_on_source
+            self.robot.final_lineup_pose = self.get_path_to_source(
+                self.robot.poseEstimator.calculate_closest_source()[0], 
+                self.robot.position_on_source, 
+                extra_dist_offset=-3.0
+            )
 
 
         allianceColor = DriverStation.getAlliance()
