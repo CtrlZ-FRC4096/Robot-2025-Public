@@ -42,9 +42,9 @@ class Climber(Subsystem):
         climber_arm_motor_config.slot0.k_d = 0.0
 
         ## Adjust other stuff if we need it like k_v and k_a for feed forward
-        climber_arm_motor_config.current_limits.supply_current_limit = 80
-        climber_arm_motor_config.torque_current.peak_forward_torque_current = 80
-        climber_arm_motor_config.torque_current.peak_reverse_torque_current = -80
+        climber_arm_motor_config.current_limits.supply_current_limit = 35
+        climber_arm_motor_config.torque_current.peak_forward_torque_current = 35
+        climber_arm_motor_config.torque_current.peak_reverse_torque_current = -35
         ##Ramps
         climber_arm_motor_config.closed_loop_ramps.torque_closed_loop_ramp_period = 0.02
         climber_arm_motor_config.open_loop_ramps.torque_open_loop_ramp_period = 0.02

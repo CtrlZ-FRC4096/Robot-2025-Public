@@ -214,8 +214,8 @@ class FieldConstants:
                 "right": {1: Pose2d(), 2: Pose2d(), 3: Pose2d(), 4: Pose2d(), 5: Pose2d(), 6: Pose2d()}
             },
             "blue": {
-                "left": {1: Pose2d(3.083, 4.129, Rotation2d.fromDegrees(87.196)), 2: Pose2d(), 3: Pose2d(), 4: Pose2d(5.827, 3.998, Rotation2d.fromDegrees(-91.32)), 5: Pose2d(5.069, 2.728, Rotation2d.fromDegrees(-151.75)), 6: Pose2d(3.74, 2.899, Rotation2d.fromDegrees(149.85))},
-                "right": {1: Pose2d(3.081, 3.814, Rotation2d.fromDegrees(87.665)), 2: Pose2d(), 3: Pose2d(), 4: Pose2d(5.807, 4.3055, Rotation2d.fromDegrees(-91.38)), 5: Pose2d(5.356, 2.908, Rotation2d.fromDegrees(-151.147)), 6: Pose2d(4.05785, 2.74, Rotation2d.fromDegrees(149.35))}
+                "left": {1: Pose2d(3.166, 4.068, Rotation2d.fromDegrees(90.300)), 2: Pose2d(), 3: Pose2d(), 4: Pose2d(5.827, 3.998, Rotation2d.fromDegrees(-91.32)), 5: Pose2d(5.091, 2.854, Rotation2d.fromDegrees(-149.186)), 6: Pose2d(3.74, 2.899, Rotation2d.fromDegrees(149.85))},
+                "right": {1: Pose2d(3.192, 3.798, Rotation2d.fromDegrees(89.766)), 2: Pose2d(), 3: Pose2d(), 4: Pose2d(5.807, 4.3055, Rotation2d.fromDegrees(-91.38)), 5: Pose2d(5.349, 3.029, Rotation2d.fromDegrees(-146.211)), 6: Pose2d(4.05785, 2.74, Rotation2d.fromDegrees(149.35))}
             }
         }
 

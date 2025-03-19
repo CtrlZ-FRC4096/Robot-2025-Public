@@ -38,7 +38,7 @@ class LEDs(Subsystem):
 
         self.mode = self.MODE_ODOMETRY
 
-        self.led_strip_1 = wpilib.AddressableLED(port=PWM_PORT_STRIP_1)  # check this
+        self.led_strip_1 = wpilib.AddressableLED(port=0)  # check this
         # self.led_strip_2 = wpilib.AddressableLED(port=PWM_PORT_STRIP_2)
 
         self.led_strip_1.setLength(NUM_LEDS)  # check this
