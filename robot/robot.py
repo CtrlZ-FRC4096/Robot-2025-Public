@@ -34,6 +34,8 @@ import ntcore
 import subsystems.climber
 import subsystems.drivetrain
 
+from phoenix6 import controls
+
 # import subsystems.limelight
 import subsystems.elevator
 import subsystems.end_effector
@@ -183,6 +185,9 @@ class Robot(CoroutineRobot):
         self.is_intaking = False
         self.raise_setpoints = 0.0
 
+        ### TODO: TURN OFF BEFORE A MATCH ###
+        self.set_calibration_mode()
+
 
         @self.addPeriodic(period=0.25, offset=0)
         def _():
@@ -199,6 +204,10 @@ class Robot(CoroutineRobot):
         while True:
             yield
             self.scheduler.run()
+
+    def set_calibration_mode(self):
+        self.elevator.elevator_motor_1.set_control(controls.CoastOut())
+        self.end_effector.end_effector_motor.set_control(controls.CoastOut())
 
     def flip_X_coord(self, x):
         return FieldConstants.fieldLength - x
