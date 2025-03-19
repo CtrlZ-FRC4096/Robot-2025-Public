@@ -221,7 +221,7 @@ class PoseEstimator(Subsystem):
 
         self.temp_rotation_check = Rotation2d()
 
-        self.tag_layout = AprilTagFieldLayout.loadField(AprilTagField.k2025Reefscape)
+        self.tag_layout = AprilTagFieldLayout.loadField(AprilTagField.k2025ReefscapeWelded)
         self.single_tag = False
         self.possible_pose_gbl = Pose2d()
 
@@ -353,7 +353,7 @@ class PoseEstimator(Subsystem):
 
     def get_path_to_L1(self, face_to_score : int, right_side : bool):
         target_face = (face_to_score - 1) % 6 if right_side else (face_to_score + 1) % 6
-        target_translation = self.get_path_to_reef(False, target_face, not right_side, margin_dist_offset=8.625, do_side_offset=True, do_manip_offset=False).translation()
+        target_translation = self.get_path_to_reef(True, target_face, not right_side, margin_dist_offset=8.625, do_side_offset=True, do_manip_offset=False).translation()
         face_angle = FieldConstants.flip_Rotation2d(FieldConstants.Reef.centerFaces[target_face - 1].rotation())
         target_angle = Rotation2d()
         if right_side:
@@ -378,6 +378,7 @@ class PoseEstimator(Subsystem):
 
     def get_path_to_reef(self, use_calibrated_field, face: int, right_branch: bool, margin_dist_offset=1.0, do_side_offset=True, do_manip_offset=True):
         manip_offset = 3.25
+        calibration_tuple = (not FieldConstants.shouldFlip, right_branch, face)
 
         side_offset = (inchesToMeters(6.47) if not do_manip_offset else (inchesToMeters(6.47 + manip_offset) if right_branch else inchesToMeters(6.47 - manip_offset)))  # distance b/w center of face to branch
         dist_offset = (
@@ -420,7 +421,7 @@ class PoseEstimator(Subsystem):
                 ),  # don't know if this + 90 is needed, because our battery is facing forward and we want the camera side (scoring side) to face reef
             )
 
-            if use_calibrated_field:
+            if use_calibrated_field and (calibration_tuple not in self.robot.bad_reef_calibrations):
                 alliance_color = "red" if DriverStation.getAlliance() == DriverStation.Alliance.kRed else "blue"
                 branch = "right" if right_branch else "left"
                 target_pose_3 = FieldConstants.ReefCalibratedToField.calibrated_data[alliance_color][branch][face]

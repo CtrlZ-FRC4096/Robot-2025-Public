@@ -160,7 +160,8 @@ class Robot(CoroutineRobot):
         self.path_constraints = PathConstraints(4.0, 4.0, degreesToRadians(540), degreesToRadians(540))
 
         self.autoroutines = autoroutines.AutoRoutines(self)
-        self.flip_3_piece_f1(False)
+        self.flip_3_piece_f1(False) # LEFT SIDE -> TRUE; RIGHT SIDE -> False
+        # SIDES ARE BASED OFF THE SIDE CURRENTLY ON, NOT FROM (0,0) (Blue alliance perspective) 
         self.auto = self.autoroutines.three_piece_f1()
 
         DataLogManager.start()
@@ -184,6 +185,10 @@ class Robot(CoroutineRobot):
 
         self.is_intaking = False
         self.raise_setpoints = 0.0
+
+        ## LIST OF BAD CALIBRATED POSES ##
+        ## (Blue Side : bool, Right Branch : bool, Face : int)
+        self.bad_reef_calibrations = [] # EXAMPlE: (True, False, 4) is left branch on Face 4 of Blue side
 
         ### TODO: TURN OFF BEFORE A MATCH ###
         self.set_calibration_mode()
@@ -272,17 +277,19 @@ class Robot(CoroutineRobot):
         if not left_side:
             self.score_1_face = 4
             self.score_1_right_branch = False
-            self.left_source_auto = False
             self.score_2_face = 4
             self.score_2_right_branch = True
             self.wait_score_1_2p = 0.0
+            self.left_source_auto = False
+            self.auto_position_source = 3
         else:
             self.left_source_auto = True
             self.score_1_face = 4
             self.score_1_right_branch = True
             self.score_2_face = 4
             self.score_2_right_branch = False
-            self.wait_score_1_2p = 1.0
+            self.wait_score_1_2p = 0.0
+            self.auto_position_source = 3
             for idx, command in enumerate(self.autoroutines.p_for_2p):
                 self.autoroutines.p_for_2p[idx] = self.flip_path_cmd_across_x(command)
 
@@ -298,8 +305,10 @@ class Robot(CoroutineRobot):
             self.score_4_face = 1
             self.score_4_right_branch = True
             self.left_source_auto = False
+            self.auto_position_source = 3
         else:
             self.left_source_auto = True
+            self.auto_position_source = 3
             self.score_1_face = 4
             self.score_1_right_branch = True
             self.score_2_face = 2
@@ -314,6 +323,7 @@ class Robot(CoroutineRobot):
     def flip_3_piece_f1(self, left_side : bool):
         if not left_side:
             self.left_source_auto = False
+            self.auto_position_source = 3
             self.score_1_face = 5
             self.score_1_right_branch = False
             self.score_2_face = 1
@@ -322,6 +332,7 @@ class Robot(CoroutineRobot):
             self.score_3_right_branch = False
         else:
             self.left_source_auto = True
+            self.auto_position_source = 3
             self.score_1_face = 3
             self.score_1_right_branch = True
             self.score_2_face = 1
@@ -334,6 +345,7 @@ class Robot(CoroutineRobot):
     def flip_3_piece_to_f5(self, left_side : bool):
         if not left_side:
             self.score_1_f5_face = 5
+            self.auto_position_source = 3
             self.score_1_f5_right_branch = False
             self.score_2_face = 6
             self.score_2_right_branch = True
@@ -342,6 +354,7 @@ class Robot(CoroutineRobot):
             self.left_source_auto = False
         else:
             self.score_1_f5_face = 3
+            self.auto_position_source = 3
             self.score_1_f5_right_branch = True
             self.score_2_face = 2
             self.score_2_right_branch = False
