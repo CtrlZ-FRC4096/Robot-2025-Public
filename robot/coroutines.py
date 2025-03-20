@@ -17,7 +17,6 @@ from wpilib import Timer
 from wpilibextra.coroutine import commandify
 import oi
 from robot_scoring_positions import RobotScoringPositions
-from field_const import FieldConstants
 
 
 class Coroutines:
@@ -126,7 +125,7 @@ class Coroutines:
             robot.at_scoring_position = False
             robot.score_piece = False
             robot.final_lineup_pose = robot.poseEstimator.get_path_to_reef(
-                True,
+                True if robot.score_1_face in [1,5,4,6] else False, # CHANGE WHEN WE HAVE FIELD CALIBRATED
                 robot.score_1_face,
             	robot.score_1_right_branch,
                 do_manip_offset=True
@@ -148,7 +147,7 @@ class Coroutines:
             robot.at_scoring_position = False
             robot.score_piece = False
             robot.final_lineup_pose = robot.poseEstimator.get_path_to_reef(
-                True,
+                True if robot.score_2_face in [1,5,4,6] else False, # CHANGE WHEN WE HAVE FIELD CALIBRATED
                 robot.score_2_face,
             	robot.score_2_right_branch,
                 do_manip_offset=True
@@ -170,7 +169,7 @@ class Coroutines:
             robot.at_scoring_position = False
             robot.score_piece = False
             robot.final_lineup_pose = robot.poseEstimator.get_path_to_reef(
-                True,
+                True if robot.score_3_face in [1,5,4,6] else False, # CHANGE WHEN WE HAVE FIELD CALIBRATED
                 robot.score_3_face,
             	robot.score_3_right_branch,
                 do_manip_offset=True
@@ -192,7 +191,7 @@ class Coroutines:
             robot.at_scoring_position = False
             robot.score_piece = False
             robot.final_lineup_pose = robot.poseEstimator.get_path_to_reef(
-                True,
+                True if robot.score_4_face in [1,5,4,6] else False, # CHANGE WHEN WE HAVE FIELD CALIBRATED
                 robot.score_4_face,
             	robot.score_4_right_branch,
                 do_manip_offset=True
@@ -203,11 +202,31 @@ class Coroutines:
             while robot.has_coral:
                 yield
 
+        @commandify
+        def score_piece_1_f5():
+            yield
+            robot.score_state = RobotScoringPositions.L4_Scoring
+            robot.funnel_intake.is_intaking = False
+            robot.end_effector.is_intaking = False
+            robot.at_scoring_position = False
+            robot.score_piece = False
+            robot.final_lineup_pose = robot.poseEstimator.get_path_to_reef(
+                True if robot.score_1_f5_face in [1,4,5,6] else False, # CHANGE WHEN WE HAVE FIELD CALIBRATED
+                robot.score_1_f5_face,
+            	robot.score_1_f5_right_branch,
+                do_manip_offset=True
+            )
+            robot.mechanisms_at_default = False
+            robot.running_pid_lineup = True
+            robot.score_intent = True
+            while robot.has_coral:
+                yield
 
         self.score_piece_1 = (score_piece_1)
         self.score_piece_2 = (score_piece_2)
         self.score_piece_3 = (score_piece_3)
         self.score_piece_4 = (score_piece_4)
+        self.score_piece_1_f5 = (score_piece_1_f5)
 
         @commandify
         def score_L4_1():
@@ -297,7 +316,7 @@ class Coroutines:
         @commandify
         def intake_coral_1():
             yield
-            robot.final_lineup_pose = robot.poseEstimator.get_path_to_source(robot.left_source_auto, robot.auto_position_source, extra_dist_offset=-5.0)
+            robot.final_lineup_pose = robot.poseEstimator.get_path_to_source(robot.left_source_auto, 1, extra_dist_offset=-5.0)
             robot.mechanisms_at_default = False
             robot.at_scoring_position = False
             robot.score_piece = False
@@ -316,7 +335,7 @@ class Coroutines:
         @commandify
         def intake_coral_2():
             yield
-            robot.final_lineup_pose = robot.poseEstimator.get_path_to_source(robot.left_source_auto, robot.auto_position_source, extra_dist_offset=-5.0) # CHANGE TO POSITION ON SOURCE from OI
+            robot.final_lineup_pose = robot.poseEstimator.get_path_to_source(robot.left_source_auto, 1, extra_dist_offset=-5.0) # CHANGE TO POSITION ON SOURCE from OI
             robot.mechanisms_at_default = False
             robot.at_scoring_position = False
             robot.score_piece = False
@@ -335,7 +354,7 @@ class Coroutines:
         @commandify
         def intake_coral_3():
             yield
-            robot.final_lineup_pose = robot.poseEstimator.get_path_to_source(robot.left_source_auto, robot.auto_position_source, extra_dist_offset=-5.0) # CHANGE TO POSITION ON SOURCE from OI
+            robot.final_lineup_pose = robot.poseEstimator.get_path_to_source(robot.left_source_auto, 1, extra_dist_offset=-5.0) # CHANGE TO POSITION ON SOURCE from OI
             robot.mechanisms_at_default = False
             robot.at_scoring_position = False
             robot.score_piece = False
@@ -354,7 +373,7 @@ class Coroutines:
         @commandify
         def intake_coral_2p_1():
             yield
-            robot.final_lineup_pose = robot.poseEstimator.get_path_to_source(robot.left_source_auto, robot.auto_position_source, extra_dist_offset=-6.0)
+            robot.final_lineup_pose = robot.poseEstimator.get_path_to_source(robot.left_source_auto, 3, extra_dist_offset=-6.0)
             robot.mechanisms_at_default = False
             robot.at_scoring_position = False
             robot.score_piece = False
@@ -399,3 +418,66 @@ class Coroutines:
 
         self.reset_robot_after_intaking_1 = (reset_robot_after_intaking_1)
         self.reset_robot_after_intaking_2 = (reset_robot_after_intaking_2)
+
+
+        @commandify
+        def score_3_piece_auto_no_closest_tag_1():
+            yield
+            robot.funnel_intake.is_intaking = False
+            robot.end_effector.is_intaking = False
+            robot.at_scoring_position = False
+            robot.score_piece = False
+            robot.final_lineup_pose = robot.poseEstimator.get_path_to_reef(
+                False,
+                5,
+            	robot.right_branch,
+                do_manip_offset=True
+            )
+            robot.mechanisms_at_default = False
+            robot.running_pid_lineup = True
+            robot.score_intent = True
+            while robot.has_coral:
+                yield
+
+        @commandify
+        def score_3_piece_auto_no_closest_tag_2():
+            yield
+            robot.funnel_intake.is_intaking = False
+            robot.end_effector.is_intaking = False
+            robot.at_scoring_position = False
+            robot.score_piece = False
+            robot.final_lineup_pose = robot.poseEstimator.get_path_to_reef(
+                True,
+                6,
+            	robot.right_branch,
+                do_manip_offset=True
+            )
+            robot.mechanisms_at_default = False
+            robot.running_pid_lineup = True
+            robot.score_intent = True
+            while robot.has_coral:
+                yield
+
+        @commandify
+        def score_3_piece_auto_no_closest_tag_3():
+            yield
+            robot.funnel_intake.is_intaking = False
+            robot.end_effector.is_intaking = False
+            robot.at_scoring_position = False
+            robot.score_piece = False
+            robot.final_lineup_pose = robot.poseEstimator.get_path_to_reef(
+                True,
+                6,
+            	robot.right_branch,
+                do_manip_offset=True
+            )
+            robot.mechanisms_at_default = False
+            robot.running_pid_lineup = True
+            robot.score_intent = True
+            while robot.has_coral:
+                yield
+
+
+        self.score_3_piece_auto_no_closest_tag_1 = (score_3_piece_auto_no_closest_tag_1)
+        self.score_3_piece_auto_no_closest_tag_2 = (score_3_piece_auto_no_closest_tag_2)
+        self.score_3_piece_auto_no_closest_tag_3 = (score_3_piece_auto_no_closest_tag_3)

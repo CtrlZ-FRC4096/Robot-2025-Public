@@ -142,7 +142,7 @@ class Elevator(Subsystem):
             if self.robot.end_effector.get_position() >= RobotScoringPositions.min_end_effector_position_to_move_elevator_up:
                 self.set_elevator_height(RobotScoringPositions.elevator_climb_height)
         elif self.robot.mechanisms_at_default:
-            if (self.robot.end_effector.get_position() >= RobotScoringPositions.min_end_effector_position_to_move_elevator_up): # and (self.robot.climber.get_position() <= (RobotScoringPositions.climber_default_position + 0.03)):
+            if (self.robot.end_effector.get_position() >= RobotScoringPositions.min_end_effector_position_to_move_elevator_up) and (self.robot.climber.get_position() <= (RobotScoringPositions.climber_default_position + 0.03)):
                 self.set_elevator_height(RobotScoringPositions.elevator_intake_height) # set elevator to intake height
 
     def log(self):

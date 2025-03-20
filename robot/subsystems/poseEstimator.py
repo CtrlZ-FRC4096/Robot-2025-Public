@@ -150,9 +150,9 @@ class PoseEstimator(Subsystem):
             const.SWERVE_KINEMATICS, self.getYaw(), self.get_module_positions()  # type: ignore
         )
 
-        self.curEstPose = Pose2d(FieldConstants.flip_Translation2d(Translation2d(7.170, 3.944)), self.getYaw())
-        self.curEstPoseSingleTag = Pose2d(FieldConstants.flip_Translation2d(Translation2d(7.170, 3.944)), self.getYaw())
-        self.curEstPoseGlobal = Pose2d(FieldConstants.flip_Translation2d(Translation2d(7.170, 3.944)), self.getYaw())
+        self.curEstPose = FieldConstants.flip_Pose2d(Pose2d(7.170, 3.944, self.getYaw()))
+        self.curEstPoseSingleTag = FieldConstants.flip_Pose2d(Pose2d(7.170, 3.944, self.getYaw()))
+        self.curEstPoseGlobal = FieldConstants.flip_Pose2d(Pose2d(7.170, 3.944, self.getYaw()))
         # self.lastPeriodicEstPose = self.curEstPose
 
         self.poseEst = SwerveDrive4PoseEstimator(
@@ -211,7 +211,7 @@ class PoseEstimator(Subsystem):
             WrapperedPhotonCamera("camera_1", ROBOT_TO_CAM1),
             WrapperedPhotonCamera("camera_2", ROBOT_TO_CAM2),
             WrapperedPhotonCamera("camera_3", ROBOT_TO_CAM3),
-            WrapperedPhotonCamera("camera_4", ROBOT_TO_CAM4),
+            # WrapperedPhotonCamera("camera_4", ROBOT_TO_CAM4),
         ]
 
         self.poseConverge = True
@@ -224,8 +224,7 @@ class PoseEstimator(Subsystem):
         self.tag_layout = AprilTagFieldLayout.loadField(AprilTagField.k2025Reefscape)
         self.single_tag = False
         self.possible_pose_gbl = Pose2d()
-        object_1 = self.field.getObject("1")
-        object_1.setPose(self.get_path_to_reef(True, 1, True))
+
         # for face in [1,5]:
         #     for side in range(2):
         #         object = self.field.getObject("l1 score " + str(face) + " " + ("right side" if side else "left side"))
@@ -354,7 +353,7 @@ class PoseEstimator(Subsystem):
 
     def get_path_to_L1(self, face_to_score : int, right_side : bool):
         target_face = (face_to_score - 1) % 6 if right_side else (face_to_score + 1) % 6
-        target_translation = self.get_path_to_reef(True, target_face, not right_side, margin_dist_offset=8.625, do_side_offset=True, do_manip_offset=False).translation()
+        target_translation = self.get_path_to_reef(False, target_face, not right_side, margin_dist_offset=8.625, do_side_offset=True, do_manip_offset=False).translation()
         face_angle = FieldConstants.flip_Rotation2d(FieldConstants.Reef.centerFaces[target_face - 1].rotation())
         target_angle = Rotation2d()
         if right_side:
@@ -379,7 +378,6 @@ class PoseEstimator(Subsystem):
 
     def get_path_to_reef(self, use_calibrated_field, face: int, right_branch: bool, margin_dist_offset=1.0, do_side_offset=True, do_manip_offset=True):
         manip_offset = 3.25
-        calibration_tuple = (not FieldConstants.shouldFlip, right_branch, face)
 
         side_offset = (inchesToMeters(6.47) if not do_manip_offset else (inchesToMeters(6.47 + manip_offset) if right_branch else inchesToMeters(6.47 - manip_offset)))  # distance b/w center of face to branch
         dist_offset = (
@@ -422,7 +420,7 @@ class PoseEstimator(Subsystem):
                 ),  # don't know if this + 90 is needed, because our battery is facing forward and we want the camera side (scoring side) to face reef
             )
 
-            if use_calibrated_field and (calibration_tuple not in self.robot.bad_reef_calibrations):
+            if use_calibrated_field:
                 alliance_color = "red" if DriverStation.getAlliance() == DriverStation.Alliance.kRed else "blue"
                 branch = "right" if right_branch else "left"
                 target_pose_3 = FieldConstants.ReefCalibratedToField.calibrated_data[alliance_color][branch][face]
@@ -518,12 +516,12 @@ class PoseEstimator(Subsystem):
                     self.robot.right_branch,
                     do_manip_offset=True,
                 )
-
+        
         if (self.robot.is_intaking) and (self.robot.previous_position_on_source != self.robot.position_on_source):
             self.robot.previous_position_on_source = self.robot.position_on_source
             self.robot.final_lineup_pose = self.get_path_to_source(
-                self.robot.poseEstimator.calculate_closest_source()[0],
-                self.robot.position_on_source,
+                self.robot.poseEstimator.calculate_closest_source()[0], 
+                self.robot.position_on_source, 
                 extra_dist_offset=-3.0
             )
 

@@ -298,7 +298,7 @@ class WrapperedPhotonCamera:
 
     def getSingleTagIDs(self):
         return self.singleTagIDs
-
+    
     def getTagDistances(self):
         return self.tagDistances
 
