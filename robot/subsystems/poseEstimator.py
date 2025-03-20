@@ -658,6 +658,7 @@ class PoseEstimator(Subsystem):
                 SmartDashboard.putNumber(self.cams[idx].camName + " Y", self.camera_Y[self.cams[idx].camName])
                 SmartDashboard.putNumber(self.cams[idx].camName + " THETA", self.camera_theta[self.cams[idx].camName])
             except:
+                print(f"camera {idx + 1} not showing")
                 continue
 
         SmartDashboard.putBoolean("single tag :3", self.single_tag)

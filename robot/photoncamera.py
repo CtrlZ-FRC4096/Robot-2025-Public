@@ -148,6 +148,9 @@ class WrapperedPhotonCamera:
                     ]
                 ).astype(np.float32)
 
+                SmartDashboard.putNumber(f"corners for tag x: {self.camName}", corners[0][0])
+                SmartDashboard.putNumber(f"corners for tag y: {self.camName}", corners[0][1])
+
                 # Return list of n corners, for fiducials this is counter clockwise starting from the top left corner of the tag.
                 corners_undistorted = cv2.undistortPoints(  # Unsure if these corners have already been undistorted
                     corners,
@@ -172,16 +175,21 @@ class WrapperedPhotonCamera:
                 target_x_angle = np.mean(corners[:, 0])
                 target_y_angle = np.mean(corners[:, 1])
 
+                SmartDashboard.putNumber(f"tgt x {self.camName}", target_x_angle)
+                SmartDashboard.putNumber(f"tgt y {self.camName}", target_y_angle)
+
                 # print("targ x: ", target_x_angle)
                 # print("target y: ", target_y_angle)
 
                 # z_dist = tag_map.getTagPose(tgtID).Z() - inchesToMeters(4.87)
 
                 distance_3d = target.getBestCameraToTarget().translation().norm()
+                SmartDashboard.putNumber(f"3d distance for {self.camName}", distance_3d)
 
                 distance_2d_to_tag = distance_3d * math.cos(
                     (-1 * self.robotToCam.rotation().Y()) - target_y_angle
                 )  # cosine is even so we don't need to negate both
+                SmartDashboard.putNumber(f"2d distance for {self.camName}", distance_2d_to_tag)
 
                 # print(distance_2d_to_tag)
 
@@ -191,6 +199,7 @@ class WrapperedPhotonCamera:
                     + self.robotToCam.rotation().Z()
                     - target_x_angle
                 )
+                SmartDashboard.putNumber(f"cam to tag rotation for {self.camName}", cam_to_tag_rotation.degrees())
 
                 # Calculate the translation of the camera to the tag. We take the position of the tag, transform by the distance to the tag, in the direction of the camera
                 field_to_camera_translation = (
@@ -205,6 +214,8 @@ class WrapperedPhotonCamera:
                     )
                     .translation()
                 )
+                SmartDashboard.putNumber(f"field to camera translation x for {self.camName}", field_to_camera_translation.X())
+                SmartDashboard.putNumber(f"field to camera translation y for {self.camName}", field_to_camera_translation.Y())
 
                 # Calculate the pose of the robot. We take the position of the camera to the tag and transform it by the robot to camera transform
                 robot_pose = Pose2d(
@@ -229,6 +240,9 @@ class WrapperedPhotonCamera:
                 robot_pose = Pose2d(
                     robot_pose.translation(), prevEstPoseSingleTag.rotation()
                 )
+                SmartDashboard.putNumber(f"robot pose for {self.camName} x", robot_pose.X())
+                SmartDashboard.putNumber(f"robot pose for {self.camName} y", robot_pose.Y())
+                SmartDashboard.putNumber(f"robot pose for {self.camName} theta", robot_pose.rotation().degrees())
                 # print(robot_pose)
                 # z_dist / (math.tan(self.robotToCam.rotation().Y() + target_y_angle))
                 # absolute_angle = yaw.radians() + target_x_angle
