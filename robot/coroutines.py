@@ -17,6 +17,7 @@ from wpilib import Timer
 from wpilibextra.coroutine import commandify
 import oi
 from robot_scoring_positions import RobotScoringPositions
+from field_const import FieldConstants
 
 
 class Coroutines:
@@ -25,6 +26,16 @@ class Coroutines:
     """
 
     def __init__(self, robot: "Robot"):
+        
+        @commandify
+        def move_forward():
+            # start in the middle, and face battery directly towards DS wall
+            yield
+            vx = 3.0 if FieldConstants.shouldFlip else -3.0
+            robot.drivetrain.drive(Translation2d(vx, 0), 0, True, False)
+            yield from robot.wait(1.0)
+        self.move_forward = (move_forward)
+        
         @commandify
         def tush_push_towards_yaw():
             yield
