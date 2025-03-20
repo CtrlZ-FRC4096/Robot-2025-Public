@@ -55,10 +55,7 @@ class WrapperedPhotonCamera:
         self.robotToCam: Transform3d = robotToCam
         self.counter = 0
         self.tag_map = AprilTagFieldLayout.loadField(AprilTagField.k2025Reefscape)
-        # if FieldConstants.shouldFlip:
-        #     self.reef_tags_to_use = [6,7,8,9,10,11]
-        # else:
-        #     self.reef_tags_to_use = [17,18,19,20,21,22]
+
         self.reef_tags_to_use = [6,7,8,9,10,11,17,18,19,20,21,22]
 
     @staticmethod

@@ -98,7 +98,10 @@ class AutoRoutines:
             self.robot.coroutines.score_3_piece_auto_no_closest_tag_3.withTimeout(5.0),
             self.robot.coroutines.reset_robot_after_scoring_3,
         )
-
+    def move_forwards(self):
+        return SequentialCommandGroup(
+            self.robot.coroutines.move_forward.withTimeout(1.5)
+        )
     def three_piece_f1(self):
         return SequentialCommandGroup(
             self.robot.coroutines.score_piece_1.withTimeout(2.5),
