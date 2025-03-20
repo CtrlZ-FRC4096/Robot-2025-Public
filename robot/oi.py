@@ -123,10 +123,6 @@ class OI:
                 forward_back = -square(self.driver1.LEFT_JOY_Y())
                 left_right = -square(self.driver1.LEFT_JOY_X())
                 
-                if FieldConstants.shouldFlip:
-                    forward_back *= -1
-                    left_right *= -1
-                
                 if not self.driver1.RIGHT_TRIGGER_AS_BUTTON():  # boost
                     forward_back *= 1.0
                     left_right *= 1.0
