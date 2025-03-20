@@ -89,8 +89,6 @@ class PoseEstimator(Subsystem):
         self.gyro = Pigeon2(const.SWERVE_PIGEON_ID, "carnivore")
 
         self.gyro_offset = 0.0
-        if FieldConstants.shouldFlip:
-            self.gyro_offset = 180.0
         self.gyro.set_yaw(self.gyro_offset)
 
         self.field = Field2d()
@@ -226,7 +224,8 @@ class PoseEstimator(Subsystem):
         self.tag_layout = AprilTagFieldLayout.loadField(AprilTagField.k2025Reefscape)
         self.single_tag = False
         self.possible_pose_gbl = Pose2d()
-
+        object_1 = self.field.getObject("1")
+        object_1.setPose(self.get_path_to_reef(True, 1, True))
         # for face in [1,5]:
         #     for side in range(2):
         #         object = self.field.getObject("l1 score " + str(face) + " " + ("right side" if side else "left side"))

@@ -209,12 +209,12 @@ class OI:
 
         @self.driver1.POV.DOWN.whenPressed  # Reset Gyro
         def _():
-            if FieldConstants.shouldFlip:
-                robot.poseEstimator.set_yaw(180.0)
-                self.robot_oriented_angle = 180.0
-            else:
-                robot.poseEstimator.set_yaw(0.0)
-                self.robot_oriented_angle = 0.0
+            # if FieldConstants.shouldFlip:
+            #     robot.poseEstimator.set_yaw(180.0)
+            #     self.robot_oriented_angle = 180.0
+            # else:
+            robot.poseEstimator.set_yaw(0.0)
+            self.robot_oriented_angle = 0.0
 
         @self.driver1.POV.LEFT.whenHeld  # Code Crash Input 1
         def _():
