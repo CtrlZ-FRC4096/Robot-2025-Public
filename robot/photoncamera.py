@@ -55,6 +55,10 @@ class WrapperedPhotonCamera:
         self.robotToCam: Transform3d = robotToCam
         self.counter = 0
         self.tag_map = AprilTagFieldLayout.loadField(AprilTagField.k2025Reefscape)
+        if FieldConstants.shouldFlip:
+            self.reef_tags_to_use = [6,7,8,9,10,11]
+        else:
+            self.reef_tags_to_use = [17,18,19,20,21,22]
 
     @staticmethod
     def tgt_corner_to_list(target):
@@ -129,20 +133,7 @@ class WrapperedPhotonCamera:
 
             # Transform both poses to on-field poses
             tgtID = target.getFiducialId()
-            if tgtID in [
-                6,
-                7,
-                8,
-                9,
-                10,
-                11,
-                17,
-                18,
-                19,
-                20,
-                21,
-                22,
-            ]:  # Only use reef IDs, everything else is not great
+            if tgtID in self.reef_tags_to_use:  # Only use reef IDs, everything else is not great
 
                 tagFieldPose = self.tag_map.getTagPose(tgtID)
 
