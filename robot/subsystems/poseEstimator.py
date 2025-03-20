@@ -89,6 +89,8 @@ class PoseEstimator(Subsystem):
         self.gyro = Pigeon2(const.SWERVE_PIGEON_ID, "carnivore")
 
         self.gyro_offset = 0.0
+        if FieldConstants.shouldFlip:
+            self.gyro_offset = 180.0
         self.gyro.set_yaw(self.gyro_offset)
 
         self.field = Field2d()
@@ -221,7 +223,7 @@ class PoseEstimator(Subsystem):
 
         self.temp_rotation_check = Rotation2d()
 
-        self.tag_layout = AprilTagFieldLayout.loadField(AprilTagField.k2025ReefscapeWelded)
+        self.tag_layout = AprilTagFieldLayout.loadField(AprilTagField.k2025Reefscape)
         self.single_tag = False
         self.possible_pose_gbl = Pose2d()
 
@@ -517,12 +519,12 @@ class PoseEstimator(Subsystem):
                     self.robot.right_branch,
                     do_manip_offset=True,
                 )
-        
+
         if (self.robot.is_intaking) and (self.robot.previous_position_on_source != self.robot.position_on_source):
             self.robot.previous_position_on_source = self.robot.position_on_source
             self.robot.final_lineup_pose = self.get_path_to_source(
-                self.robot.poseEstimator.calculate_closest_source()[0], 
-                self.robot.position_on_source, 
+                self.robot.poseEstimator.calculate_closest_source()[0],
+                self.robot.position_on_source,
                 extra_dist_offset=-3.0
             )
 

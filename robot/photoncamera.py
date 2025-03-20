@@ -54,7 +54,7 @@ class WrapperedPhotonCamera:
         self.poseEstimates = []
         self.robotToCam: Transform3d = robotToCam
         self.counter = 0
-        self.tag_map = AprilTagFieldLayout.loadField(AprilTagField.k2025ReefscapeWelded)
+        self.tag_map = AprilTagFieldLayout.loadField(AprilTagField.k2025Reefscape)
 
     @staticmethod
     def tgt_corner_to_list(target):
@@ -298,7 +298,7 @@ class WrapperedPhotonCamera:
 
     def getSingleTagIDs(self):
         return self.singleTagIDs
-    
+
     def getTagDistances(self):
         return self.tagDistances
 

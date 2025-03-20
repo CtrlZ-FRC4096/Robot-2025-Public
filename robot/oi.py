@@ -122,6 +122,11 @@ class OI:
 
                 forward_back = -square(self.driver1.LEFT_JOY_Y())
                 left_right = -square(self.driver1.LEFT_JOY_X())
+
+                if FieldConstants.shouldFlip:
+                    forward_back *= -1
+                    left_right *= -1
+
                 if not self.driver1.RIGHT_TRIGGER_AS_BUTTON():  # boost
                     forward_back *= 1.0
                     left_right *= 1.0
@@ -195,7 +200,7 @@ class OI:
             self.robot.manual_scoring = True
             self.robot.mechanisms_at_default = False
 
-        @self.driver1.Y.whenPressed
+        @self.driver1.Y.whenPressed #manual elevator down
         def _():
             self.robot.mechanisms_at_default = True
             self.robot.raise_elevator_slightly_for_L1 = False
@@ -204,8 +209,12 @@ class OI:
 
         @self.driver1.POV.DOWN.whenPressed  # Reset Gyro
         def _():
-            robot.poseEstimator.set_yaw(0.0)
-            self.robot_oriented_angle = 0.0
+            if FieldConstants.shouldFlip:
+                robot.poseEstimator.set_yaw(180.0)
+                self.robot_oriented_angle = 180.0
+            else:
+                robot.poseEstimator.set_yaw(0.0)
+                self.robot_oriented_angle = 0.0
 
         @self.driver1.POV.LEFT.whenHeld  # Code Crash Input 1
         def _():
