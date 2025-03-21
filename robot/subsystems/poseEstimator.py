@@ -88,7 +88,11 @@ class PoseEstimator(Subsystem):
 
         self.gyro = Pigeon2(const.SWERVE_PIGEON_ID, "carnivore")
 
-        self.gyro_offset = 0.0
+        if FieldConstants.shouldFlip:
+            self.gyro_offset = 90
+        else:
+            self.gyro_offset = 270
+
         self.gyro.set_yaw(self.gyro_offset)
 
         self.field = Field2d()
@@ -190,10 +194,11 @@ class PoseEstimator(Subsystem):
         )
 
         # # Update with positionon robot
+        # # Update with positionon robot
         ROBOT_TO_CAM3 = Transform3d(
             Translation3d(0.334, 0.193, 0.732),  # X  # Y (0.282 need to change on robot)  # Z
             Rotation3d(
-                0.0, np.deg2rad(25.0), np.deg2rad(-105.0)
+                np.deg2rad(-3.3), np.deg2rad(24.9), np.deg2rad(-104.8)
             ),  # Roll  # Pitch  # Yaw
         )
 
@@ -201,9 +206,9 @@ class PoseEstimator(Subsystem):
         ROBOT_TO_CAM4 = Transform3d(
             Translation3d(-0.302, 0.214, 0.773),  # X  # Y  # Z
             Rotation3d(
-                0.0,
-                np.deg2rad(38.0),
-                np.deg2rad(75.0),
+                np.deg2rad(5.0),
+                np.deg2rad(-37.8),
+                np.deg2rad(75.6),
             ),  # Roll  # Pitch  # Yaw
         )
 
@@ -211,7 +216,7 @@ class PoseEstimator(Subsystem):
             WrapperedPhotonCamera("camera_1", ROBOT_TO_CAM1),
             WrapperedPhotonCamera("camera_2", ROBOT_TO_CAM2),
             WrapperedPhotonCamera("camera_3", ROBOT_TO_CAM3),
-            WrapperedPhotonCamera("camera_4", ROBOT_TO_CAM4),
+            # WrapperedPhotonCamera("camera_4", ROBOT_TO_CAM4),
         ]
 
         self.poseConverge = True
@@ -494,6 +499,7 @@ class PoseEstimator(Subsystem):
             return target_pose
 
     def useSingleTag(self, distance=2):
+        return True #Only use single tag
         return (self.curEstPose - self.tag_layout.getTagPose(self.calculate_closest_reef_tag()[0]).toPose2d()).translation().norm() < distance
 
     def calculate_algae_height_at_closest_side(self):

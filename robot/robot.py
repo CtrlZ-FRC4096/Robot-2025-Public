@@ -158,8 +158,8 @@ class Robot(CoroutineRobot):
         self.path_constraints = PathConstraints(4.0, 4.0, degreesToRadians(540), degreesToRadians(540))
 
         self.autoroutines = autoroutines.AutoRoutines(self)
-        self.flip_3_piece_f1(False)
-        self.auto = self.autoroutines.three_piece_f1()
+        self.flip_3_piece_to_f5(False)
+        self.auto = self.autoroutines.three_piece_to_f5()
 
         DataLogManager.start()
         DriverStation.startDataLog(DataLogManager.getLog())
@@ -338,7 +338,7 @@ class Robot(CoroutineRobot):
             self.score_2_right_branch = False
             self.score_3_face = 2
             self.score_3_right_branch = True
-            self.left_source_auto = False
+            self.left_source_auto = True
             for idx, command in enumerate(self.autoroutines.p_for_f5):
                 #     #mirror across x axis
                 # print("pathplanner command ", idx + 1)
@@ -385,6 +385,11 @@ class Robot(CoroutineRobot):
         self.has_coral = True # Start with preloaded coral
         self.scheduler.cancelAll()
         self.in_autonomous_mode = True
+
+        if FieldConstants.shouldFlip:
+            self.poseEstimator.set_yaw(90)
+        else:
+            self.poseEstimator.set_yaw(270)
 
         self.scheduler.schedule(self.auto)
 
