@@ -36,15 +36,15 @@ class AutoRoutines:
         #self.p_1 = self.robot.followPathCommand("3P_1")
         
     #     )
-    # def move_forwards(self):
-    #     return SequentialCommandGroup(
-    #         self.robot.coroutines.move_forward.withTimeout(1.5)
-    #     )
-    def one_piece_f4(self):
+    def move_forwards(self):
         return SequentialCommandGroup(
-            self.robot.coroutines.score_piece_1.withTimeout(9.0),
-            self.robot.coroutines.reset_robot_after_scoring_1,
+            self.robot.coroutines.move_forward.withTimeout(1.5)
         )
+    # def one_piece_f4(self):
+    #     return SequentialCommandGroup(
+    #         # self.robot.coroutines.score_piece_1.withTimeout(9.0),
+    #         # self.robot.coroutines.reset_robot_after_scoring_1,
+    #     )
     def three_piece_f1(self):
         return SequentialCommandGroup(
             self.robot.coroutines.score_piece_1.withTimeout(2.5),

@@ -202,9 +202,9 @@ class Robot(CoroutineRobot):
 		# PATH CONSTRAINTS
         self.path_constraints = PathConstraints(4.0, 4.0, degreesToRadians(540), degreesToRadians(540))
 
-        self.flip_3_piece_to_f5(True)
+        # self.flip_one_piece_f4(False)
         self.autoroutines = autoroutines.AutoRoutines(self)
-        self.auto = self.autoroutines.three_piece_to_f5()
+        self.auto = self.autoroutines.move_forwards()
 
         DataLogManager.start()
         DriverStation.startDataLog(DataLogManager.getLog())
