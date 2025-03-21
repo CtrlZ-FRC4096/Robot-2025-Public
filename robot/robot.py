@@ -34,6 +34,8 @@ import ntcore
 import subsystems.climber
 import subsystems.drivetrain
 
+from wpimath.estimator import SwerveDrive4PoseEstimator
+
 from phoenix6 import controls
 
 # import subsystems.limelight
@@ -107,7 +109,7 @@ class Robot(CoroutineRobot):
         self.scheduler = CommandScheduler.getInstance()
 
         self.previously_scored = True
-
+        
         # subsystems
         self.drivetrain = subsystems.drivetrain.Drivetrain(self)
         self.leds = subsystems.leds.LEDs(self)
@@ -226,9 +228,6 @@ class Robot(CoroutineRobot):
         self.is_intaking = False
         self.raise_setpoints = 0.0
 
-        ### TODO: TURN OFF BEFORE A MATCH ###
-        self.set_calibration_mode()
-
 
         @self.addPeriodic(period=0.25, offset=0)
         def _():
@@ -246,9 +245,6 @@ class Robot(CoroutineRobot):
             yield
             self.scheduler.run()
 
-    def set_calibration_mode(self):
-        self.elevator.elevator_motor_1.set_control(controls.CoastOut())
-        self.end_effector.end_effector_motor.set_control(controls.CoastOut())
 
     def flip_X_coord(self, x):
         return FieldConstants.fieldLength - x
@@ -310,7 +306,8 @@ class Robot(CoroutineRobot):
         else:
             self.score_1_face = 4
             self.score_1_right_branch = True
-        self.poseEstimator.curEstPose = FieldConstants.flip_Pose2d(Pose2d(7.167, FieldConstants.fieldWidth / 2, Rotation2d.fromDegrees(270)))
+        self.poseEstimator.poseEst.resetPose(FieldConstants.flip_Pose2d(Pose2d(7.167, FieldConstants.fieldWidth / 2, Rotation2d.fromDegrees(270))))
+        self.poseEstimator.poseEstSingleTag.resetPose(FieldConstants.flip_Pose2d(Pose2d(7.167, FieldConstants.fieldWidth / 2, Rotation2d.fromDegrees(270))))
 
     def flip_2_piece_delay_auto(self, left_side : bool):
         if not left_side:
@@ -331,7 +328,8 @@ class Robot(CoroutineRobot):
             self.auto_position_source = 3
             for idx, command in enumerate(self.p_for_2p):
                 self.p_for_2p[idx] = self.flip_path_cmd_across_x(command)
-        self.poseEstimator.curEstPose = FieldConstants.flip_Pose2d(Pose2d(7.167, FieldConstants.fieldWidth / 2, Rotation2d.fromDegrees(270)))
+        self.poseEstimator.poseEst.resetPose(FieldConstants.flip_Pose2d(Pose2d(7.167, FieldConstants.fieldWidth / 2, Rotation2d.fromDegrees(270))))
+        self.poseEstimator.poseEstSingleTag.resetPose(FieldConstants.flip_Pose2d(Pose2d(7.167, FieldConstants.fieldWidth / 2, Rotation2d.fromDegrees(270))))
 
 
     def flip_3_piece_auto(self, left_side : bool):
@@ -359,7 +357,8 @@ class Robot(CoroutineRobot):
             self.auto_position_source = 3
             for idx, command in enumerate(self.p_for_3p):
                 self.p_for_3p[idx] = self.flip_path_cmd_across_x(command)
-        self.poseEstimator.curEstPose = FieldConstants.flip_Pose2d(Pose2d(7.167, FieldConstants.fieldWidth / 2, Rotation2d.fromDegrees(270)))
+        self.poseEstimator.poseEst.resetPose(FieldConstants.flip_Pose2d(Pose2d(7.167, FieldConstants.fieldWidth / 2, Rotation2d.fromDegrees(270))))
+        self.poseEstimator.poseEstSingleTag.resetPose(FieldConstants.flip_Pose2d(Pose2d(7.167, FieldConstants.fieldWidth / 2, Rotation2d.fromDegrees(270))))
 
     def flip_3_piece_f1(self, left_side : bool):
         if not left_side:
@@ -371,7 +370,8 @@ class Robot(CoroutineRobot):
             self.score_3_face = 1
             self.score_3_right_branch = False
             self.auto_position_source = 3
-            self.poseEstimator.curEstPose = FieldConstants.flip_Pose2d(Pose2d(7.167, 1.372, Rotation2d.fromDegrees(270)))
+            self.poseEstimator.poseEst.resetPose(FieldConstants.flip_Pose2d(Pose2d(7.167, 1.372, Rotation2d.fromDegrees(270))))
+            self.poseEstimator.poseEstSingleTag.resetPose(FieldConstants.flip_Pose2d(Pose2d(7.167, 1.372, Rotation2d.fromDegrees(270))))
         else:
             self.left_source_auto = True
             self.score_1_face = 3
@@ -381,7 +381,8 @@ class Robot(CoroutineRobot):
             self.score_3_face = 1
             self.score_3_right_branch = True
             self.auto_position_source = 3
-            self.poseEstimator.curEstPose = FieldConstants.flip_Pose2d(Pose2d(7.167, FieldConstants.fieldWidth - 1.372, Rotation2d.fromDegrees(270)))
+            self.poseEstimator.poseEst.resetPose(FieldConstants.flip_Pose2d(Pose2d(7.167, FieldConstants.fieldWidth - 1.372, Rotation2d.fromDegrees(270))))
+            self.poseEstimator.poseEstSingleTag.resetPose(FieldConstants.flip_Pose2d(Pose2d(7.167, FieldConstants.fieldWidth - 1.372, Rotation2d.fromDegrees(270))))
             for idx, command in enumerate(self.p_for_3p_f1):
                 self.p_for_3p_f1[idx] = self.flip_path_cmd_across_x(command)
 
@@ -395,7 +396,9 @@ class Robot(CoroutineRobot):
             self.score_3_right_branch = False
             self.left_source_auto = False
             self.auto_position_source = 3
-            self.poseEstimator.curEstPose = FieldConstants.flip_Pose2d(Pose2d(7.167, 1.372, Rotation2d.fromDegrees(270)))
+            self.poseEstimator.poseEst.resetPose(FieldConstants.flip_Pose2d(Pose2d(7.167, 1.372, Rotation2d.fromDegrees(270))))
+            self.poseEstimator.poseEstSingleTag.resetPose(FieldConstants.flip_Pose2d(Pose2d(7.167, 1.372, Rotation2d.fromDegrees(270))))
+            
         else:
             self.score_1_face = 3
             self.score_1_right_branch = True
@@ -405,7 +408,8 @@ class Robot(CoroutineRobot):
             self.score_3_right_branch = True
             self.left_source_auto = True
             self.auto_position_source = 3
-            self.poseEstimator.curEstPose = FieldConstants.flip_Pose2d(Pose2d(7.167, FieldConstants.fieldWidth - 1.372, Rotation2d.fromDegrees(270)))
+            self.poseEstimator.poseEst.resetPose(FieldConstants.flip_Pose2d(Pose2d(7.167, FieldConstants.fieldWidth - 1.372, Rotation2d.fromDegrees(270))))
+            self.poseEstimator.poseEstSingleTag.resetPose(FieldConstants.flip_Pose2d(Pose2d(7.167, FieldConstants.fieldWidth - 1.372, Rotation2d.fromDegrees(270))))
             for idx, command in enumerate(self.p_for_f5):
                 self.p_for_f5[idx] = self.flip_path_cmd_across_x(command)
 
