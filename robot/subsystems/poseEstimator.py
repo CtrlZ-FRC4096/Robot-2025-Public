@@ -88,8 +88,8 @@ class PoseEstimator(Subsystem):
 
         self.gyro = Pigeon2(const.SWERVE_PIGEON_ID, "carnivore")
 
-        self.gyro_offset = 0.0
-        self.gyro.set_yaw(self.gyro_offset)
+        # self.gyro_offset = 0.0
+        # self.gyro.set_yaw(self.gyro_offset)
 
         self.field = Field2d()
         self.field_for_single_tag = Field2d()
@@ -150,9 +150,9 @@ class PoseEstimator(Subsystem):
             const.SWERVE_KINEMATICS, self.getYaw(), self.get_module_positions()  # type: ignore
         )
 
-        self.curEstPose = FieldConstants.flip_Pose2d(Pose2d(7.170, 3.944, self.getYaw()))
-        self.curEstPoseSingleTag = FieldConstants.flip_Pose2d(Pose2d(7.170, 3.944, self.getYaw()))
-        self.curEstPoseGlobal = FieldConstants.flip_Pose2d(Pose2d(7.170, 3.944, self.getYaw()))
+        self.curEstPose = Pose2d(8.6868, 3.944, self.getYaw()) #Remove the flip
+        self.curEstPoseSingleTag = Pose2d(8.6868, 3.944, self.getYaw()) #Remove the flip 
+        self.curEstPoseGlobal = Pose2d(8.6868, 3.944, self.getYaw()) #Remove the flip
         # self.lastPeriodicEstPose = self.curEstPose
 
         self.poseEst = SwerveDrive4PoseEstimator(
@@ -193,7 +193,7 @@ class PoseEstimator(Subsystem):
         ROBOT_TO_CAM3 = Transform3d(
             Translation3d(0.334, 0.193, 0.732),  # X  # Y (0.282 need to change on robot)  # Z
             Rotation3d(
-                0.0, np.deg2rad(25.0), np.deg2rad(-105.0)
+                np.deg2rad(-3.3), np.deg2rad(24.9), np.deg2rad(-104.8)
             ),  # Roll  # Pitch  # Yaw
         )
 
@@ -201,9 +201,9 @@ class PoseEstimator(Subsystem):
         ROBOT_TO_CAM4 = Transform3d(
             Translation3d(-0.302, 0.214, 0.773),  # X  # Y  # Z
             Rotation3d(
-                0.0,
-                np.deg2rad(38.0),
-                np.deg2rad(75.0),
+                np.deg2rad(5.0),
+                np.deg2rad(-37.8),
+                np.deg2rad(75.6),
             ),  # Roll  # Pitch  # Yaw
         )
 
@@ -211,7 +211,7 @@ class PoseEstimator(Subsystem):
             WrapperedPhotonCamera("camera_1", ROBOT_TO_CAM1),
             WrapperedPhotonCamera("camera_2", ROBOT_TO_CAM2),
             WrapperedPhotonCamera("camera_3", ROBOT_TO_CAM3),
-            WrapperedPhotonCamera("camera_4", ROBOT_TO_CAM4),
+            # WrapperedPhotonCamera("camera_4", ROBOT_TO_CAM4),
         ]
 
         self.poseConverge = True
@@ -516,6 +516,14 @@ class PoseEstimator(Subsystem):
                     self.robot.right_branch,
                     do_manip_offset=True,
                 )
+        
+        if (self.robot.is_intaking) and (self.robot.previous_position_on_source != self.robot.position_on_source):
+            self.robot.previous_position_on_source = self.robot.position_on_source
+            self.robot.final_lineup_pose = self.get_path_to_source(
+                self.robot.poseEstimator.calculate_closest_source()[0], 
+                self.robot.position_on_source, 
+                extra_dist_offset=-3.0
+            )
 
 
         allianceColor = DriverStation.getAlliance()
