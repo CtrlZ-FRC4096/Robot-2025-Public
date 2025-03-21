@@ -200,8 +200,8 @@ class Robot(CoroutineRobot):
 		# PATH CONSTRAINTS
         self.path_constraints = PathConstraints(4.0, 4.0, degreesToRadians(540), degreesToRadians(540))
 
+        self.flip_3_piece_to_f5(True)
         self.autoroutines = autoroutines.AutoRoutines(self)
-        self.flip_3_piece_to_f5(False)
         self.auto = self.autoroutines.three_piece_to_f5()
 
         DataLogManager.start()
@@ -310,6 +310,7 @@ class Robot(CoroutineRobot):
         else:
             self.score_1_face = 4
             self.score_1_right_branch = True
+        self.poseEstimator.curEstPose = FieldConstants.flip_Pose2d(Pose2d(7.167, FieldConstants.fieldWidth / 2, Rotation2d.fromDegrees(270)))
 
     def flip_2_piece_delay_auto(self, left_side : bool):
         if not left_side:
@@ -330,6 +331,7 @@ class Robot(CoroutineRobot):
             self.auto_position_source = 3
             for idx, command in enumerate(self.p_for_2p):
                 self.p_for_2p[idx] = self.flip_path_cmd_across_x(command)
+        self.poseEstimator.curEstPose = FieldConstants.flip_Pose2d(Pose2d(7.167, FieldConstants.fieldWidth / 2, Rotation2d.fromDegrees(270)))
 
 
     def flip_3_piece_auto(self, left_side : bool):
@@ -357,6 +359,7 @@ class Robot(CoroutineRobot):
             self.auto_position_source = 3
             for idx, command in enumerate(self.p_for_3p):
                 self.p_for_3p[idx] = self.flip_path_cmd_across_x(command)
+        self.poseEstimator.curEstPose = FieldConstants.flip_Pose2d(Pose2d(7.167, FieldConstants.fieldWidth / 2, Rotation2d.fromDegrees(270)))
 
     def flip_3_piece_f1(self, left_side : bool):
         if not left_side:
@@ -368,6 +371,7 @@ class Robot(CoroutineRobot):
             self.score_3_face = 1
             self.score_3_right_branch = False
             self.auto_position_source = 3
+            self.poseEstimator.curEstPose = FieldConstants.flip_Pose2d(Pose2d(7.167, 1.372, Rotation2d.fromDegrees(270)))
         else:
             self.left_source_auto = True
             self.score_1_face = 3
@@ -377,6 +381,7 @@ class Robot(CoroutineRobot):
             self.score_3_face = 1
             self.score_3_right_branch = True
             self.auto_position_source = 3
+            self.poseEstimator.curEstPose = FieldConstants.flip_Pose2d(Pose2d(7.167, FieldConstants.fieldWidth - 1.372, Rotation2d.fromDegrees(270)))
             for idx, command in enumerate(self.p_for_3p_f1):
                 self.p_for_3p_f1[idx] = self.flip_path_cmd_across_x(command)
 
@@ -390,6 +395,7 @@ class Robot(CoroutineRobot):
             self.score_3_right_branch = False
             self.left_source_auto = False
             self.auto_position_source = 3
+            self.poseEstimator.curEstPose = FieldConstants.flip_Pose2d(Pose2d(7.167, 1.372, Rotation2d.fromDegrees(270)))
         else:
             self.score_1_face = 3
             self.score_1_right_branch = True
@@ -399,6 +405,7 @@ class Robot(CoroutineRobot):
             self.score_3_right_branch = True
             self.left_source_auto = True
             self.auto_position_source = 3
+            self.poseEstimator.curEstPose = FieldConstants.flip_Pose2d(Pose2d(7.167, FieldConstants.fieldWidth - 1.372, Rotation2d.fromDegrees(270)))
             for idx, command in enumerate(self.p_for_f5):
                 self.p_for_f5[idx] = self.flip_path_cmd_across_x(command)
 

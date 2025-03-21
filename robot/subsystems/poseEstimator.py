@@ -88,8 +88,8 @@ class PoseEstimator(Subsystem):
 
         self.gyro = Pigeon2(const.SWERVE_PIGEON_ID, "carnivore")
 
-        self.gyro_offset = 0.0
-        self.gyro.set_yaw(self.gyro_offset)
+        # self.gyro_offset = 0.0
+        # self.gyro.set_yaw(self.gyro_offset)
 
         self.field = Field2d()
         self.field_for_single_tag = Field2d()
