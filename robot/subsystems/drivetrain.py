@@ -149,6 +149,11 @@ class Drivetrain(Subsystem):
         # Calculate the control outputs
         vx = self.x_controller.calculate(current_pose.X(), target_pose.X()) + feedforward_x # meters / 0.05 seconds
         vy = self.y_controller.calculate(current_pose.Y(), target_pose.Y()) + feedforward_y
+
+        # if FieldConstants.shouldFlip:
+        #     vx = -vx
+        #     vy = -vy
+
         omega = self.theta_controller.calculate(
             current_pose.rotation().degrees(), target_pose.rotation().degrees()
         ) + feedfoward_theta
