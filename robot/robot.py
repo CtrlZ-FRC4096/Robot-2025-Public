@@ -115,7 +115,7 @@ class Robot(CoroutineRobot):
         self.funnel_intake = subsystems.funnel_intake.FunnelIntake(self)
         self.elevator = subsystems.elevator.Elevator(self)
         self.end_effector = subsystems.end_effector.EndEffector(self)
-        self.climber = subsystems.climber.Climber(self)
+        # self.climber = subsystems.climber.Climber(self)
 
         self.subsystems = [
             self.drivetrain,
@@ -124,7 +124,7 @@ class Robot(CoroutineRobot):
             self.funnel_intake,
             self.elevator,
             self.end_effector,
-            self.climber
+            # self.climber
         ]
 
         # If everything in self.subsystems is a Subsystem object, then
@@ -391,6 +391,7 @@ class Robot(CoroutineRobot):
 
     ### AUTONOMOUS ###
     def autonomous_mode(self):
+        self.poseEstimator.set_yaw(0.0)
         self.has_coral = True # Start with preloaded coral
         self.scheduler.cancelAll()
         self.in_autonomous_mode = True
