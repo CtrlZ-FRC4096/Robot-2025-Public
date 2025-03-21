@@ -452,9 +452,9 @@ class Robot(CoroutineRobot):
     ### AUTONOMOUS ###
     def autonomous_mode(self):
         if FieldConstants.shouldFlip:
-            desired_yaw = 90.0
-        else:
             desired_yaw = 270.0
+        else:
+            desired_yaw = 90.0
         self.poseEstimator.set_yaw(desired_yaw)
         self.has_coral = True # Start with preloaded coral
         self.scheduler.cancelAll()
