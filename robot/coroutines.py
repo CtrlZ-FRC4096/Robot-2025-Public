@@ -125,7 +125,7 @@ class Coroutines:
             robot.at_scoring_position = False
             robot.score_piece = False
             robot.final_lineup_pose = robot.poseEstimator.get_path_to_reef(
-                True if robot.score_1_face in [1,5,4,6] else False, # CHANGE WHEN WE HAVE FIELD CALIBRATED
+                True, # CHANGE WHEN WE HAVE FIELD CALIBRATED
                 robot.score_1_face,
             	robot.score_1_right_branch,
                 do_manip_offset=True
@@ -147,7 +147,7 @@ class Coroutines:
             robot.at_scoring_position = False
             robot.score_piece = False
             robot.final_lineup_pose = robot.poseEstimator.get_path_to_reef(
-                True if robot.score_2_face in [1,5,4,6] else False, # CHANGE WHEN WE HAVE FIELD CALIBRATED
+                True, # CHANGE WHEN WE HAVE FIELD CALIBRATED
                 robot.score_2_face,
             	robot.score_2_right_branch,
                 do_manip_offset=True
@@ -169,7 +169,7 @@ class Coroutines:
             robot.at_scoring_position = False
             robot.score_piece = False
             robot.final_lineup_pose = robot.poseEstimator.get_path_to_reef(
-                True if robot.score_3_face in [1,5,4,6] else False, # CHANGE WHEN WE HAVE FIELD CALIBRATED
+                True, # CHANGE WHEN WE HAVE FIELD CALIBRATED
                 robot.score_3_face,
             	robot.score_3_right_branch,
                 do_manip_offset=True
@@ -191,7 +191,7 @@ class Coroutines:
             robot.at_scoring_position = False
             robot.score_piece = False
             robot.final_lineup_pose = robot.poseEstimator.get_path_to_reef(
-                True if robot.score_4_face in [1,5,4,6] else False, # CHANGE WHEN WE HAVE FIELD CALIBRATED
+                True, # CHANGE WHEN WE HAVE FIELD CALIBRATED
                 robot.score_4_face,
             	robot.score_4_right_branch,
                 do_manip_offset=True
@@ -294,7 +294,7 @@ class Coroutines:
         self.set_position_to_1_on_source = (
             set_position_to_1_on_source
         )
-
+        
         @commandify # position 2 on source
         def set_position_to_2_on_source():
             yield
