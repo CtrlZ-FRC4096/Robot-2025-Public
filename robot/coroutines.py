@@ -211,7 +211,7 @@ class Coroutines:
             robot.at_scoring_position = False
             robot.score_piece = False
             robot.final_lineup_pose = robot.poseEstimator.get_path_to_reef(
-                True if robot.score_1_f5_face in [1,4,5,6] else False, # CHANGE WHEN WE HAVE FIELD CALIBRATED
+                True, # CHANGE WHEN WE HAVE FIELD CALIBRATED
                 robot.score_1_f5_face,
             	robot.score_1_f5_right_branch,
                 do_manip_offset=True
