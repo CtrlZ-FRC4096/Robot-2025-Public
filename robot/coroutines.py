@@ -60,7 +60,6 @@ class Coroutines:
             robot.score_intent = False
             robot.at_scoring_position = False
             robot.end_effector.stop()
-            robot.drivetrain.stop()
             robot.has_coral = False
 
         @commandify
@@ -74,7 +73,6 @@ class Coroutines:
             robot.score_intent = False
             robot.at_scoring_position = False
             robot.end_effector.stop()
-            robot.drivetrain.stop()
             robot.has_coral = False
 
         self.reset_robot_after_scoring_1 = (reset_robot_after_scoring_1)
