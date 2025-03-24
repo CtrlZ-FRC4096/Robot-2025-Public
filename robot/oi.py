@@ -122,22 +122,16 @@ class OI:
 
                 forward_back = -square(self.driver1.LEFT_JOY_Y())
                 left_right = -square(self.driver1.LEFT_JOY_X())
-                if not self.driver1.RIGHT_TRIGGER_AS_BUTTON():  # boost
-                    forward_back *= 1.0
-                    left_right *= 1.0
+
+                if FieldConstants.shouldFlip:
+                    forward_back *= -1
+                    left_right *= -1
 
                 if FieldConstants.shouldFlip:
                     forward_back *= -1
                     left_right *= -1
 
                 rotate = -self.driver1.RIGHT_JOY_X()
-
-                elevator_height_adjustment = -square(self.driver2.RIGHT_JOY_Y()) * const.ELEVATOR_RAISE_SPEED
-                # if (self.robot.manual_scoring or self.robot.score_intent) and (abs(elevator_height_adjustment) > 0.05):
-                #     if self.robot.end_effector.get_position() >= RobotScoringPositions.min_end_effector_position_to_move_elevator_up:
-                #         self.robot.elevator.set_elevator_height(self.robot.elevator.get_height() + elevator_height_adjustment) # being overriden in elevator periodic
-                #     else:
-                #         self.robot.end_effector.set_end_effector_position(self.robot.score_state.end_effector_position)
 
                 if abs(rotate) >= 0.02:
                     self.cardinal_directing = False
@@ -147,7 +141,7 @@ class OI:
                     self.robot.drivetrain.drive(
                         Translation2d(forward_back, left_right)
                         * const.SWERVE_MAX_SPEED,
-                        rotate * 3.0,
+                        rotate * 3.5,
                         True,
                         False,
                     )
