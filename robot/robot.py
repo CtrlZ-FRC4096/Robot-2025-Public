@@ -204,7 +204,8 @@ class Robot(CoroutineRobot):
 
         # self.flip_one_piece_f4(False)
         self.autoroutines = autoroutines.AutoRoutines(self)
-        self.auto = self.autoroutines.move_forwards()
+        self.flip_3_piece_to_f5(False)
+        self.auto = self.autoroutines.three_piece_to_f5()
 
         DataLogManager.start()
         DriverStation.startDataLog(DataLogManager.getLog())
@@ -407,11 +408,10 @@ class Robot(CoroutineRobot):
             self.score_3_face = 2
             self.score_3_right_branch = True
             self.left_source_auto = True
-            self.auto_position_source = 3
-            self.poseEstimator.poseEst.resetPose(FieldConstants.flip_Pose2d(Pose2d(7.167, FieldConstants.fieldWidth - 1.372, Rotation2d.fromDegrees(270))))
-            self.poseEstimator.poseEstSingleTag.resetPose(FieldConstants.flip_Pose2d(Pose2d(7.167, FieldConstants.fieldWidth - 1.372, Rotation2d.fromDegrees(270))))
-            for idx, command in enumerate(self.p_for_f5):
-                self.p_for_f5[idx] = self.flip_path_cmd_across_x(command)
+            for idx, command in enumerate(self.autoroutines.p_for_f5):
+                #     #mirror across x axis
+                # print("pathplanner command ", idx + 1)
+                self.autoroutines.p_for_f5[idx] = self.flip_path_cmd_across_x(command)
 
     def followPathCommand(self, pathName: str, pathConstraints=None):
         path = PathPlannerPath.fromPathFile(pathName)
@@ -459,6 +459,11 @@ class Robot(CoroutineRobot):
         self.has_coral = True # Start with preloaded coral
         self.scheduler.cancelAll()
         self.in_autonomous_mode = True
+
+        if FieldConstants.shouldFlip:
+            self.poseEstimator.set_yaw(90)
+        else:
+            self.poseEstimator.set_yaw(270)
 
         self.scheduler.schedule(self.auto)
 

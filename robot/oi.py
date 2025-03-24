@@ -127,6 +127,10 @@ class OI:
                     forward_back *= -1
                     left_right *= -1
 
+                if FieldConstants.shouldFlip:
+                    forward_back *= -1
+                    left_right *= -1
+
                 rotate = -self.driver1.RIGHT_JOY_X()
 
                 if abs(rotate) >= 0.02:
@@ -367,8 +371,8 @@ class OI:
         @self.driver2.BACK.whenPressed # raise all setpoints
         def _():
             self.robot.raise_setpoints += 1
-            RobotScoringPositions.elevator_intake_height += 0.1
-            RobotScoringPositions.elevator_climb_height += 0.2
+            # RobotScoringPositions.elevator_intake_height += 0.1
+            # RobotScoringPositions.elevator_climb_height += 0.2
             RobotScoringPositions.L1_Scoring.elevator_height += 0.5
             RobotScoringPositions.L2_Scoring.elevator_height += 0.5
             RobotScoringPositions.L3_Scoring.elevator_height += 0.5
@@ -379,8 +383,8 @@ class OI:
         @self.driver2.START.whenPressed # lower all setpoints
         def _():
             self.robot.raise_setpoints -= 1
-            RobotScoringPositions.elevator_intake_height -= 0.1
-            RobotScoringPositions.elevator_climb_height -= 0.2
+            # RobotScoringPositions.elevator_intake_height -= 0.1
+            # RobotScoringPositions.elevator_climb_height -= 0.2
             RobotScoringPositions.L1_Scoring.elevator_height -= 0.5
             RobotScoringPositions.L2_Scoring.elevator_height -= 0.5
             RobotScoringPositions.L3_Scoring.elevator_height -= 0.5

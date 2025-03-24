@@ -88,8 +88,12 @@ class PoseEstimator(Subsystem):
 
         self.gyro = Pigeon2(const.SWERVE_PIGEON_ID, "carnivore")
 
-        # self.gyro_offset = 0.0
-        # self.gyro.set_yaw(self.gyro_offset)
+        if FieldConstants.shouldFlip:
+            self.gyro_offset = 90
+        else:
+            self.gyro_offset = 270
+
+        self.gyro.set_yaw(self.gyro_offset)
 
         self.field = Field2d()
         self.field_for_single_tag = Field2d()
@@ -150,9 +154,11 @@ class PoseEstimator(Subsystem):
             const.SWERVE_KINEMATICS, self.getYaw(), self.get_module_positions()  # type: ignore
         )
 
-        self.curEstPose = Pose2d(8.6868, 3.944, self.getYaw()) #Remove the flip
-        self.curEstPoseSingleTag = Pose2d(8.6868, 3.944, self.getYaw()) #Remove the flip 
-        self.curEstPoseGlobal = Pose2d(8.6868, 3.944, self.getYaw()) #Remove the flip
+
+        self.curEstPose = Pose2d(FieldConstants.flip_Translation2d(Translation2d(7.170, 3.944)), self.getYaw())
+        self.curEstPoseSingleTag = self.curEstPose
+        self.curEstPoseGlobal = self.curEstPose
+
         # self.lastPeriodicEstPose = self.curEstPose
 
         self.poseEst = SwerveDrive4PoseEstimator(
@@ -189,6 +195,7 @@ class PoseEstimator(Subsystem):
             ),  # Roll  # Pitch  # Yaw
         )
 
+        # # Update with positionon robot
         # # Update with positionon robot
         ROBOT_TO_CAM3 = Transform3d(
             Translation3d(0.334, 0.193, 0.732),  # X  # Y (0.282 need to change on robot)  # Z
@@ -494,6 +501,7 @@ class PoseEstimator(Subsystem):
             return target_pose
 
     def useSingleTag(self, distance=2):
+        return True #Only use single tag
         return (self.curEstPose - self.tag_layout.getTagPose(self.calculate_closest_reef_tag()[0]).toPose2d()).translation().norm() < distance
 
     def calculate_algae_height_at_closest_side(self):
