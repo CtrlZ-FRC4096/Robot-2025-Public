@@ -154,9 +154,11 @@ class PoseEstimator(Subsystem):
             const.SWERVE_KINEMATICS, self.getYaw(), self.get_module_positions()  # type: ignore
         )
 
+
         self.curEstPose = Pose2d(FieldConstants.flip_Translation2d(Translation2d(7.170, 3.944)), self.getYaw())
         self.curEstPoseSingleTag = self.curEstPose
         self.curEstPoseGlobal = self.curEstPose
+
         # self.lastPeriodicEstPose = self.curEstPose
 
         self.poseEst = SwerveDrive4PoseEstimator(
