@@ -88,3 +88,5 @@ class FunnelIntake(Subsystem):
         SmartDashboard.putBoolean("piece passing through funnel", self.piece_passing_through)
         SmartDashboard.putNumber("funnel intake speed", self.intake_motor.get_velocity().value)
         SmartDashboard.putNumber("funnel commanded intake speed", self.commanded_speed)
+        SmartDashboard.putNumber("funnel canrange dist", self.funnel_cannrange.get_distance().value)
+        SmartDashboard.putBoolean("funnel detected", self.funnel_cannrange.get_is_detected().value)

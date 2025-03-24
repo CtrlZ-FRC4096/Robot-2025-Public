@@ -38,12 +38,15 @@ class Coroutines:
         
         @commandify
         def tush_push_towards_yaw():
-            yield
-            yaw = robot.poseEstimator.getYaw().radians()
-            vx = math.cos(yaw) * 3.0
-            vy = math.sin(yaw) * 3.0
-            robot.drivetrain.drive(Translation2d(vx, vy), 0, True, False)
-            yield from robot.wait(0.75)
+            # yaw = robot.poseEstimator.getYaw().radians()
+            # vx = math.cos(yaw) * 3.0
+            # vy = math.sin(yaw) * 3.0
+            vx = -3.0 if FieldConstants.shouldFlip else 3.0
+            timer = Timer()
+            timer.start()
+            while not timer.hasElapsed(1.0):
+                robot.drivetrain.drive(Translation2d(vx, 0), 0, True, False)
+                yield
         self.tush_push_towards_yaw = (tush_push_towards_yaw)
 
         @commandify

@@ -408,10 +408,8 @@ class Robot(CoroutineRobot):
             self.score_3_face = 2
             self.score_3_right_branch = True
             self.left_source_auto = True
-            for idx, command in enumerate(self.autoroutines.p_for_f5):
-                #     #mirror across x axis
-                # print("pathplanner command ", idx + 1)
-                self.autoroutines.p_for_f5[idx] = self.flip_path_cmd_across_x(command)
+            for idx, command in enumerate(self.p_for_f5):
+                self.p_for_f5[idx] = self.flip_path_cmd_across_x(command)
 
     def followPathCommand(self, pathName: str, pathConstraints=None):
         path = PathPlannerPath.fromPathFile(pathName)

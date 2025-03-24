@@ -127,10 +127,6 @@ class OI:
                     forward_back *= -1
                     left_right *= -1
 
-                if FieldConstants.shouldFlip:
-                    forward_back *= -1
-                    left_right *= -1
-
                 rotate = -self.driver1.RIGHT_JOY_X()
 
                 if abs(rotate) >= 0.02:
