@@ -55,6 +55,8 @@ from wpilibextra.customcontroller import XboxCommandController
 from field_const import FieldConstants
 from path_gen import PathGenerator, PurePursuitController
 from wpimath.units import inchesToMeters, degreesToRadians
+from phoenix5 import NeutralMode
+from phoenix6.controls import CoastOut
 
 ###  IMPORTS ###
 
@@ -445,7 +447,16 @@ class OI:
             self.robot.end_effector.is_intaking = False
             self.robot.is_climbing = False
             self.robot.retract_climber = False
-
+        
+        # @self.driver1.A.whenHeld #swerve drive motors to coast
+        # def _():
+        #     for module in self.robot.poseEstimator.modules:
+        #         module.drive_motor.setNeutralMode(NeutralMode.Coast)
+        
+        # @self.driver1.A.whenReleased #swerve drive motors to coast
+        # def _():
+        #     for module in self.robot.poseEstimator.modules:
+        #         module.drive_motor.setNeutralMode(NeutralMode.Brake)
 
 
     def log(self):
