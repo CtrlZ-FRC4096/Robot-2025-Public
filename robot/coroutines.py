@@ -142,6 +142,7 @@ class Coroutines:
 
         @commandify
         def score_piece_2():
+            robot.is_intaking = False
             robot.final_lineup_pose = robot.poseEstimator.get_path_to_reef(
                 True, # CHANGE WHEN WE HAVE FIELD CALIBRATED
                 robot.score_2_face,
@@ -150,7 +151,6 @@ class Coroutines:
             )
             robot.score_state = RobotScoringPositions.L4_Scoring
             robot.running_pid_lineup = True
-            robot.is_intaking = False
             while not robot.has_coral:
                 yield # wait til piece hits EE
             robot.funnel_intake.is_intaking = False
@@ -165,6 +165,7 @@ class Coroutines:
 
         @commandify
         def score_piece_3():
+            robot.is_intaking = False
             robot.final_lineup_pose = robot.poseEstimator.get_path_to_reef(
                 True, # CHANGE WHEN WE HAVE FIELD CALIBRATED
                 robot.score_3_face,
@@ -173,7 +174,6 @@ class Coroutines:
             )
             robot.score_state = RobotScoringPositions.L4_Scoring
             robot.running_pid_lineup = True
-            robot.is_intaking = False
             while not robot.has_coral:
                 yield # wait til piece hits EE
             robot.funnel_intake.is_intaking = False
@@ -187,6 +187,7 @@ class Coroutines:
 
         @commandify
         def score_piece_4():
+            robot.is_intaking = False
             robot.final_lineup_pose = robot.poseEstimator.get_path_to_reef(
                 True, # CHANGE WHEN WE HAVE FIELD CALIBRATED
                 robot.score_4_face,
@@ -195,7 +196,6 @@ class Coroutines:
             )
             robot.score_state = RobotScoringPositions.L4_Scoring
             robot.running_pid_lineup = True
-            robot.is_intaking = False
             while not robot.has_coral:
                 yield # wait til piece hits EE
             robot.funnel_intake.is_intaking = False
