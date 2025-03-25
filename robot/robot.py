@@ -395,11 +395,10 @@ class Robot(CoroutineRobot):
             self.score_2_right_branch = True
             self.score_3_face = 6
             self.score_3_right_branch = False
+            self.score_4_face = 1
+            self.score_4_right_branch = True
             self.left_source_auto = False
             self.auto_position_source = 3
-            self.poseEstimator.poseEst.resetPose(FieldConstants.flip_Pose2d(Pose2d(7.167, 1.372, Rotation2d.fromDegrees(270))))
-            self.poseEstimator.poseEstSingleTag.resetPose(FieldConstants.flip_Pose2d(Pose2d(7.167, 1.372, Rotation2d.fromDegrees(270))))
-            
         else:
             self.score_1_face = 3
             self.score_1_right_branch = True
@@ -409,8 +408,10 @@ class Robot(CoroutineRobot):
             self.score_3_right_branch = True
             self.left_source_auto = True
             self.auto_position_source = 3
-            for idx, command in enumerate(self.p_for_f5):
-                self.p_for_f5[idx] = self.flip_path_cmd_across_x(command)
+            self.score_4_face = 1
+            self.score_4_right_branch = False
+            # for idx, command in enumerate(self.p_for_f5):
+            #     self.p_for_f5[idx] = self.flip_path_cmd_across_x(command)
 
     def followPathCommand(self, pathName: str, pathConstraints=None):
         path = PathPlannerPath.fromPathFile(pathName)
@@ -448,11 +449,7 @@ class Robot(CoroutineRobot):
 
     ### AUTONOMOUS ###
     def autonomous_mode(self):
-        if FieldConstants.shouldFlip:
-            desired_yaw = 270.0
-        else:
-            desired_yaw = 90.0
-        self.poseEstimator.set_yaw(desired_yaw)
+
         self.has_coral = True # Start with preloaded coral
         self.scheduler.cancelAll()
         self.in_autonomous_mode = True

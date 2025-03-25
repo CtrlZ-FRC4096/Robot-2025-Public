@@ -96,19 +96,17 @@ class AutoRoutines:
 
     def three_piece_to_f5(self):
         return SequentialCommandGroup(
-            self.robot.coroutines.score_piece_1.withTimeout(2.6), #CHANGE TIME
+            self.robot.coroutines.score_piece_1.withTimeout(2.0), #CHANGE TIME
             self.robot.coroutines.reset_robot_after_scoring_1,
-            self.robot.p_for_f5[0],
-            self.robot.coroutines.intake_coral_1,
-            # self.robot.p_for_f5[1],
-            self.robot.coroutines.score_piece_2,
+            self.robot.coroutines.intake_coral_1.withTimeout(2.0),
+            self.robot.coroutines.score_piece_2.withTimeout(2.0),
             self.robot.coroutines.reset_robot_after_scoring_2,
-            self.robot.coroutines.intake_coral_2,
-            # self.robot.p_for_f5[2],
-            self.robot.coroutines.score_piece_3,
+            self.robot.coroutines.intake_coral_2.withTimeout(2.0),
+            self.robot.coroutines.score_piece_3.withTimeout(2.0),
             self.robot.coroutines.reset_robot_after_scoring_3,
-            # self.robot.p_for_f5[3],
-            self.robot.coroutines.intake_coral_3
+            self.robot.coroutines.intake_coral_3.withTimeout(2.0),
+            self.robot.coroutines.score_piece_4.withTimeout(2.5),
+            self.robot.coroutines.reset_robot_after_scoring_4
 
         )
 
