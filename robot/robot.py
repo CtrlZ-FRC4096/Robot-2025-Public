@@ -408,6 +408,7 @@ class Robot(CoroutineRobot):
             self.score_3_face = 2
             self.score_3_right_branch = True
             self.left_source_auto = True
+            self.auto_position_source = 3
             for idx, command in enumerate(self.p_for_f5):
                 self.p_for_f5[idx] = self.flip_path_cmd_across_x(command)
 
@@ -432,8 +433,6 @@ class Robot(CoroutineRobot):
             self.drivetrain.shouldFlipPath, # Supplier to control path flipping based on alliance color
             self.drivetrain # Reference to this subsystem to set requirements
         )
-
-
 
     ### DISABLED ###
 

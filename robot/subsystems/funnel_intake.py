@@ -56,7 +56,7 @@ class FunnelIntake(Subsystem):
 
         self.funnel_cannrange.configurator.apply(self.funnel_cannrange_config)
 
-        funnel_piece_length = 2
+        funnel_piece_length = 1
         self.piece_detected_in_funnel = deque(maxlen=funnel_piece_length)
         for i in range(funnel_piece_length):
             self.piece_detected_in_funnel.append(False)

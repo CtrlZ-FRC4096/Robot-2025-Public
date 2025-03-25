@@ -22,17 +22,17 @@ class RobotScoringPositions:
 		number = 1
 	class L2_Scoring:
 		elevator_height = 23.0
-		end_effector_outtake_speed = 35
+		end_effector_outtake_speed = 30.0 #35.0
 		end_effector_position = 10.0
 		number = 2
 	class L3_Scoring:
 		elevator_height = 39.0
-		end_effector_outtake_speed = 35
+		end_effector_outtake_speed = 30.0 #35.0
 		end_effector_position = 10.0
 		number = 3
 	class L4_Scoring:
 		elevator_height = 61.0
-		end_effector_outtake_speed = 42.0
+		end_effector_outtake_speed = 53.0 #42.0
 		end_effector_position = 10.0
 		number = 4
 	class Descore_Algae_L3:
