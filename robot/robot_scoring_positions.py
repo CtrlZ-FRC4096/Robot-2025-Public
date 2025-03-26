@@ -1,5 +1,5 @@
 class RobotScoringPositions:
-	elevator_raise_threshold = 1.6 # meters needed to be closer than to reef to raise elevator
+	elevator_raise_threshold = 1.7 # meters needed to be closer than to reef to raise elevator
 	end_effector_travel_position = 8.1 # 8.0
 	elevator_intake_height = 2.0
 	end_effector_intake_position = 0.0
@@ -26,13 +26,13 @@ class RobotScoringPositions:
 		end_effector_position = 10.0
 		number = 2
 	class L3_Scoring:
-		elevator_height = 39.0
+		elevator_height = 40.0 # 39.0
 		end_effector_outtake_speed = 30.0 #35.0
 		end_effector_position = 10.0
 		number = 3
 	class L4_Scoring:
 		elevator_height = 61.0
-		end_effector_outtake_speed = 53.0 #42.0
+		end_effector_outtake_speed = 65.0 #42.0
 		end_effector_position = 10.0
 		number = 4
 	class Descore_Algae_L3:

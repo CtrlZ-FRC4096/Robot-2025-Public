@@ -208,14 +208,24 @@ class FieldConstants:
             }
         }
         """
+        # calibrated_data = {
+        #     "red": {
+        #         "left": {1: Pose2d(14.379, 3.961, Rotation2d.fromDegrees(-89.65)), 2: Pose2d(13.662, 2.858, Rotation2d.fromDegrees(-149.45)), 3: Pose2d(12.349, 2.918, Rotation2d.fromDegrees(149.93)), 4: Pose2d(11.743, 4.087, Rotation2d.fromDegrees(89.742)), 5: Pose2d(12.462, 5.194, Rotation2d.fromDegrees(30.198)), 6: Pose2d(13.762, 5.140, Rotation2d.fromDegrees(-29.828))},
+        #         "right": {1: Pose2d(14.367, 4.265, Rotation2d.fromDegrees(-88.777)), 2: Pose2d(13.919, 3.015, Rotation2d.fromDegrees(-149.969)), 3: Pose2d(12.596, 2.789, Rotation2d.fromDegrees(150.881)), 4: Pose2d(11.767, 3.798, Rotation2d.fromDegrees(91.195)), 5: Pose2d(12.210, 5.046, Rotation2d.fromDegrees(30.331)), 6: Pose2d(13.520, 5.26, Rotation2d.fromDegrees(-29.844))}
+        #     },
+        #     "blue": {
+        #         "left": {1: Pose2d(3.178, 4.081, Rotation2d.fromDegrees(90.039)), 2: Pose2d(3.898, 5.194, Rotation2d.fromDegrees(30.198)), 3: Pose2d(5.206, 5.124, Rotation2d.fromDegrees(-30.489)), 4: Pose2d(5.799, 3.974, Rotation2d.fromDegrees(-89.280)), 5: Pose2d(5.089, 2.858, Rotation2d.fromDegrees(-150.211)), 6: Pose2d(3.765, 2.936, Rotation2d.fromDegrees(148.370))},
+        #         "right": {1: Pose2d(3.189, 3.797, Rotation2d.fromDegrees(89.594)), 2: Pose2d(3.645, 5.037, Rotation2d.fromDegrees(30.737)), 3: Pose2d(4.938, 5.275, Rotation2d.fromDegrees(-29.443)), 4: Pose2d(5.790, 4.269, Rotation2d.fromDegrees(-88.984)), 5: Pose2d(5.341, 3.018, Rotation2d.fromDegrees(-149.494)), 6: Pose2d(4.050, 2.775, Rotation2d.fromDegrees(149.601))}
+        #     }
+        # }
         calibrated_data = {
             "red": {
                 "left": {1: Pose2d(14.379, 3.961, Rotation2d.fromDegrees(-89.65)), 2: Pose2d(13.662, 2.858, Rotation2d.fromDegrees(-149.45)), 3: Pose2d(12.349, 2.918, Rotation2d.fromDegrees(149.93)), 4: Pose2d(11.743, 4.087, Rotation2d.fromDegrees(89.742)), 5: Pose2d(12.462, 5.194, Rotation2d.fromDegrees(30.198)), 6: Pose2d(13.762, 5.140, Rotation2d.fromDegrees(-29.828))},
                 "right": {1: Pose2d(14.367, 4.265, Rotation2d.fromDegrees(-88.777)), 2: Pose2d(13.919, 3.015, Rotation2d.fromDegrees(-149.969)), 3: Pose2d(12.596, 2.789, Rotation2d.fromDegrees(150.881)), 4: Pose2d(11.767, 3.798, Rotation2d.fromDegrees(91.195)), 5: Pose2d(12.210, 5.046, Rotation2d.fromDegrees(30.331)), 6: Pose2d(13.520, 5.26, Rotation2d.fromDegrees(-29.844))}
             },
             "blue": {
-                "left": {1: Pose2d(3.178, 4.081, Rotation2d.fromDegrees(90.039)), 2: Pose2d(3.898, 5.194, Rotation2d.fromDegrees(30.198)), 3: Pose2d(5.206, 5.124, Rotation2d.fromDegrees(-30.489)), 4: Pose2d(5.799, 3.974, Rotation2d.fromDegrees(-89.280)), 5: Pose2d(5.089, 2.858, Rotation2d.fromDegrees(-150.211)), 6: Pose2d(3.765, 2.936, Rotation2d.fromDegrees(148.370))},
-                "right": {1: Pose2d(3.189, 3.797, Rotation2d.fromDegrees(89.594)), 2: Pose2d(3.645, 5.037, Rotation2d.fromDegrees(30.737)), 3: Pose2d(4.938, 5.275, Rotation2d.fromDegrees(-29.443)), 4: Pose2d(5.790, 4.269, Rotation2d.fromDegrees(-88.984)), 5: Pose2d(5.341, 3.018, Rotation2d.fromDegrees(-149.494)), 6: Pose2d(4.050, 2.775, Rotation2d.fromDegrees(149.601))}
+                "left": {1: Pose2d(3.173186070870988, 4.073690659726437, Rotation2d.fromDegrees(89.61272515581884)), 2: Pose2d(3.898, 5.194, Rotation2d.fromDegrees(30.198)), 3: Pose2d(5.206, 5.124, Rotation2d.fromDegrees(-30.489)), 4: Pose2d(5.806, 3.983, Rotation2d.fromDegrees(-88.77)), 5: Pose2d(5.0994359665627655, 2.8658779087341277, Rotation2d.fromDegrees(-150.46053735999183)), 6: Pose2d(3.771, 2.914, Rotation2d.fromDegrees(152.393))},
+                "right": {1: Pose2d(3.182317394315812, 3.783768322269491, Rotation2d.fromDegrees(89.11834017699435)), 2: Pose2d(3.645, 5.037, Rotation2d.fromDegrees(30.737)), 3: Pose2d(4.938, 5.275, Rotation2d.fromDegrees(-29.443)), 4: Pose2d(5.807, 4.253, Rotation2d.fromDegrees(-88.82)), 5: Pose2d(5.3518825585391845, 3.025396006545362, Rotation2d.fromDegrees(-147.61782678043267)), 6: Pose2d(4.064, 2.778, Rotation2d.fromDegrees(153.778))}
             }
         }
 
