@@ -100,8 +100,12 @@ class Drivetrain(Subsystem):
                     rotation,
                 )
             )
+        if self.robot.in_autonomous_mode:
+            max_speed = 4.0
+        else:
+            max_speed = const.SWERVE_MAX_SPEED
         SwerveDrive4Kinematics.desaturateWheelSpeeds(
-            module_states, const.SWERVE_MAX_SPEED
+            module_states, max_speed
         )
 
         for idx, module in enumerate(self.robot.poseEstimator.modules):

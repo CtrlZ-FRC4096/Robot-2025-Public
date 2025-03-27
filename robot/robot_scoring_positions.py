@@ -21,13 +21,13 @@ class RobotScoringPositions:
 		end_effector_position = 10.0
 		number = 1
 	class L2_Scoring:
-		elevator_height = 23.5
-		end_effector_outtake_speed = 25.0 #35.0
+		elevator_height = 23.2
+		end_effector_outtake_speed = 30.0 #35.0
 		end_effector_position = 10.0
 		number = 2
 	class L3_Scoring:
-		elevator_height = 40.5 # 39.0
-		end_effector_outtake_speed = 25.0 #35.0 # 30.0
+		elevator_height = 39.8 # 39.0
+		end_effector_outtake_speed = 30.0 #35.0 # 30.0
 		end_effector_position = 10.0
 		number = 3
 	class L4_Scoring:
