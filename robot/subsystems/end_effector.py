@@ -183,7 +183,7 @@ class EndEffector(Subsystem):
         if (self.robot.score_piece) or ((self.robot.at_scoring_position) and (abs(self.robot.score_state.elevator_height-self.robot.elevator.get_height()) <= 0.2) and (abs(self.robot.end_effector.get_position() - self.robot.score_state.end_effector_position) <= 0.2)): # manual vs automated
             self.set_outtake_motor_speed(self.robot.score_state.end_effector_outtake_speed)
             self.reef_detected.clear()
-            if self.robot.score_state.number == 1 and self.outtake_motor.get_torque_current().value >= RobotScoringPositions.piece_touching_L1_rim_torque_current:
+            if self.robot.score_state.number == 1:
                 self.robot.raise_elevator_slightly_for_L1 = True
             self.robot.has_coral = False
         elif self.is_intaking:

@@ -53,7 +53,7 @@ class Coroutines:
         def reset_robot_after_scoring_1():
             robot.score_piece = True
             i = 0
-            while i < 3:
+            while i < 4:
                 yield
                 i += 1
             robot.mechanisms_at_default = True
@@ -69,7 +69,7 @@ class Coroutines:
         def reset_robot_after_scoring_2():
             robot.score_piece = True
             i = 0
-            while i < 3:
+            while i < 4:
                 yield
                 i += 1
             robot.mechanisms_at_default = True
@@ -84,7 +84,7 @@ class Coroutines:
         def reset_robot_after_scoring_3():
             robot.score_piece = True
             i = 0
-            while i < 3:
+            while i < 4:
                 yield
                 i += 1
             robot.mechanisms_at_default = True
@@ -214,7 +214,7 @@ class Coroutines:
 
         @commandify
         def intake_coral_1():
-            robot.final_lineup_pose = robot.poseEstimator.get_path_to_source(robot.left_source_auto, robot.auto_position_source)
+            robot.final_lineup_pose = robot.poseEstimator.get_path_to_source(robot.left_source_auto, robot.auto_position_source, extra_dist_offset=-3.0)
             robot.mechanisms_at_default = False
             robot.at_scoring_position = False
             robot.score_piece = False

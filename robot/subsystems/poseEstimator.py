@@ -428,7 +428,7 @@ class PoseEstimator(Subsystem):
             )
 
             if use_calibrated_field:
-                alliance_color = "red" if DriverStation.getAlliance() == DriverStation.Alliance.kRed else "blue"
+                alliance_color = "red" if FieldConstants.shouldFlip else "blue"
                 branch = "right" if right_branch else "left"
                 target_pose_3 = FieldConstants.ReefCalibratedToField.calibrated_data[alliance_color][branch][face]
 
