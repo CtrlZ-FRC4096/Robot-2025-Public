@@ -232,10 +232,10 @@ class PoseEstimator(Subsystem):
         self.single_tag = False
         self.possible_pose_gbl = Pose2d()
 
-        # for face in [1,5]:
+        # for face in range(1,7):
         #     for side in range(2):
         #         object = self.field.getObject("l1 score " + str(face) + " " + ("right side" if side else "left side"))
-        #         object.setPose(self.get_path_to_L1(face, side))
+        #         object.setPose(self.get_path_to_reef(True, face, side))
 
     def stop(self):
         print("sike this aint stoppin")

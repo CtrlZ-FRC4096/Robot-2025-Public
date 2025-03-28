@@ -77,6 +77,7 @@ class Drivetrain(Subsystem):
         self.previous_chassisspeeds = ChassisSpeeds()
         # self.curPose = Pose2d(inchesToMeters(235.726), 0.8, Rotation2d.fromDegrees(0))
         # self.isFirstTick = True
+        
 
     def drive(self, translation: Translation2d, rotation, field_relative, is_open_loop):
         SmartDashboard.putNumber("Swerve/Translation X", translation.x)

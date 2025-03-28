@@ -32,7 +32,7 @@ class FieldConstants:
     fieldWidth = inchesToMeters(317)
     startingLineX = inchesToMeters(299.438)  # Measured from the inside of starting line
     algaeDiameter = inchesToMeters(16)
-    shouldFlip = False #DriverStation.getAlliance() == DriverStation.Alliance.kRed
+    shouldFlip = True #DriverStation.getAlliance() == DriverStation.Alliance.kRed
     reef_tags = {6, 7, 8, 9, 10, 11} if shouldFlip else {17, 18, 19, 20, 21, 22}
     face_to_tag = (
         {1: 7, 2: 6, 3: 11, 4: 10, 5: 9, 6: 8}
@@ -220,8 +220,8 @@ class FieldConstants:
         # }
         calibrated_data = {
             "red": {
-                "left": {1: Pose2d(14.379, 3.961, Rotation2d.fromDegrees(-89.65)), 2: Pose2d(13.662, 2.858, Rotation2d.fromDegrees(-149.45)), 3: Pose2d(12.349, 2.918, Rotation2d.fromDegrees(149.93)), 4: Pose2d(11.743, 4.087, Rotation2d.fromDegrees(89.742)), 5: Pose2d(12.462, 5.194, Rotation2d.fromDegrees(30.198)), 6: Pose2d(13.762, 5.140, Rotation2d.fromDegrees(-29.828))},
-                "right": {1: Pose2d(14.367, 4.265 - inchesToMeters(1), Rotation2d.fromDegrees(-88.777)), 2: Pose2d(13.919, 3.015, Rotation2d.fromDegrees(-149.969)), 3: Pose2d(12.596, 2.789, Rotation2d.fromDegrees(150.881)), 4: Pose2d(11.767, 3.798, Rotation2d.fromDegrees(91.195)), 5: Pose2d(12.210 + (inchesToMeters(1) * math.cos(degreesToRadians(30.331))), 5.046 + (inchesToMeters(1) * math.sin(degreesToRadians(30.331))), Rotation2d.fromDegrees(30.331)), 6: Pose2d(13.520, 5.26, Rotation2d.fromDegrees(-29.844))}
+                "left": {1: Pose2d(14.375197, 3.9928, Rotation2d.fromDegrees(-90.3538)), 2: Pose2d(13.67587, 2.8653, Rotation2d.fromDegrees(-150.965)), 3: Pose2d(12.363, 2.91204, Rotation2d.fromDegrees(149.665)), 4: Pose2d(11.743, 4.0754, Rotation2d.fromDegrees(88.711)), 5: Pose2d(12.4396, 5.1939, Rotation2d.fromDegrees(29.792)), 6: Pose2d(13.75969, 5.140, Rotation2d.fromDegrees(-30.3387))},
+                "right": {1: Pose2d(14.367123, 4.2809, Rotation2d.fromDegrees(-90.3153)), 2: Pose2d(13.937887327, 3.0255, Rotation2d.fromDegrees(-149.7097983)), 3: Pose2d(12.60422, 2.79657, Rotation2d.fromDegrees(148.978)), 4: Pose2d(11.7491, 3.772, Rotation2d.fromDegrees(89.556798)), 5: Pose2d(12.187, 5.0334, Rotation2d.fromDegrees(30.51)), 6: Pose2d(13.4727, 5.312, Rotation2d.fromDegrees(-30.418))}
             },
             "blue": {
                 "left": {1: Pose2d(3.175, 4.079, Rotation2d.fromDegrees(90.02)), 2: Pose2d(3.886, 5.197, Rotation2d.fromDegrees(28.965)), 3: Pose2d(5.203, 5.129, Rotation2d.fromDegrees(-29.93)), 4: Pose2d(5.801, 3.977, Rotation2d.fromDegrees(-89.766)), 5: Pose2d(5.098, 2.863, Rotation2d.fromDegrees(-149.723)), 6: Pose2d(3.777, 2.922, Rotation2d.fromDegrees(149.839))},
