@@ -204,6 +204,7 @@ class Robot(CoroutineRobot):
 
         # self.flip_one_piece_f4(False)
         self.autoroutines = autoroutines.AutoRoutines(self)
+        # NOTE: For TUSH PUSH AUTO, RUN FLIP 3 PIECE TO F5
         self.flip_3_piece_to_f5(False)
         self.auto = self.autoroutines.three_piece_to_f5()
 

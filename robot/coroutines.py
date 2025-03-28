@@ -122,6 +122,18 @@ class Coroutines:
         self.wait_2p_after_score_1 = (wait_2p_after_score_1)
 
         @commandify
+        def drive_for_tush_push():
+            dist_add = -9.0 if FieldConstants.shouldFlip else 9.0
+            robot.final_lineup_pose = Pose2d(robot.poseEstimator.curEstPose.X() + dist_add, robot.poseEstimator.curEstPose.Y(), robot.poseEstimator.getYaw())
+            robot.running_pid_lineup = True
+            i = 0
+            while i < 40:
+                i += 1
+                yield
+        
+        self.drive_for_tush_push = (drive_for_tush_push)
+
+        @commandify
         def score_piece_1():
             robot.score_state = RobotScoringPositions.L4_Scoring
             robot.funnel_intake.is_intaking = False

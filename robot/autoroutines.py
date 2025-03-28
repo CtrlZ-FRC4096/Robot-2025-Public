@@ -111,19 +111,16 @@ class AutoRoutines:
 
     def tush_push_auto(self):
         return SequentialCommandGroup(
-            self.robot.coroutines.tush_push_towards_yaw,
-            self.robot.coroutines.score_piece_1,
+            self.robot.coroutines.drive_for_tush_push.withTimeout(2.0),
+            self.robot.coroutines.score_piece_1.withTimeout(4.0), #CHANGE TIME
             self.robot.coroutines.reset_robot_after_scoring_1,
-            self.robot.followPathCommand("3P_2"),
             self.robot.coroutines.intake_coral_1,
-            self.robot.coroutines.reset_robot_after_intaking_1,
-            self.robot.followPathCommand("3P_3"),
-            self.robot.coroutines.score_piece_2,
+            self.robot.coroutines.score_piece_2.withTimeout(4.0),
             self.robot.coroutines.reset_robot_after_scoring_2,
-            self.robot.followPathCommand("3P_4"),
             self.robot.coroutines.intake_coral_2,
-            self.robot.coroutines.reset_robot_after_intaking_2,
-            self.robot.followPathCommand("3P_5"),
-            self.robot.coroutines.score_piece_3.withTimeout(5.0),
+            self.robot.coroutines.score_piece_3.withTimeout(4.0),
             self.robot.coroutines.reset_robot_after_scoring_3,
+            self.robot.coroutines.intake_coral_3,
+            self.robot.coroutines.score_piece_4.withTimeout(3.0),
+            self.robot.coroutines.reset_robot_after_scoring_4
         )
