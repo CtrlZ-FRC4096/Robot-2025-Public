@@ -605,7 +605,7 @@ class PoseEstimator(Subsystem):
                 self.camera_X[cam.camName] = pose.X()
                 self.camera_Y[cam.camName] = pose.Y()
                 self.camera_theta[cam.camName] = pose.rotation().degrees()
-
+                # if abs(pose.rotation().degrees() - self.getYaw().degrees()) > 
                 self.poseEstSingleTag.addVisionMeasurement(
                     pose,
                     cam.getObsTime(),

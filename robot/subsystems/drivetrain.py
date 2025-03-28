@@ -52,6 +52,7 @@ from wpimath.estimator import SwerveDrive4PoseEstimator
 from photoncamera import WrapperedPhotonCamera
 from wpimath.units import degreesToRadians, inchesToMeters
 from robot_scoring_positions import RobotScoringPositions
+from collections import deque
 
 class Drivetrain(Subsystem):
     def __init__(self, robot: "Robot"):
@@ -68,15 +69,20 @@ class Drivetrain(Subsystem):
 
 
         ## Need to check these tolerances
-        self.x_controller.setTolerance(0.04, 0.25) #0.025, 0.1
-        self.y_controller.setTolerance(0.04, 0.25) #0.025, 0.1
+        self.x_controller.setTolerance(0.03, 0.1) #0.025, 0.1
+        self.y_controller.setTolerance(0.03, 0.1) #0.025, 0.1
         self.theta_controller.enableContinuousInput(0, 360)
-        self.theta_controller.setTolerance(3.5, 2.5) #3.0, 0.1
-
+        self.theta_controller.setTolerance(2.8, 2.0) #3.0, 0.1
+        
         ### Field Visualisation - Needs testing ###
         self.previous_chassisspeeds = ChassisSpeeds()
         # self.curPose = Pose2d(inchesToMeters(235.726), 0.8, Rotation2d.fromDegrees(0))
         # self.isFirstTick = True
+
+        # self.scoring_position_length = 2
+        # self.at_scoring_position_drivetrain = deque(maxlen=self.scoring_position_length)
+        # for i in range(self.scoring_position_length):
+        #     self.at_scoring_position_drivetrain.append(False)
         
 
     def drive(self, translation: Translation2d, rotation, field_relative, is_open_loop):
@@ -103,14 +109,18 @@ class Drivetrain(Subsystem):
                 )
             )
         if self.robot.in_autonomous_mode:
-            max_speed = 3.5
+            max_speed = 3.4
         else:
             max_speed = const.SWERVE_MAX_SPEED
         module_states = SwerveDrive4Kinematics.desaturateWheelSpeeds(
-            module_states, max_speed
-        )
+                module_states, max_speed
+            )
+        log_chassis = const.SWERVE_KINEMATICS.toChassisSpeeds(module_states)
+        SmartDashboard.putNumber("chassis log vx", log_chassis.vx)
+        SmartDashboard.putNumber("chassis log vy", log_chassis.vy)
 
         for idx, module in enumerate(self.robot.poseEstimator.modules):
+            SmartDashboard.putNumber("module state " + str(idx + 1), module_states[idx].speed)
             module.set_desired_state(module_states[idx], is_open_loop)
 
         # self.curPose = Pose2d(self.curPose.X() + min(translation.X(), (3.0 * translation.X()) / abs(translation.X()) if translation.X() != 0 else 3.0), self.curPose.Y() + min(translation.Y(), (3.0 * translation.Y()) / abs(translation.Y()) if translation.Y() != 0 else 3.0), Rotation2d.fromDegrees(0))
@@ -164,7 +174,6 @@ class Drivetrain(Subsystem):
             current_pose.rotation().degrees(), target_pose.rotation().degrees()
         ) + feedfoward_theta
 
-
         # Check if the controllers are at their setpoints
         if (
             self.x_controller.atSetpoint()
@@ -173,9 +182,12 @@ class Drivetrain(Subsystem):
         ):
             # self.robot.running_pid_lineup = False
             if self.robot.score_intent and self.robot.running_pid_lineup:
+                # self.at_scoring_position_drivetrain.appendleft(True)
                 self.robot.at_scoring_position = True
             # self.stop()
             # Optionally, stop the drivetrain if at setpoint
+        # else:
+        #     self.at_scoring_position_drivetrain.appendleft(False)
 
 
         # Drive the robot using the calculated velocities
@@ -186,7 +198,7 @@ class Drivetrain(Subsystem):
         SmartDashboard.putNumber("t_pose y", target_pose.Y())
         SmartDashboard.putNumber("vx", vx)
         SmartDashboard.putNumber("vy", vy)
-        SmartDashboard.putNumber("omega", 0)
+        SmartDashboard.putNumber("omega", omega)
 
     def go_to_pose_profiled_pid_ghost(self, final_target_pose : Pose2d, feedforward_x=0.0, feedforward_y=0.0, feedfoward_theta=0.0):
         current_pose = self.robot.poseEstimator.curEstPose

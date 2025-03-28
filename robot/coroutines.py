@@ -53,7 +53,7 @@ class Coroutines:
         def reset_robot_after_scoring_1():
             robot.score_piece = True
             i = 0
-            while i < 4:
+            while i < 5:
                 yield
                 i += 1
             robot.mechanisms_at_default = True
@@ -69,7 +69,7 @@ class Coroutines:
         def reset_robot_after_scoring_2():
             robot.score_piece = True
             i = 0
-            while i < 4:
+            while i < 5:
                 yield
                 i += 1
             robot.mechanisms_at_default = True
@@ -84,7 +84,7 @@ class Coroutines:
         def reset_robot_after_scoring_3():
             robot.score_piece = True
             i = 0
-            while i < 4:
+            while i < 5:
                 yield
                 i += 1
             robot.mechanisms_at_default = True
@@ -99,7 +99,7 @@ class Coroutines:
         def reset_robot_after_scoring_4():
             robot.score_piece = True
             i = 0
-            while i < 3:
+            while i < 5:
                 yield
                 i += 1
             robot.mechanisms_at_default = True

@@ -21,27 +21,27 @@ class RobotScoringPositions:
 		end_effector_position = 10.0
 		number = 1
 	class L2_Scoring:
-		elevator_height = 23.0
+		elevator_height = 23.5
 		end_effector_outtake_speed = 35.0 #35.0
 		end_effector_position = 10.0
 		number = 2
 	class L3_Scoring:
-		elevator_height = 39.0 # 39.0
+		elevator_height = 39.5 # 39.0
 		end_effector_outtake_speed = 35.0 #35.0 # 30.0
 		end_effector_position = 10.0
 		number = 3
 	class L4_Scoring:
-		elevator_height = 61.0
-		end_effector_outtake_speed = 52.0 #42.0 #65.0
+		elevator_height = 61.5
+		end_effector_outtake_speed = 42.0 #42.0 #65.0
 		end_effector_position = 10.0
 		number = 4
 	class Descore_Algae_L3:
 		elevator_height = 37.5
 		end_effector_outtake_speed = 40
-		end_effector_position = 8.5
+		end_effector_position = 10.0
 		number = 6
 	class Descore_Algae_L2:
 		elevator_height = 20.0
 		end_effector_outtake_speed = 40
-		end_effector_position = 8.5
+		end_effector_position = 10.0
 		number = 5
