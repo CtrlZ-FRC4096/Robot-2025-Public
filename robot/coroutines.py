@@ -127,7 +127,7 @@ class Coroutines:
             robot.final_lineup_pose = Pose2d(robot.poseEstimator.curEstPose.X() + dist_add, robot.poseEstimator.curEstPose.Y(), robot.poseEstimator.getYaw())
             robot.running_pid_lineup = True
             i = 0
-            while i < 40:
+            while i < 8:
                 i += 1
                 yield
         

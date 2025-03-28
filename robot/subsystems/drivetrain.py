@@ -84,6 +84,7 @@ class Drivetrain(Subsystem):
         SmartDashboard.putNumber("Swerve/Translation Y", translation.y)
         SmartDashboard.putNumber("Swerve/Rotation", rotation)
         SmartDashboard.putBoolean("Swerve/With PID", False)
+        
         if field_relative:
             module_states = const.SWERVE_KINEMATICS.toSwerveModuleStates(
                 ChassisSpeeds.fromFieldRelativeSpeeds(
@@ -102,10 +103,10 @@ class Drivetrain(Subsystem):
                 )
             )
         if self.robot.in_autonomous_mode:
-            max_speed = 4.0
+            max_speed = 3.5
         else:
             max_speed = const.SWERVE_MAX_SPEED
-        SwerveDrive4Kinematics.desaturateWheelSpeeds(
+        module_states = SwerveDrive4Kinematics.desaturateWheelSpeeds(
             module_states, max_speed
         )
 
