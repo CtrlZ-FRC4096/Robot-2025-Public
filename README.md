@@ -1,6 +1,6 @@
 # Ctrl-Z FRC Team 4096 - Robot Code 2025
 
-The codebase for Elevator-Z, the Ctrl-Z robot used in FRC 2025 REEFSCAPE competition seasons.
+The codebase for Pozeidon, the Ctrl-Z robot used in FRC 2025 REEFSCAPE competition seasons.
 
 ## Overview
 
