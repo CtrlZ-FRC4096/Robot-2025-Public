@@ -19,7 +19,7 @@ from field_const import FieldConstants
 import math
 import numpy as np
 from wpilib import SmartDashboard
-from shapely.geometry import Polygon, Point
+# from shapely.geometry import Polygon, Point
 
 class QueueNode():
     def __init__(self, data, cost):
@@ -235,16 +235,18 @@ class PathGenerator():
     def inReef(self, pose : Translation2d, useForExit=False):
         if useForExit:
             hexagon_points = [(ObstacleConstants.reefForInReef[idx].X(), ObstacleConstants.reefForInReef[idx].Y()) for idx in range(6)]
-            hexagon = Polygon(hexagon_points)
-            point = Point(pose.X(), pose.Y())
-            return hexagon.contains(point)
+            # hexagon = Polygon(hexagon_points)
+            # point = Point(pose.X(), pose.Y())
+            # return hexagon.contains(point)
+            return True
         else:
             # normal pathfind
             hexagon_points = ((ObstacleConstants.reefForNormal[idx].X(), ObstacleConstants.reefForNormal[idx].Y()) for idx in range(6))
-            hexagon = Polygon(hexagon_points)
+            # hexagon = Polygon(hexagon_points)
             #print("pose in reef test ", pose)
-            point = Point(pose.X(), pose.Y())
-            return hexagon.contains(point)
+            # point = Point(pose.X(), pose.Y())
+            # return hexagon.contains(point)
+            return True
         
     def inObstacle(self, pose : Translation2d) -> bool:
         if self.inReef(pose):
