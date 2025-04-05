@@ -66,7 +66,8 @@ class Drivetrain(Subsystem):
         self.x_controller = PIDController(2.0, 0.01, 0.025)
         self.y_controller = PIDController(2.0, 0.01, 0.025)
         self.theta_controller = PIDController(0.07, 0.01, 0.0015)
-
+        constraints = TrapezoidProfile.Constraints(4.0, 4.0)
+        self.xy_controller = ProfiledPIDController(2.0, 0.01, 0.025, constraints, period=0.05)
 
         ## Need to check these tolerances
         self.x_controller.setTolerance(0.03, 0.1) #0.025, 0.1
@@ -157,6 +158,38 @@ class Drivetrain(Subsystem):
         for idx, module in enumerate(self.robot.poseEstimator.modules):
             # print(module_states[idx].speed)
             module.set_desired_state(module_states[idx], is_open_loop=False)
+
+    def go_to_pose_sgl_xy_controller(self, target_pose : Pose2d, feedforward_x=0.0, feedforward_y=0.0, feedfoward_theta=0.0):
+        current_pose = self.robot.poseEstimator.curEstPose
+        distance_to_tgt = (current_pose.translation() - target_pose.translation()).norm()
+        distance_output = self.xy_controller.calculate(0, distance_to_tgt)
+        delta_vector = target_pose.translation().__sub__(current_pose.translation())
+        angle_of_vector = Rotation2d(delta_vector.X(), delta_vector.Y())
+
+        vx = distance_output * math.cos(angle_of_vector.radians()) + feedforward_x
+        vy = distance_output * math.sin(angle_of_vector.radians()) + feedforward_y
+
+        omega = self.theta_controller.calculate(
+            current_pose.rotation().degrees(), target_pose.rotation().degrees()
+        ) + feedfoward_theta
+
+        if (
+            self.x_controller.atSetpoint()
+            and self.y_controller.atSetpoint()
+            and self.theta_controller.atSetpoint()
+        ):
+            if self.robot.score_intent and self.robot.running_pid_lineup:
+                self.robot.at_scoring_position = True
+        
+        self.drive(Translation2d(vx, vy), omega, True, False)
+
+        # Update SmartDashboard values for debugging
+        SmartDashboard.putNumber("t_pose x", target_pose.X())
+        SmartDashboard.putNumber("t_pose y", target_pose.Y())
+        SmartDashboard.putNumber("vx", vx)
+        SmartDashboard.putNumber("vy", vy)
+        SmartDashboard.putNumber("omega", omega)
+
 
     def go_to_pose_profiled_pid(self, target_pose : Translation2d, feedforward_x=0.0, feedforward_y=0.0, feedfoward_theta=0.0):
 
