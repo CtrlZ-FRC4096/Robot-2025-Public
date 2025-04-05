@@ -381,6 +381,21 @@ class PoseEstimator(Subsystem):
                 min_distance_to_tag = distance
                 closest_reef_tag = tagID
         return [closest_reef_tag, FieldConstants.tag_to_face[closest_reef_tag]]
+    
+    def calculate_closest_tag_on_the_move(self):
+        cur_speeds = const.SWERVE_KINEMATICS.toChassisSpeeds(self.get_module_states())
+        # x seconds into the future (cur_speeds is distance over 1 second)
+        future_pose = Pose2d(self.curEstPose.X() + cur_speeds.vx * 0.75, self.curEstPose.Y() + cur_speeds.vy * 0.75, Rotation2d.fromDegrees(self.curEstPose.rotation().degrees() + cur_speeds.omega_dps * 0.75))
+        
+        min_distance_to_tag = math.inf
+        closest_reef_tag = None
+        for tagID in FieldConstants.reef_tags:
+            tag_pose = self.tag_layout.getTagPose(tagID).toPose2d()
+            distance = (future_pose - tag_pose).translation().norm()
+            if distance < min_distance_to_tag:
+                min_distance_to_tag = distance
+                closest_reef_tag = tagID
+        return [closest_reef_tag, FieldConstants.tag_to_face[closest_reef_tag]]
 
 
     def get_path_to_reef(self, use_calibrated_field, face: int, right_branch: bool, margin_dist_offset=1.0, do_side_offset=True, do_manip_offset=True):
