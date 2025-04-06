@@ -66,8 +66,8 @@ class Drivetrain(Subsystem):
         self.x_controller = PIDController(2.0, 0.01, 0.025)
         self.y_controller = PIDController(2.0, 0.01, 0.025)
         self.theta_controller = PIDController(0.07, 0.01, 0.0015)
-        constraints = TrapezoidProfile.Constraints(4.0, 4.0)
-        self.xy_controller = ProfiledPIDController(2.0, 0.01, 0.025, constraints, period=0.05)
+        #constraints = TrapezoidProfile.Constraints(4.0, 4.0)
+        self.xy_controller = PIDController(2.0, 0.01, 0.025)#, constraints, period=0.05)
 
         ## Need to check these tolerances
         self.x_controller.setTolerance(0.03, 0.1) #0.025, 0.1
