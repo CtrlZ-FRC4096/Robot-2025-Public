@@ -244,6 +244,7 @@ class Coroutines:
             	        robot.score_2_right_branch,
                         do_manip_offset=True)
                     robot.is_intaking = False
+                    robot.drivetrain.reset_pid_error()
                     break
 
         @commandify
@@ -267,6 +268,7 @@ class Coroutines:
                         do_manip_offset=True
                         )
                     robot.is_intaking = False
+                    robot.drivetrain.reset_pid_error()
                     break
 
         @commandify
@@ -290,6 +292,7 @@ class Coroutines:
                         do_manip_offset=True
                         )
                     robot.is_intaking = False
+                    robot.drivetrain.reset_pid_error()
                     break
 
         @commandify

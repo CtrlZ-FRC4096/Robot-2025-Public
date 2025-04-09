@@ -183,6 +183,7 @@ class EndEffector(Subsystem):
         if (self.robot.score_piece) or ((self.robot.at_scoring_position) and (abs(self.robot.score_state.elevator_height-self.robot.elevator.get_height()) <= 0.2) and (abs(self.robot.end_effector.get_position() - self.robot.score_state.end_effector_position) <= 0.2)): # manual vs automated
             self.set_outtake_motor_speed(self.robot.score_state.end_effector_outtake_speed)
             self.reef_detected.clear()
+            self.robot.drivetrain.reset_pid_error()
             if self.robot.score_state.number == 1:
                 self.robot.raise_elevator_slightly_for_L1 = True
             self.robot.has_coral = False
@@ -199,6 +200,7 @@ class EndEffector(Subsystem):
                     self.stop()
                     self.set_end_effector_position(RobotScoringPositions.end_effector_travel_position)
                     self.robot.has_coral = True
+                    self.robot.drivetrain.reset_pid_error()
             else:
                 self.robot.score_intent = False
                 self.robot.manual_scoring = False

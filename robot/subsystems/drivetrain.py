@@ -159,38 +159,6 @@ class Drivetrain(Subsystem):
             # print(module_states[idx].speed)
             module.set_desired_state(module_states[idx], is_open_loop=False)
 
-    def go_to_pose_sgl_xy_controller(self, target_pose : Pose2d, feedforward_x=0.0, feedforward_y=0.0, feedfoward_theta=0.0):
-        current_pose = self.robot.poseEstimator.curEstPose
-        distance_to_tgt = (current_pose.translation() - target_pose.translation()).norm()
-        distance_output = self.xy_controller.calculate(0, distance_to_tgt)
-        delta_vector = target_pose.translation().__sub__(current_pose.translation())
-        angle_of_vector = Rotation2d(delta_vector.X(), delta_vector.Y())
-
-        vx = distance_output * math.cos(angle_of_vector.radians()) + feedforward_x
-        vy = distance_output * math.sin(angle_of_vector.radians()) + feedforward_y
-
-        omega = self.theta_controller.calculate(
-            current_pose.rotation().degrees(), target_pose.rotation().degrees()
-        ) + feedfoward_theta
-
-        if (
-            self.x_controller.atSetpoint()
-            and self.y_controller.atSetpoint()
-            and self.theta_controller.atSetpoint()
-        ):
-            if self.robot.score_intent and self.robot.running_pid_lineup:
-                self.robot.at_scoring_position = True
-        
-        self.drive(Translation2d(vx, vy), omega, True, False)
-
-        # Update SmartDashboard values for debugging
-        SmartDashboard.putNumber("t_pose x", target_pose.X())
-        SmartDashboard.putNumber("t_pose y", target_pose.Y())
-        SmartDashboard.putNumber("vx", vx)
-        SmartDashboard.putNumber("vy", vy)
-        SmartDashboard.putNumber("omega", omega)
-
-
     def go_to_pose_profiled_pid(self, target_pose : Translation2d, feedforward_x=0.0, feedforward_y=0.0, feedfoward_theta=0.0):
 
         current_pose = self.robot.poseEstimator.curEstPose
@@ -286,19 +254,24 @@ class Drivetrain(Subsystem):
         #source_rotation = FieldConstants.flip_Rotation2d(FieldConstants.CoralStation.leftCenterFace.rotation()) if left_source else FieldConstants.flip_Rotation2d(FieldConstants.CoralStation.rightCenterFace.rotation())
         battery_facing = self.robot.poseEstimator.getYaw()
         #source_rotation + Rotation2d.fromDegrees(90)
-        module_angles.append(battery_facing + Rotation2d.fromDegrees(-45))
-        module_angles.append(battery_facing + Rotation2d.fromDegrees(45))
-        module_angles.append(battery_facing + Rotation2d.fromDegrees(-135))
-        module_angles.append(battery_facing + Rotation2d.fromDegrees(135))
+        module_angles.append(Rotation2d.fromDegrees(45))
+        module_angles.append(Rotation2d.fromDegrees(-45))
+        module_angles.append(Rotation2d.fromDegrees(135))
+        module_angles.append(Rotation2d.fromDegrees(-135))
         module_states = [
             SwerveModuleState(0, module_angles[0]),
             SwerveModuleState(0, module_angles[1]),
-            SwerveModuleState(0, module_angles[1]),
-            SwerveModuleState(0, module_angles[1]),
+            SwerveModuleState(0, module_angles[2]),
+            SwerveModuleState(0, module_angles[3]),
         ]
         for idx, module in enumerate(self.robot.poseEstimator.modules):
             module.set_desired_state(module_states[idx], False)
 
+    def reset_pid_error(self):
+        self.x_controller.reset()
+        self.y_controller.reset()
+        self.theta_controller.reset()
+        
     def get_robot_relative_speeds(self):
         module_states = (
             self.robot.poseEstimator.get_module_states()
