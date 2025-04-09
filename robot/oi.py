@@ -193,6 +193,7 @@ class OI:
         def _():
             self.robot.leds.mode = self.robot.leds.MODE_LOCKED_ON
             self.robot.raise_elevator_slightly_for_L1 = False
+            self.robot.strafe_for_L1 = False
             self.robot.manual_scoring = True
             self.robot.mechanisms_at_default = False
 
@@ -200,6 +201,7 @@ class OI:
         def _():
             self.robot.mechanisms_at_default = True
             self.robot.raise_elevator_slightly_for_L1 = False
+            self.robot.strafe_for_L1 = False
             self.robot.manual_scoring = False
             self.robot.leds.mode = self.robot.leds.MODE_ODOMETRY
 
@@ -226,6 +228,7 @@ class OI:
             self.robot.is_intaking = True
             self.robot.descoring_algae = False
             self.robot.raise_elevator_slightly_for_L1 = False
+            self.robot.strafe_for_L1 = False
             self.robot.leds.mode = self.robot.leds.MODE_INTAKING
             self.robot.mechanisms_at_default = False
             self.robot.funnel_intake.is_intaking = True
@@ -250,6 +253,7 @@ class OI:
             self.robot.is_intaking = True
             self.robot.descoring_algae = False
             self.robot.raise_elevator_slightly_for_L1 = False
+            self.robot.strafe_for_L1 = False
             self.robot.mechanisms_at_default = False
             self.robot.at_scoring_position = False
             self.robot.score_piece = False
@@ -279,9 +283,9 @@ class OI:
             self.robot.end_effector.stop()
             self.robot.raise_elevator_slightly_for_L1 = False
             self.robot.at_scoring_position = False
+            self.robot.strafe_for_L1 = False
             self.robot.score_piece = False
-            if self.robot.score_state.number == 1:
-                # self.robot.final_lineup_pose = self.robot.poseEstimator.get_path_to_closest_L1()
+            if self.robot.score_state.number == 1 and not self.robot.score_with_strafing:
                 self.robot.final_lineup_pose = self.robot.poseEstimator.get_path_to_reef(True, self.robot.poseEstimator.calculate_closest_reef_tag()[1], self.robot.right_branch, do_manip_offset=False, do_side_offset=False)
             else:
                 self.robot.final_lineup_pose = self.robot.poseEstimator.get_path_to_reef(
@@ -298,6 +302,7 @@ class OI:
         def _():
             self.robot.leds.mode = self.robot.leds.MODE_ODOMETRY
             self.robot.raise_elevator_slightly_for_L1 = False
+            self.robot.strafe_for_L1 = False
             self.robot.mechanisms_at_default = True
             self.robot.running_pid_lineup = False
             self.robot.score_intent = False

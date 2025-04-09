@@ -225,7 +225,9 @@ class Robot(CoroutineRobot):
         self.is_climbing = False
         self.retract_climber = False
         self.descoring_algae = False
+        self.strafe_for_L1 = False
         self.raise_elevator_slightly_for_L1 = False
+        self.score_with_strafing = False
 
         self.is_intaking = False
         self.raise_setpoints = 0.0

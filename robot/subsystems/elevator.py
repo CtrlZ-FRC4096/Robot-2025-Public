@@ -20,6 +20,7 @@ from wpimath.geometry import (
 from path_gen import PathGenerator
 import const
 from robot_scoring_positions import RobotScoringPositions
+from wpimath.units import inchesToMeters
 
 class Elevator(Subsystem):
     def __init__(self, robot: "Robot"):
@@ -120,8 +121,17 @@ class Elevator(Subsystem):
 
                 self.robot.end_effector.set_end_effector_position(self.robot.score_state.end_effector_position) # set end effector to scoring position
                 if self.robot.end_effector.get_position() >= RobotScoringPositions.min_end_effector_position_to_move_elevator_up:
-                    if self.robot.raise_elevator_slightly_for_L1:
+                    if self.robot.raise_elevator_slightly_for_L1 and not self.robot.score_with_strafing:
                         self.set_elevator_height(RobotScoringPositions.L1_Scoring.elevator_height + RobotScoringPositions.L1_elevator_raise_height) # raise elevator to slightly above scoring height to flip piece in
+                    elif self.robot.strafe_for_L1 and self.robot.score_with_strafing:
+                        current_pose = self.robot.poseEstimator.curEstPose
+                        add_angle = 180 if self.robot.right_branch else 0
+                        angle = Rotation2d.fromDegrees(current_pose.rotation().degrees() + add_angle)
+                        self.robot.final_lineup_pose = Pose2d(
+                            current_pose.X() + inchesToMeters(10) * math.cos(angle.radians()),
+                            current_pose.Y() + inchesToMeters(10) * math.sin(angle.radians()),
+                            current_pose.rotation()
+                        )
                     else:
                         self.set_elevator_height(self.robot.score_state.elevator_height) # raise elevator to scoring height
             else:
@@ -133,7 +143,7 @@ class Elevator(Subsystem):
             """
             self.robot.end_effector.set_end_effector_position(self.robot.score_state.end_effector_position) # set end effector to scoring position
             if self.robot.end_effector.get_position() >= RobotScoringPositions.min_end_effector_position_to_move_elevator_up:
-                if self.robot.raise_elevator_slightly_for_L1:
+                if self.robot.raise_elevator_slightly_for_L1 and not self.robot.score_with_strafing:
                         self.set_elevator_height(RobotScoringPositions.L1_Scoring.elevator_height + RobotScoringPositions.L1_elevator_raise_height) # raise elevator to slightly above scoring height to flip piece in
                 else:
                     self.set_elevator_height(self.robot.score_state.elevator_height) # raise elevator to scoring height

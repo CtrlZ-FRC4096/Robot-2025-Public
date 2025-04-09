@@ -186,6 +186,7 @@ class EndEffector(Subsystem):
             self.robot.drivetrain.reset_pid_error()
             if self.robot.score_state.number == 1:
                 self.robot.raise_elevator_slightly_for_L1 = True
+                self.robot.strafe_for_L1 = True
             self.robot.has_coral = False
         elif self.is_intaking:
             if self.robot.elevator.get_height() <= RobotScoringPositions.min_elevator_height_to_bring_in_end_effector:
@@ -205,6 +206,7 @@ class EndEffector(Subsystem):
                 self.robot.score_intent = False
                 self.robot.manual_scoring = False
                 self.robot.raise_elevator_slightly_for_L1 = False
+                self.robot.strafe_for_L1 = False
                 self.robot.is_climbing = False
                 self.robot.at_scoring_position = False
                 self.robot.elevator.set_elevator_height(RobotScoringPositions.elevator_intake_height)
@@ -214,6 +216,7 @@ class EndEffector(Subsystem):
             else:
                 self.is_intaking = False
                 self.robot.raise_elevator_slightly_for_L1 = False
+                self.robot.strafe_for_L1 = False
                 self.robot.manual_scoring = False
                 self.robot.running_pid_lineup = False
                 self.robot.score_intent = False
