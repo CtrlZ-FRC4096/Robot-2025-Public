@@ -71,6 +71,7 @@ from commands2 import (
     ParallelRaceGroup,
     SequentialCommandGroup,
 )
+import time
 from wpilibextra.coroutine import CoroutineCommand
 
 
@@ -98,7 +99,24 @@ class Robot(CoroutineRobot):
         nt_inst.startServer()
         self.nt_robot = nt_inst.getTable("SmartDashboard")
         # self.nt_robot.putString('led_mode', 'off')
+        
+        ### ARE WE USING AN FMS? (EX: IF WE ARE AT COMPETITION) ###
+        self.using_FMS = True
 
+        # DRIVERSTATION #
+        self.driverstation = wpilib.DriverStation
+
+        if self.using_FMS:
+            while not self.driverstation.isFMSAttached():
+                # time.sleep(1.0) # Wait until the FMS is connected to the Driver Station
+                yield from self.wait(1.0)
+                if self.driverstation.isFMSAttached():
+                    break
+                print("in loop")
+            # time.sleep(1.0) # Give enough time to make sure the FMS has told the Driver Station the Alliance 
+            print("out of loop")
+        self.fieldConstants = FieldConstants()
+        
         # Match Stuff
         self.match_time = -1
         # const.IS_SIMULATION = self.isSimulation()
@@ -139,7 +157,7 @@ class Robot(CoroutineRobot):
         # With V's wrapper for commandify we automatically register all commands
 
         ### OTHER ###
-        self.driverstation = wpilib.DriverStation
+        
         self.oi = oi.OI(self)
 
 		### STATE MACHINE ###
@@ -251,9 +269,9 @@ class Robot(CoroutineRobot):
 
 
     def flip_X_coord(self, x):
-        return FieldConstants.fieldLength - x
+        return self.fieldConstants.fieldLength - x
     def flip_Y_coord(self, y):
-        return FieldConstants.fieldWidth - y
+        return self.fieldConstants.fieldWidth - y
 
     def flip_path_cmd_across_x(self, cmd_path : FollowPathCommand):
         # FLIPPING Y COORDS
@@ -310,8 +328,8 @@ class Robot(CoroutineRobot):
         else:
             self.score_1_face = 4
             self.score_1_right_branch = True
-        self.poseEstimator.poseEst.resetPose(FieldConstants.flip_Pose2d(Pose2d(7.167, FieldConstants.fieldWidth / 2, Rotation2d.fromDegrees(270))))
-        self.poseEstimator.poseEstSingleTag.resetPose(FieldConstants.flip_Pose2d(Pose2d(7.167, FieldConstants.fieldWidth / 2, Rotation2d.fromDegrees(270))))
+        self.poseEstimator.poseEst.resetPose(self.fieldConstants.flip_Pose2d(Pose2d(7.167, self.fieldConstants.fieldWidth / 2, Rotation2d.fromDegrees(270))))
+        self.poseEstimator.poseEstSingleTag.resetPose(self.fieldConstants.flip_Pose2d(Pose2d(7.167, self.fieldConstants.fieldWidth / 2, Rotation2d.fromDegrees(270))))
 
     def flip_2_piece_delay_auto(self, left_side : bool):
         if not left_side:
@@ -332,8 +350,8 @@ class Robot(CoroutineRobot):
             self.auto_position_source = 3
             for idx, command in enumerate(self.p_for_2p):
                 self.p_for_2p[idx] = self.flip_path_cmd_across_x(command)
-        self.poseEstimator.poseEst.resetPose(FieldConstants.flip_Pose2d(Pose2d(7.167, FieldConstants.fieldWidth / 2, Rotation2d.fromDegrees(270))))
-        self.poseEstimator.poseEstSingleTag.resetPose(FieldConstants.flip_Pose2d(Pose2d(7.167, FieldConstants.fieldWidth / 2, Rotation2d.fromDegrees(270))))
+        self.poseEstimator.poseEst.resetPose(self.fieldConstants.flip_Pose2d(Pose2d(7.167, self.fieldConstants.fieldWidth / 2, Rotation2d.fromDegrees(270))))
+        self.poseEstimator.poseEstSingleTag.resetPose(self.fieldConstants.flip_Pose2d(Pose2d(7.167, self.fieldConstants.fieldWidth / 2, Rotation2d.fromDegrees(270))))
 
 
     def flip_3_piece_auto(self, left_side : bool):
@@ -361,8 +379,8 @@ class Robot(CoroutineRobot):
             self.auto_position_source = 3
             for idx, command in enumerate(self.p_for_3p):
                 self.p_for_3p[idx] = self.flip_path_cmd_across_x(command)
-        self.poseEstimator.poseEst.resetPose(FieldConstants.flip_Pose2d(Pose2d(7.167, FieldConstants.fieldWidth / 2, Rotation2d.fromDegrees(270))))
-        self.poseEstimator.poseEstSingleTag.resetPose(FieldConstants.flip_Pose2d(Pose2d(7.167, FieldConstants.fieldWidth / 2, Rotation2d.fromDegrees(270))))
+        self.poseEstimator.poseEst.resetPose(self.fieldConstants.flip_Pose2d(Pose2d(7.167, self.fieldConstants.fieldWidth / 2, Rotation2d.fromDegrees(270))))
+        self.poseEstimator.poseEstSingleTag.resetPose(self.fieldConstants.flip_Pose2d(Pose2d(7.167, self.fieldConstants.fieldWidth / 2, Rotation2d.fromDegrees(270))))
 
     def flip_3_piece_f1(self, left_side : bool):
         if not left_side:
@@ -374,8 +392,8 @@ class Robot(CoroutineRobot):
             self.score_3_face = 1
             self.score_3_right_branch = False
             self.auto_position_source = 3
-            self.poseEstimator.poseEst.resetPose(FieldConstants.flip_Pose2d(Pose2d(7.167, 1.372, Rotation2d.fromDegrees(270))))
-            self.poseEstimator.poseEstSingleTag.resetPose(FieldConstants.flip_Pose2d(Pose2d(7.167, 1.372, Rotation2d.fromDegrees(270))))
+            self.poseEstimator.poseEst.resetPose(self.fieldConstants.flip_Pose2d(Pose2d(7.167, 1.372, Rotation2d.fromDegrees(270))))
+            self.poseEstimator.poseEstSingleTag.resetPose(self.fieldConstants.flip_Pose2d(Pose2d(7.167, 1.372, Rotation2d.fromDegrees(270))))
         else:
             self.left_source_auto = True
             self.score_1_face = 3
@@ -385,8 +403,8 @@ class Robot(CoroutineRobot):
             self.score_3_face = 1
             self.score_3_right_branch = True
             self.auto_position_source = 3
-            self.poseEstimator.poseEst.resetPose(FieldConstants.flip_Pose2d(Pose2d(7.167, FieldConstants.fieldWidth - 1.372, Rotation2d.fromDegrees(270))))
-            self.poseEstimator.poseEstSingleTag.resetPose(FieldConstants.flip_Pose2d(Pose2d(7.167, FieldConstants.fieldWidth - 1.372, Rotation2d.fromDegrees(270))))
+            self.poseEstimator.poseEst.resetPose(self.fieldConstants.flip_Pose2d(Pose2d(7.167, self.fieldConstants.fieldWidth - 1.372, Rotation2d.fromDegrees(270))))
+            self.poseEstimator.poseEstSingleTag.resetPose(self.fieldConstants.flip_Pose2d(Pose2d(7.167, self.fieldConstants.fieldWidth - 1.372, Rotation2d.fromDegrees(270))))
             for idx, command in enumerate(self.p_for_3p_f1):
                 self.p_for_3p_f1[idx] = self.flip_path_cmd_across_x(command)
 
@@ -402,7 +420,7 @@ class Robot(CoroutineRobot):
             self.score_4_right_branch = True
             self.left_source_auto = False
             self.auto_position_source = 3
-            # self.poseEstimator.poseEstSingleTag.resetPose(Pose2d(FieldConstants.flip_Translation2d(Translation2d(7.13, FieldConstants.fieldWidth - 6.772)), self.poseEstimator.getYaw()))
+            # self.poseEstimator.poseEstSingleTag.resetPose(Pose2d(self.fieldConstants.flip_Translation2d(Translation2d(7.13, self.fieldConstants.fieldWidth - 6.772)), self.poseEstimator.getYaw()))
         else:
             self.score_1_face = 3
             self.score_1_right_branch = True
@@ -414,7 +432,7 @@ class Robot(CoroutineRobot):
             self.auto_position_source = 3
             self.score_4_face = 1
             self.score_4_right_branch = False
-            # self.poseEstimator.poseEstSingleTag.resetPose(Pose2d(FieldConstants.flip_Translation2d(Translation2d(7.13, 6.772)), self.poseEstimator.getYaw()))
+            # self.poseEstimator.poseEstSingleTag.resetPose(Pose2d(self.fieldConstants.flip_Translation2d(Translation2d(7.13, 6.772)), self.poseEstimator.getYaw()))
             
             # for idx, command in enumerate(self.p_for_f5):
             #     self.p_for_f5[idx] = self.flip_path_cmd_across_x(command)
@@ -444,6 +462,10 @@ class Robot(CoroutineRobot):
     ### DISABLED ###
 
     def disabled_mode(self):
+        if self.using_FMS:
+            while not self.driverstation.isFMSAttached():
+                yield
+            yield from self.wait(2.0)
         self.scheduler.cancelAll()
         # self.drivetrain.gyro_offset = self.drivetrain.gyro.get_roll()
 
@@ -460,7 +482,7 @@ class Robot(CoroutineRobot):
         self.scheduler.cancelAll()
         self.in_autonomous_mode = True
 
-        if FieldConstants.shouldFlip:
+        if self.fieldConstants.shouldFlip:
             self.poseEstimator.set_yaw(90)
         else:
             self.poseEstimator.set_yaw(270)

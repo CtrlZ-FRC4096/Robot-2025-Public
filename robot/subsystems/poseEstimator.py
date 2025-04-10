@@ -88,7 +88,7 @@ class PoseEstimator(Subsystem):
 
         self.gyro = Pigeon2(const.SWERVE_PIGEON_ID, "carnivore")
 
-        if FieldConstants.shouldFlip:
+        if self.robot.fieldConstants.shouldFlip:
             self.gyro_offset = 90
         else:
             self.gyro_offset = 270
@@ -155,7 +155,7 @@ class PoseEstimator(Subsystem):
         )
 
 
-        self.curEstPose = Pose2d(FieldConstants.flip_Translation2d(Translation2d(7.170, 3.944)), self.getYaw())
+        self.curEstPose = Pose2d(self.robot.fieldConstants.flip_Translation2d(Translation2d(7.170, 3.944)), self.getYaw())
         self.curEstPoseSingleTag = self.curEstPose
         self.curEstPoseGlobal = self.curEstPose
 
@@ -326,8 +326,8 @@ class PoseEstimator(Subsystem):
         trans = pose.translation()
         x = trans.X()
         y = trans.Y()
-        inY = -0.5 < y < FieldConstants.fieldWidth + 0.5
-        inX = -0.5 < x < FieldConstants.fieldLength + 0.5
+        inY = -0.5 < y < self.robot.fieldConstants.fieldWidth + 0.5
+        inX = -0.5 < x < self.robot.fieldConstants.fieldLength + 0.5
         return not (inX and inY)
 
     def candidate_pose_OK(self, candidate_pose: Pose2d):
@@ -361,7 +361,7 @@ class PoseEstimator(Subsystem):
     def get_path_to_L1(self, face_to_score : int, right_side : bool):
         target_face = (face_to_score - 1) % 6 if right_side else (face_to_score + 1) % 6
         target_translation = self.get_path_to_reef(False, target_face, not right_side, margin_dist_offset=8.625, do_side_offset=True, do_manip_offset=False).translation()
-        face_angle = FieldConstants.flip_Rotation2d(FieldConstants.Reef.centerFaces[target_face - 1].rotation())
+        face_angle = self.robot.fieldConstants.flip_Rotation2d(self.robot.fieldConstants.Reef.centerFaces[target_face - 1].rotation())
         target_angle = Rotation2d()
         if right_side:
             target_angle = face_angle + Rotation2d.fromDegrees(-14 - 65)
@@ -374,13 +374,13 @@ class PoseEstimator(Subsystem):
     def calculate_closest_reef_tag(self):
         min_distance_to_tag = math.inf
         closest_reef_tag = None
-        for tagID in FieldConstants.reef_tags:
+        for tagID in self.robot.fieldConstants.reef_tags:
             tag_pose = self.tag_layout.getTagPose(tagID).toPose2d()
             distance = (self.curEstPose - tag_pose).translation().norm()
             if distance < min_distance_to_tag:
                 min_distance_to_tag = distance
                 closest_reef_tag = tagID
-        return [closest_reef_tag, FieldConstants.tag_to_face[closest_reef_tag]]
+        return [closest_reef_tag, self.robot.fieldConstants.tag_to_face[closest_reef_tag]]
     
     def calculate_closest_tag_on_the_move(self):
         cur_speeds = const.SWERVE_KINEMATICS.toChassisSpeeds(self.get_module_states())
@@ -389,13 +389,13 @@ class PoseEstimator(Subsystem):
         
         min_distance_to_tag = math.inf
         closest_reef_tag = None
-        for tagID in FieldConstants.reef_tags:
+        for tagID in self.robot.fieldConstants.reef_tags:
             tag_pose = self.tag_layout.getTagPose(tagID).toPose2d()
             distance = (future_pose - tag_pose).translation().norm()
             if distance < min_distance_to_tag:
                 min_distance_to_tag = distance
                 closest_reef_tag = tagID
-        return [closest_reef_tag, FieldConstants.tag_to_face[closest_reef_tag]]
+        return [closest_reef_tag, self.robot.fieldConstants.tag_to_face[closest_reef_tag]]
 
 
     def get_path_to_reef(self, use_calibrated_field, face: int, right_branch: bool, margin_dist_offset=1.0, do_side_offset=True, do_manip_offset=True):
@@ -406,7 +406,7 @@ class PoseEstimator(Subsystem):
             (inchesToMeters(29.5) / 2) + (inchesToMeters(7.25) / 2) + inchesToMeters(margin_dist_offset)
         )  # robot size + bumper addition + error protection
 
-        center_face_pose = FieldConstants.flip_Pose2d(FieldConstants.Reef.centerFaces[face - 1])
+        center_face_pose = self.robot.fieldConstants.flip_Pose2d(self.robot.fieldConstants.Reef.centerFaces[face - 1])
         angle_face = center_face_pose.rotation()
 
         # manip_distance = 38
@@ -443,9 +443,9 @@ class PoseEstimator(Subsystem):
             )
 
             if use_calibrated_field:
-                alliance_color = "red" if FieldConstants.shouldFlip else "blue"
+                alliance_color = "red" if self.robot.fieldConstants.shouldFlip else "blue"
                 branch = "right" if right_branch else "left"
-                target_pose_3 = FieldConstants.ReefCalibratedToField.calibrated_data[alliance_color][branch][face]
+                target_pose_3 = self.robot.fieldConstants.ReefCalibratedToField.calibrated_data[alliance_color][branch][face]
 
             return target_pose_3
         else:
@@ -462,10 +462,10 @@ class PoseEstimator(Subsystem):
         FOR RED SIDE
         '''
         curPose = self.curEstPose
-        right_source_tag = 2 if FieldConstants.shouldFlip else 12
-        left_source_tag = 1 if FieldConstants.shouldFlip else 13
-        dist_to_right_source = (FieldConstants.flip_Pose2d(FieldConstants.CoralStation.rightCenterFace).translation() - curPose.translation()).norm()
-        dist_to_left_source = (FieldConstants.flip_Pose2d(FieldConstants.CoralStation.leftCenterFace).translation() - curPose.translation()).norm()
+        right_source_tag = 2 if self.robot.fieldConstants.shouldFlip else 12
+        left_source_tag = 1 if self.robot.fieldConstants.shouldFlip else 13
+        dist_to_right_source = (self.robot.fieldConstants.flip_Pose2d(self.robot.fieldConstants.CoralStation.rightCenterFace).translation() - curPose.translation()).norm()
+        dist_to_left_source = (self.robot.fieldConstants.flip_Pose2d(self.robot.fieldConstants.CoralStation.leftCenterFace).translation() - curPose.translation()).norm()
         left_source_closer = True if (dist_to_left_source <= dist_to_right_source) else False
         SmartDashboard.putBoolean("left source closer", left_source_closer)
         SmartDashboard.putNumber("dist to right source", dist_to_right_source)
@@ -486,7 +486,7 @@ class PoseEstimator(Subsystem):
         side_offset = inchesToMeters(24) + inchesToMeters(1) # test for 2
 
         if left_source:
-            source_pose = FieldConstants.flip_Pose2d(FieldConstants.CoralStation.leftCenterFace)
+            source_pose = self.robot.fieldConstants.flip_Pose2d(self.robot.fieldConstants.CoralStation.leftCenterFace)
             source_rotation = source_pose.rotation()
             x_offset = math.cos(source_rotation.radians()) * dist_offset  # offsetting that pose by a set offset that extends the pose as if there's a vector from the center face with angle: angle_face
             y_offset = math.sin(source_rotation.radians()) * dist_offset
@@ -500,7 +500,7 @@ class PoseEstimator(Subsystem):
                 target_pose = Pose2d(offset_pose.X() + x_side_offset, offset_pose.Y() + y_side_offset, source_rotation.rotateBy(Rotation2d.fromDegrees(90)))
                 return target_pose
         else:
-            source_pose = FieldConstants.flip_Pose2d(FieldConstants.CoralStation.rightCenterFace)
+            source_pose = self.robot.fieldConstants.flip_Pose2d(self.robot.fieldConstants.CoralStation.rightCenterFace)
             source_rotation = source_pose.rotation()
             x_offset = math.cos(source_rotation.radians()) * dist_offset  # offsetting that pose by a set offset that extends the pose as if there's a vector from the center face with angle: angle_face
             y_offset = math.sin(source_rotation.radians()) * dist_offset
@@ -653,7 +653,7 @@ class PoseEstimator(Subsystem):
         # ALWAYS USING SINGLE
         if self.robot.running_pid_lineup or True:
             if self.useSingleTag() or self.robot.is_intaking:
-                # (((self.robot.final_lineup_pose.translation() - FieldConstants.flip_Translation2d(FieldConstants.CoralStation.rightCenterFace.translation())).norm() < 0.75) or ((self.robot.final_lineup_pose.translation() - FieldConstants.flip_Translation2d(FieldConstants.CoralStation.leftCenterFace.translation())).norm() < 0.75))
+                # (((self.robot.final_lineup_pose.translation() - self.robot.fieldConstants.flip_Translation2d(self.robot.fieldConstants.CoralStation.rightCenterFace.translation())).norm() < 0.75) or ((self.robot.final_lineup_pose.translation() - self.robot.fieldConstants.flip_Translation2d(self.robot.fieldConstants.CoralStation.leftCenterFace.translation())).norm() < 0.75))
                 self.curEstPose = self.curEstPoseSingleTag
                 self.single_tag = True
             else:

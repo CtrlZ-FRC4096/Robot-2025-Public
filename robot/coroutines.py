@@ -31,7 +31,7 @@ class Coroutines:
         def move_forward():
             # start in the middle, and face battery directly towards DS wall
             yield
-            vx = 3.0 if FieldConstants.shouldFlip else -3.0
+            vx = 3.0 if robot.fieldConstants.shouldFlip else -3.0
             robot.drivetrain.drive(Translation2d(vx, 0), 0, True, False)
             yield from robot.wait(1.0)
         self.move_forward = (move_forward)
@@ -41,7 +41,7 @@ class Coroutines:
             # yaw = robot.poseEstimator.getYaw().radians()
             # vx = math.cos(yaw) * 3.0
             # vy = math.sin(yaw) * 3.0
-            vx = -3.0 if FieldConstants.shouldFlip else 3.0
+            vx = -3.0 if robot.fieldConstants.shouldFlip else 3.0
             timer = Timer()
             timer.start()
             while not timer.hasElapsed(1.0):
@@ -123,7 +123,7 @@ class Coroutines:
 
         @commandify
         def drive_for_tush_push():
-            dist_add = -9.0 if FieldConstants.shouldFlip else 9.0
+            dist_add = -9.0 if robot.fieldConstants.shouldFlip else 9.0
             robot.final_lineup_pose = Pose2d(robot.poseEstimator.curEstPose.X() + dist_add, robot.poseEstimator.curEstPose.Y(), robot.poseEstimator.getYaw())
             robot.running_pid_lineup = True
             i = 0

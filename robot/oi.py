@@ -125,7 +125,7 @@ class OI:
                 forward_back = -square(self.driver1.LEFT_JOY_Y())
                 left_right = -square(self.driver1.LEFT_JOY_X())
 
-                if FieldConstants.shouldFlip:
+                if self.robot.fieldConstants.shouldFlip:
                     forward_back *= -1
                     left_right *= -1
 
