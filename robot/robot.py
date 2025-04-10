@@ -101,7 +101,7 @@ class Robot(CoroutineRobot):
         # self.nt_robot.putString('led_mode', 'off')
         
         ### ARE WE USING AN FMS? (EX: IF WE ARE AT COMPETITION) ###
-        self.using_FMS = True
+        self.using_FMS = False
 
         # DRIVERSTATION #
         self.driverstation = wpilib.DriverStation
@@ -112,9 +112,7 @@ class Robot(CoroutineRobot):
                 yield from self.wait(1.0)
                 if self.driverstation.isFMSAttached():
                     break
-                print("in loop")
             # time.sleep(1.0) # Give enough time to make sure the FMS has told the Driver Station the Alliance 
-            print("out of loop")
         self.fieldConstants = FieldConstants()
         
         # Match Stuff
