@@ -62,6 +62,7 @@ class Coroutines:
             robot.score_intent = False
             robot.score_piece = False
             robot.at_scoring_position = False
+            robot.at_intake_position = False
             robot.end_effector.stop()
             robot.has_coral = False
 
@@ -77,6 +78,7 @@ class Coroutines:
             robot.running_pid_lineup = False
             robot.score_intent = False
             robot.at_scoring_position = False
+            robot.at_intake_position = False
             robot.end_effector.stop()
             robot.has_coral = False
 
@@ -92,6 +94,7 @@ class Coroutines:
             robot.running_pid_lineup = False
             robot.score_intent = False
             robot.at_scoring_position = False
+            robot.at_intake_position = False
             robot.end_effector.stop()
             robot.has_coral = False
         
@@ -107,6 +110,7 @@ class Coroutines:
             robot.running_pid_lineup = False
             robot.score_intent = False
             robot.at_scoring_position = False
+            robot.at_intake_position = False
             robot.end_effector.stop()
             robot.has_coral = False
 
@@ -139,6 +143,7 @@ class Coroutines:
             robot.funnel_intake.is_intaking = False
             robot.end_effector.is_intaking = False
             robot.at_scoring_position = False
+            robot.at_intake_position = False
             robot.score_piece = False
             robot.final_lineup_pose = robot.poseEstimator.get_path_to_reef(
                 True, # CHANGE WHEN WE HAVE FIELD CALIBRATED
@@ -146,6 +151,7 @@ class Coroutines:
             	robot.score_1_right_branch,
                 do_manip_offset=True
             )
+            robot.right_branch = robot.score_1_right_branch
             robot.mechanisms_at_default = False
             robot.running_pid_lineup = True
             robot.score_intent = True
@@ -161,6 +167,7 @@ class Coroutines:
             	robot.score_2_right_branch,
                 do_manip_offset=True
             )
+            robot.right_branch = robot.score_2_right_branch
             robot.score_state = RobotScoringPositions.L4_Scoring
             robot.running_pid_lineup = True
             while not robot.has_coral:
@@ -168,6 +175,7 @@ class Coroutines:
             robot.funnel_intake.is_intaking = False
             robot.end_effector.is_intaking = False
             robot.at_scoring_position = False
+            robot.at_intake_position = False
             robot.score_piece = False
             robot.mechanisms_at_default = False
             robot.running_pid_lineup = True
@@ -186,11 +194,13 @@ class Coroutines:
             )
             robot.score_state = RobotScoringPositions.L4_Scoring
             robot.running_pid_lineup = True
+            robot.right_branch = robot.score_3_right_branch
             while not robot.has_coral:
                 yield # wait til piece hits EE
             robot.funnel_intake.is_intaking = False
             robot.end_effector.is_intaking = False
             robot.at_scoring_position = False
+            robot.at_intake_position = False
             robot.score_piece = False
             robot.mechanisms_at_default = False
             robot.score_intent = True
@@ -208,11 +218,13 @@ class Coroutines:
             )
             robot.score_state = RobotScoringPositions.L4_Scoring
             robot.running_pid_lineup = True
+            robot.right_branch = robot.score_4_right_branch
             while not robot.has_coral:
                 yield # wait til piece hits EE
             robot.funnel_intake.is_intaking = False
             robot.end_effector.is_intaking = False
             robot.at_scoring_position = False
+            robot.at_intake_position = False
             robot.score_piece = False
             robot.mechanisms_at_default = False
             robot.score_intent = True
@@ -229,6 +241,7 @@ class Coroutines:
             robot.final_lineup_pose = robot.poseEstimator.get_path_to_source(robot.left_source_auto, robot.auto_position_source, extra_dist_offset=-3.0)
             robot.mechanisms_at_default = False
             robot.at_scoring_position = False
+            robot.at_intake_position = False
             robot.score_piece = False
             robot.is_intaking = True
             robot.funnel_intake.is_intaking = True
@@ -237,7 +250,7 @@ class Coroutines:
             robot.score_intent = False
             while True:
                 yield
-                if robot.funnel_intake.piece_passing_through or robot.has_coral:
+                if (robot.funnel_intake.piece_passing_through and not robot.isSimulation()) or robot.has_coral:
                     robot.final_lineup_pose = robot.poseEstimator.get_path_to_reef(
                         True,
                         robot.score_2_face,
@@ -252,6 +265,7 @@ class Coroutines:
             robot.final_lineup_pose = robot.poseEstimator.get_path_to_source(robot.left_source_auto, robot.auto_position_source)
             robot.mechanisms_at_default = False
             robot.at_scoring_position = False
+            robot.at_intake_position = False
             robot.score_piece = False
             robot.is_intaking = True
             robot.funnel_intake.is_intaking = True
@@ -260,7 +274,7 @@ class Coroutines:
             robot.score_intent = False
             while True:
                 yield
-                if robot.funnel_intake.piece_passing_through or robot.has_coral:
+                if (robot.funnel_intake.piece_passing_through  and not robot.isSimulation()) or robot.has_coral:
                     robot.final_lineup_pose = robot.poseEstimator.get_path_to_reef(
                         True,
                         robot.score_3_face,
@@ -276,6 +290,7 @@ class Coroutines:
             robot.final_lineup_pose = robot.poseEstimator.get_path_to_source(robot.left_source_auto, robot.auto_position_source)
             robot.mechanisms_at_default = False
             robot.at_scoring_position = False
+            robot.at_intake_position = False
             robot.score_piece = False
             robot.is_intaking = True
             robot.funnel_intake.is_intaking = True
@@ -284,7 +299,7 @@ class Coroutines:
             robot.score_intent = False
             while True:
                 yield
-                if robot.funnel_intake.piece_passing_through or robot.has_coral:
+                if (robot.funnel_intake.piece_passing_through and not robot.isSimulation()) or robot.has_coral:
                     robot.final_lineup_pose = robot.poseEstimator.get_path_to_reef(
                         True,
                         robot.score_4_face,
@@ -300,6 +315,7 @@ class Coroutines:
             robot.final_lineup_pose = robot.poseEstimator.get_path_to_source(robot.left_source_auto, robot.auto_position_source)
             robot.mechanisms_at_default = False
             robot.at_scoring_position = False
+            robot.at_intake_position = False
             robot.score_piece = False
             robot.funnel_intake.is_intaking = True
             robot.end_effector.is_intaking = True
@@ -307,7 +323,7 @@ class Coroutines:
             robot.score_intent = False
             while True:
                 yield
-                if robot.funnel_intake.piece_passing_through or robot.has_coral:
+                if (robot.funnel_intake.piece_passing_through and not robot.isSimulation()) or robot.has_coral:
                     robot.running_pid_lineup = False
                     robot.is_intaking = False
                     break

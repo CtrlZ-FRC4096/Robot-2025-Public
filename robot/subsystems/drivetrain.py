@@ -24,6 +24,7 @@ from wpimath.kinematics import (
     SwerveModuleState
 )
 from phoenix6 import configs
+from shapely import Polygon, Point
 
 
 # from pathplannerlib.commands import PathfindHolonomic
@@ -50,7 +51,7 @@ from pathplannerlib.path import PathPlannerTrajectory
 from pathplannerlib.path import PathPlannerPath, PathConstraints
 from wpimath.estimator import SwerveDrive4PoseEstimator
 from photoncamera import WrapperedPhotonCamera
-from wpimath.units import degreesToRadians, inchesToMeters
+from wpimath.units import degreesToRadians, inchesToMeters, radiansToDegrees
 from robot_scoring_positions import RobotScoringPositions
 from collections import deque
 
@@ -84,6 +85,29 @@ class Drivetrain(Subsystem):
         # self.at_scoring_position_drivetrain = deque(maxlen=self.scoring_position_length)
         # for i in range(self.scoring_position_length):
         #     self.at_scoring_position_drivetrain.append(False)
+
+        buffer = 0.47
+        reefVertices = [
+                self.robot.poseEstimator.get_path_to_reef(False, 1, True, margin_dist_offset=-18.375, do_side_offset=True, do_manip_offset=False),
+                self.robot.poseEstimator.get_path_to_reef(False, 2, True, margin_dist_offset=-18.375, do_side_offset=True, do_manip_offset=False),
+                self.robot.poseEstimator.get_path_to_reef(False, 3, True, margin_dist_offset=-18.375, do_side_offset=True, do_manip_offset=False),
+                self.robot.poseEstimator.get_path_to_reef(False, 4, True, margin_dist_offset=-18.375, do_side_offset=True, do_manip_offset=False),
+                self.robot.poseEstimator.get_path_to_reef(False, 5, True, margin_dist_offset=-18.375, do_side_offset=True, do_manip_offset=False),
+                self.robot.poseEstimator.get_path_to_reef(False, 6, True, margin_dist_offset=-18.375, do_side_offset=True, do_manip_offset=False),
+            ]#face's right branch point
+        reefAngles = []
+        for idx in range(6):
+            # face: idx + 1
+            angle_face = FieldConstants.Reef.centerFaces[idx].rotation().degrees()
+            angle_face_minus_1 = FieldConstants.Reef.centerFaces[(idx - 1) % 6].rotation().degrees()
+            delta_angle = (angle_face_minus_1 - angle_face) % 360
+            if delta_angle > 180:
+                delta_angle -= 360
+            angle_mid = (angle_face + delta_angle / 2) % 360
+            reefAngles.append(angle_mid)
+        self.reefForInReef = []
+        for idx in range(6):
+            self.reefForInReef.append(Translation2d(reefVertices[idx].X() + (buffer * math.cos(degreesToRadians(reefAngles[idx]))), reefVertices[idx].Y() + (buffer * math.sin(degreesToRadians(reefAngles[idx])))))
         
 
     def drive(self, translation: Translation2d, rotation, field_relative, is_open_loop):
@@ -92,7 +116,7 @@ class Drivetrain(Subsystem):
         SmartDashboard.putNumber("Swerve/Rotation", rotation)
         SmartDashboard.putBoolean("Swerve/With PID", False)
         
-        if field_relative:
+        if field_relative and not self.robot.isSimulation():
             module_states = const.SWERVE_KINEMATICS.toSwerveModuleStates(
                 ChassisSpeeds.fromFieldRelativeSpeeds(
                     translation.x,
@@ -117,19 +141,36 @@ class Drivetrain(Subsystem):
                 module_states, max_speed
             )
         log_chassis = const.SWERVE_KINEMATICS.toChassisSpeeds(module_states)
-        SmartDashboard.putNumber("chassis log vx", log_chassis.vx)
-        SmartDashboard.putNumber("chassis log vy", log_chassis.vy)
+        SmartDashboard.putNumber("translation x", translation.x / 20)
+        SmartDashboard.putNumber("translation y", translation.y / 20)
+        SmartDashboard.putNumber("translation omega", radiansToDegrees(rotation) / 20)
 
-        for idx, module in enumerate(self.robot.poseEstimator.modules):
-            SmartDashboard.putNumber("module state " + str(idx + 1), module_states[idx].speed)
-            module.set_desired_state(module_states[idx], is_open_loop)
+        SmartDashboard.putNumber("chassis log vx", log_chassis.vx / 45)
+        SmartDashboard.putNumber("chassis log vy", log_chassis.vy / 45)
+        SmartDashboard.putNumber("chassis log omega dps", log_chassis.omega_dps / 20)
+        if self.robot.isSimulation():
+            curPose = self.robot.poseEstimator.curEstPose
+            # self.robot.poseEstimator.poseEstSingleTag.resetPose(Pose2d(curPose.X() + log_chassis.vx, curPose.Y() + log_chassis.vx, Rotation2d.fromDegrees(curPose.rotation().degrees() + log_chassis.omega_dps / 50)))
+            # self.robot.poseEstimator.set_yaw(curPose.rotation().degrees() + log_chassis.omega_dps / 20)
+            self.robot.poseEstimator.curEstPose = Pose2d(curPose.X() + log_chassis.vx / 45, curPose.Y() + log_chassis.vy / 45, Rotation2d.fromDegrees(curPose.rotation().degrees() + log_chassis.omega_dps / 20))
+            if self.robot.poseEstimator.poseIsOffField(self.robot.poseEstimator.curEstPose) or self.in_reef(self.robot.poseEstimator.curEstPose.translation()):
+                self.robot.poseEstimator.curEstPose = curPose
+            self.robot.poseEstimator.set_yaw(self.robot.poseEstimator.curEstPose.rotation().degrees() + log_chassis.omega_dps / 20)
+        else:
+            for idx, module in enumerate(self.robot.poseEstimator.modules):
+                SmartDashboard.putNumber("module state " + str(idx + 1), module_states[idx].speed)
+                module.set_desired_state(module_states[idx], is_open_loop)
 
         # self.curPose = Pose2d(self.curPose.X() + min(translation.X(), (3.0 * translation.X()) / abs(translation.X()) if translation.X() != 0 else 3.0), self.curPose.Y() + min(translation.Y(), (3.0 * translation.Y()) / abs(translation.Y()) if translation.Y() != 0 else 3.0), Rotation2d.fromDegrees(0))
         # print(self.curPose)
         # pose = self.robot.poseEstimator.field.getObject("current pose")
 
         # pose.setPose(self.curPose)
-
+    def in_reef(self, pose: Translation2d):
+            hexagon_points = [(self.reefForInReef[idx].X(), self.reefForInReef[idx].Y()) for idx in range(6)]
+            hexagon = Polygon(hexagon_points)
+            point = Point(pose.X(), pose.Y())
+            return hexagon.contains(point)
 
     def drive_with_pid(self, translation: Translation2d, target_angle):
         pid_output = self.angle_pid.calculate(self.robot.poseEstimator.getYaw().degrees(), target_angle)  # type: ignore
@@ -185,6 +226,8 @@ class Drivetrain(Subsystem):
             if self.robot.score_intent and self.robot.running_pid_lineup:
                 # self.at_scoring_position_drivetrain.appendleft(True)
                 self.robot.at_scoring_position = True
+            if self.robot.is_intaking and self.robot.running_pid_lineup:
+                self.robot.at_intake_position = True
             # self.stop()
             # Optionally, stop the drivetrain if at setpoint
         # else:
@@ -200,6 +243,32 @@ class Drivetrain(Subsystem):
         SmartDashboard.putNumber("vx", vx)
         SmartDashboard.putNumber("vy", vy)
         SmartDashboard.putNumber("omega", omega)
+    def go_to_pose_angle_bisector(self, final_pose : Pose2d):
+        # ASSUMING FINAL POSE IS A POSE ON REEF FOR L2-L4 W/ END EFFECTOR ON REEF
+        cur_pose = self.robot.poseEstimator.curEstPose
+        dist_out = 1.0
+        final_rot_out = degreesToRadians(final_pose.rotation().degrees() - 90)
+        rot_proportion = dist_out / cur_pose.translation().distance(final_pose.translation())
+        rot_diff = final_pose.rotation() - cur_pose.rotation()
+        inter_pose = Pose2d(final_pose.X() + math.cos(final_rot_out), final_pose.Y() + math.sin(final_rot_out), final_pose.rotation() + rot_diff * rot_proportion)
+
+        cur_speeds = const.SWERVE_KINEMATICS.toChassisSpeeds(self.robot.poseEstimator.get_module_states())
+        veloctiy_vector = Translation2d(cur_pose.X() + cur_speeds.vx, cur_pose.Y() + cur_speeds.vy)
+        velocity_delta = veloctiy_vector - cur_pose.translation()
+        inter_pose_delta = inter_pose.translation() - cur_pose.translation()
+
+        velocity_angle = Rotation2d(math.atan2(velocity_delta.y, velocity_delta.x))
+        inter_pose_angle = Rotation2d(math.atan2(inter_pose_delta.y, inter_pose_delta.x))
+
+        # ANGLE BISECTOR BY CONVERTING TO UNIT VECTORS
+        x_part = velocity_angle.cos() + inter_pose_angle.cos()
+        y_part = velocity_angle.sin() + inter_pose_angle.sin()
+        # ANGLES ARE OPPOSITES
+        if math.isclose(x_part, 0.0, abs_tol=1e-8) and math.isclose(y_part, 0.0, abs_tol=1e-8):
+            bisector_angle = velocity_angle.rotateBy(Rotation2d.fromDegrees(90))
+        else:
+            bisector_angle = Rotation2d(math.atan2(x_part, y_part))
+        drive_output = self.xy_controller.calculate()
 
     def go_to_pose_profiled_pid_ghost(self, final_target_pose : Pose2d, feedforward_x=0.0, feedforward_y=0.0, feedfoward_theta=0.0):
         current_pose = self.robot.poseEstimator.curEstPose

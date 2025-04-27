@@ -149,45 +149,53 @@ class OI:
                     else:
                         self.robot.drivetrain.go_to_pose_profiled_pid(self.robot.final_lineup_pose)
                 else:
-                    if abs(rotate) >= 0.02:
-                        self.cardinal_directing = False
-                        self.find_heading = True
-                        self.wait_one_tick = False
-                        self.tick_count = 0
+                    if self.robot.isSimulation():
                         self.robot.drivetrain.drive(
-                            Translation2d(forward_back, left_right)
-                            * const.SWERVE_MAX_SPEED,
-                            rotate * 4.25,
-                            True,
-                            False,
-                        )
-                        self.robot_oriented_angle = (
-                            self.robot.poseEstimator.getYaw().degrees()
-                        )
+                                Translation2d(forward_back, left_right)
+                                * const.SWERVE_MAX_SPEED,
+                                rotate * 4.25,
+                                True,
+                                False)
                     else:
-                        # if not self.cardinal_directing:
-                        #     if self.find_heading:
-                        #         if self.wait_one_tick:
-                        #             self.robot_oriented_angle = (
-                        #                 self.robot.poseEstimator.getYaw().degrees()
-                        #             )
-                        #             self.find_heading = False
-                        #         else:
-                        #             self.wait_one_tick = True
-                        if not self.cardinal_directing:
-                            if self.find_heading:
-                                if self.tick_count <= 5:
-                                    self.robot_oriented_angle = (
-                                        self.robot.poseEstimator.getYaw().degrees()
-                                    )
-                                    self.tick_count += 1
-                                else:
-                                    self.find_heading = False
-                        self.robot.drivetrain.drive_with_pid(
-                            Translation2d(forward_back, left_right)
-                            * const.SWERVE_MAX_SPEED,
-                            self.robot_oriented_angle,
-                        )
+                        if abs(rotate) >= 0.02:
+                            self.cardinal_directing = False
+                            self.find_heading = True
+                            self.wait_one_tick = False
+                            self.tick_count = 0
+                            self.robot.drivetrain.drive(
+                                Translation2d(forward_back, left_right)
+                                * const.SWERVE_MAX_SPEED,
+                                rotate * 4.25,
+                                True,
+                                False,
+                            )
+                            self.robot_oriented_angle = (
+                                self.robot.poseEstimator.getYaw().degrees()
+                            )
+                        else:
+                            # if not self.cardinal_directing:
+                            #     if self.find_heading:
+                            #         if self.wait_one_tick:
+                            #             self.robot_oriented_angle = (
+                            #                 self.robot.poseEstimator.getYaw().degrees()
+                            #             )
+                            #             self.find_heading = False
+                            #         else:
+                            #             self.wait_one_tick = True
+                            if not self.cardinal_directing:
+                                if self.find_heading:
+                                    if self.tick_count <= 5:
+                                        self.robot_oriented_angle = (
+                                            self.robot.poseEstimator.getYaw().degrees()
+                                        )
+                                        self.tick_count += 1
+                                    else:
+                                        self.find_heading = False
+                            self.robot.drivetrain.drive_with_pid(
+                                Translation2d(forward_back, left_right)
+                                * const.SWERVE_MAX_SPEED,
+                                self.robot_oriented_angle,
+                            )
 
         @self.driver1.X.whenPressed  # Manual elevator raise
         def _():
@@ -234,6 +242,7 @@ class OI:
             self.robot.funnel_intake.is_intaking = True
             self.robot.end_effector.is_intaking = True
             self.robot.at_scoring_position = False
+            robot.at_intake_position = False
             self.robot.score_intent = False
             self.robot.score_piece = False
 
@@ -467,6 +476,9 @@ class OI:
         # def _():
         #     for module in self.robot.poseEstimator.modules:
         #         module.drive_motor.setNeutralMode(NeutralMode.Brake)
+        @self.driver1.A.whenPressed
+        def _():
+            self.robot.sim_coral_scored.clear()
 
 
     def log(self):

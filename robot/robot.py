@@ -33,8 +33,10 @@ import math
 import ntcore
 import subsystems.climber
 import subsystems.drivetrain
+from wpimath.units import inchesToMeters
 
 from wpimath.estimator import SwerveDrive4PoseEstimator
+
 
 from phoenix6 import controls
 
@@ -59,7 +61,7 @@ from pathplannerlib.auto import AutoBuilder, PathPlannerAuto, NamedCommands, Fol
 from pathplannerlib.config import PIDConstants, RobotConfig
 from pathplannerlib.controller import PPHolonomicDriveController
 
-from wpimath.geometry import Rotation2d, Pose2d, Translation2d
+from wpimath.geometry import Rotation2d, Pose2d, Translation2d, Pose3d, Rotation3d, Transform3d
 from wpimath.units import degreesToRadians
 
 from field_const import FieldConstants
@@ -114,10 +116,13 @@ class Robot(CoroutineRobot):
                     break
             # time.sleep(1.0) # Give enough time to make sure the FMS has told the Driver Station the Alliance 
         self.fieldConstants = FieldConstants()
-        
+        self.fieldConstants.shouldFlip = DriverStation.getAlliance() == DriverStation.Alliance.kRed
         # Match Stuff
         self.match_time = -1
+
+        ## SIMMING STUFF ##
         # const.IS_SIMULATION = self.isSimulation()
+        self.sim_coral_scored = []
 
         self.has_coral = False
 
@@ -127,9 +132,9 @@ class Robot(CoroutineRobot):
         self.previously_scored = True
         
         # subsystems
-        self.drivetrain = subsystems.drivetrain.Drivetrain(self)
         self.leds = subsystems.leds.LEDs(self)
         self.poseEstimator = subsystems.poseEstimator.PoseEstimator(self)
+        self.drivetrain = subsystems.drivetrain.Drivetrain(self)
         self.funnel_intake = subsystems.funnel_intake.FunnelIntake(self)
         self.elevator = subsystems.elevator.Elevator(self)
         self.end_effector = subsystems.end_effector.EndEffector(self)
@@ -161,6 +166,7 @@ class Robot(CoroutineRobot):
 		### STATE MACHINE ###
         self.score_state = RobotScoringPositions.L4_Scoring # defaulting to L4
         self.at_scoring_position = False
+        self.at_intake_position = False
 
         self.score_piece = False
         self.mechanisms_at_default = True
@@ -517,8 +523,54 @@ class Robot(CoroutineRobot):
         wpilib.SmartDashboard.putBoolean("Score piece", self.score_piece)
         wpilib.SmartDashboard.putBoolean("Mechanisms at default", self.mechanisms_at_default)
         wpilib.SmartDashboard.putBoolean("At scoring position", self.at_scoring_position)
+        wpilib.SmartDashboard.putBoolean("at intake position", self.at_intake_position)
         wpilib.SmartDashboard.putBoolean("OI Score Intent", self.score_intent)
         wpilib.SmartDashboard.putBoolean("Has Coral", self.has_coral)
+        if self.isSimulation():
+            wpilib.SmartDashboard.putNumberArray("RobotPose", [self.poseEstimator.curEstPose.X(), self.poseEstimator.curEstPose.Y(), self.poseEstimator.curEstPose.rotation().degrees()])
+            #elevator stage 3
+            wpilib.SmartDashboard.putNumberArray("ZeroedComponentPoses/Pose0", [0.0, 0.0, inchesToMeters(self.elevator.command_height) * 0.87, 0.0, 0.0, 0.0, 0.0])
+            #elevator stage 2
+            wpilib.SmartDashboard.putNumberArray("ZeroedComponentPoses/Pose1", [0.0, 0.0, inchesToMeters(self.elevator.command_height) * 0.87 / 2, 0.0, 0.0, 0.0, 0.0])
+            #end effector
+            wpilib.SmartDashboard.putNumberArray("ZeroedComponentPoses/Pose2", [0.0, -1 * inchesToMeters(self.end_effector.command_position) / math.sqrt(2), inchesToMeters(self.elevator.command_height) * 0.87 * 4 / 3 + inchesToMeters(self.end_effector.command_position) / math.sqrt(2), 0.0, 0.0, 0.0, 0.0])
+            # new_pose = Pose3d(old_pose.translation(), old_rotation)
+            for face in range(6):
+                for level in range(4):
+                    if level == 0:
+                        amount_in = -0.5
+                        pitch_rotate = 15
+                        amount_up = 0.0
+                    elif level == 1:
+                        amount_in = -4
+                        pitch_rotate = 0
+                        amount_up = 0.0
+                    elif level == 2:
+                        amount_in = -4
+                        pitch_rotate = 0
+                        amount_up = 0.0
+                    elif level == 3:
+                        amount_in = -4
+                        pitch_rotate = 25
+                        amount_up = 3.25
+                    pose_right : Pose3d = self.fieldConstants.Reef.branchPositions[face * 2][level].transformBy(Transform3d(Pose3d(),Pose3d(inchesToMeters(amount_in), 0.0, inchesToMeters(amount_up), Rotation3d(0.0, degreesToRadians(pitch_rotate), 0.0))))
+                    quat_right = pose_right.rotation().getQuaternion()
+                    pose_left : Pose3d = self.fieldConstants.Reef.branchPositions[face * 2 + 1][level].transformBy(Transform3d(Pose3d(),Pose3d(inchesToMeters(amount_in), 0.0, inchesToMeters(amount_up), Rotation3d(0.0, degreesToRadians(pitch_rotate), 0.0))))
+                    quat_left = pose_left.rotation().getQuaternion()
+                    if [face + 1, 4 - level, True] not in self.sim_coral_scored:
+                        appending_pose_right = []
+                    else:
+                        appending_pose_right = [pose_right.X(), pose_right.Y(), pose_right.Z(), quat_right.W(), quat_right.X(), quat_right.Y(), quat_right.Z()]
+                    if [face + 1, 4 - level, False] not in self.sim_coral_scored:
+                        appending_pose_left = []
+                    else:
+                        appending_pose_left = [pose_left.X(), pose_left.Y(), pose_left.Z(), quat_left.W(), quat_left.X(), quat_left.Y(), quat_left.Z()]
+                    wpilib.SmartDashboard.putNumberArray("coral right " + str(face + 1) + str(4 -level), appending_pose_right)
+                    wpilib.SmartDashboard.putNumberArray("coral left " + str(face + 1) + str(4 - level), appending_pose_left)
+        
+            # wpilib.SmartDashboard.putNumberArray("FinalComponentPoses/Pose3", [0.0,0.0, inchesToMeters(elevator_height) * 1.5, pose3quat.X(), pose3quat.Y(), pose3quat.Z(), pose3quat.W()])
+            # wpilib.SmartDashboard.putNumberArray("FinalComponentPoses/Pose4", [0.0, 0.0, inchesToMeters(elevator_height) / 2, 0.0, 0.0, 0.0, 0.0])
+            # wpilib.SmartDashboard.putNumberArray("FinalComponentPoses/Pose5", [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
 
         for s in self.subsystems:
             s.log()

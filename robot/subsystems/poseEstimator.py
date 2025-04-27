@@ -258,8 +258,10 @@ class PoseEstimator(Subsystem):
         self.set_yaw(0)
 
     def set_yaw(self, yaw):
-        SmartDashboard.putNumber("Gyro/Set Yaw", yaw)
+        if self.robot.isSimulation():
+            self.poseEstSingleTag.resetPose(Pose2d(self.curEstPose.X(), self.curEstPose.Y(), Rotation2d.fromDegrees(yaw)))
         self.gyro.set_yaw(yaw)
+        SmartDashboard.putNumber("Gyro/Set Yaw", yaw)
 
     def getYaw(self):
         if const.SWERVE_INVERT_GYRO:
@@ -531,7 +533,7 @@ class PoseEstimator(Subsystem):
             elif algae_height_at_closest_side == 2:
                 self.robot.score_state = RobotScoringPositions.Descore_Algae_L2
 
-        if (self.robot.score_intent) and (self.robot.previous_right_branch != self.robot.right_branch):
+        if (self.robot.score_intent) and (self.robot.previous_right_branch != self.robot.right_branch) and not self.robot.in_autonomous_mode:
             self.robot.previous_right_branch = self.robot.right_branch
             self.robot.final_lineup_pose = self.get_path_to_reef(
                     True, # change to true if wanting to use calibrated field
@@ -540,7 +542,7 @@ class PoseEstimator(Subsystem):
                     do_manip_offset=True,
                 )
         
-        if (self.robot.is_intaking) and (self.robot.previous_position_on_source != self.robot.position_on_source):
+        if (self.robot.is_intaking) and (self.robot.previous_position_on_source != self.robot.position_on_source) and not self.robot.in_autonomous_mode:
             self.robot.previous_position_on_source = self.robot.position_on_source
             self.robot.final_lineup_pose = self.get_path_to_source(
                 self.robot.poseEstimator.calculate_closest_source()[0], 
@@ -651,17 +653,18 @@ class PoseEstimator(Subsystem):
 
 
         # ALWAYS USING SINGLE
-        if self.robot.running_pid_lineup or True:
-            if self.useSingleTag() or self.robot.is_intaking:
-                # (((self.robot.final_lineup_pose.translation() - self.robot.fieldConstants.flip_Translation2d(self.robot.fieldConstants.CoralStation.rightCenterFace.translation())).norm() < 0.75) or ((self.robot.final_lineup_pose.translation() - self.robot.fieldConstants.flip_Translation2d(self.robot.fieldConstants.CoralStation.leftCenterFace.translation())).norm() < 0.75))
-                self.curEstPose = self.curEstPoseSingleTag
-                self.single_tag = True
+        if not self.robot.isSimulation():
+            if self.robot.running_pid_lineup or True:
+                if self.useSingleTag() or self.robot.is_intaking:
+                    # (((self.robot.final_lineup_pose.translation() - self.robot.fieldConstants.flip_Translation2d(self.robot.fieldConstants.CoralStation.rightCenterFace.translation())).norm() < 0.75) or ((self.robot.final_lineup_pose.translation() - self.robot.fieldConstants.flip_Translation2d(self.robot.fieldConstants.CoralStation.leftCenterFace.translation())).norm() < 0.75))
+                    self.curEstPose = self.curEstPoseSingleTag
+                    self.single_tag = True
+                else:
+                    self.curEstPose = self.curEstPoseGlobal
+                    self.single_tag = False
             else:
                 self.curEstPose = self.curEstPoseGlobal
                 self.single_tag = False
-        else:
-            self.curEstPose = self.curEstPoseGlobal
-            self.single_tag = False
 
         # if (self.robot.leds.mode == self.robot.leds.MODE_LOST_ODOMETRY) or (
         #     self.robot.leds.mode == self.robot.leds.MODE_ODOMETRY

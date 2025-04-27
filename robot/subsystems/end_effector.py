@@ -157,9 +157,12 @@ class EndEffector(Subsystem):
         self.end_effector_motor.set_control(self.request.with_position(rotation))
 
     def get_position(self):
-        rotations = self.end_effector_motor.get_position().value
-        height = rotations / self.gear_ratio * math.pi * self.sprocket_diameter
-        return height
+        if self.robot.isSimulation():
+            return self.command_position
+        else:
+            rotations = self.end_effector_motor.get_position().value
+            height = rotations / self.gear_ratio * math.pi * self.sprocket_diameter
+            return height
 
     def set_outtake_motor_speed(self, speed):
         self.commanded_outtake_motor_speed = speed
@@ -188,12 +191,16 @@ class EndEffector(Subsystem):
                 self.robot.raise_elevator_slightly_for_L1 = True
                 self.robot.strafe_for_L1 = True
             self.robot.has_coral = False
+            #face, level, right_branch
+            closest_face = self.robot.poseEstimator.calculate_closest_reef_tag()[1]
+            if [closest_face, self.robot.score_state.number, self.robot.right_branch] not in self.robot.sim_coral_scored:
+                self.robot.sim_coral_scored.append([closest_face, self.robot.score_state.number, self.robot.right_branch])
         elif self.is_intaking:
             if self.robot.elevator.get_height() <= RobotScoringPositions.min_elevator_height_to_bring_in_end_effector:
                 self.set_end_effector_position(RobotScoringPositions.end_effector_intake_position)
                 self.set_outtake_motor_speed(15.0) # default outtake speed
                 self.piece_detected.appendleft(self.canrange_end_effector.get_is_detected().value)
-                if all(self.piece_detected):
+                if (all(self.piece_detected) and not self.robot.isSimulation()) or (self.robot.isSimulation() and self.robot.at_intake_position):
                     self.robot.mechanisms_at_default = True
                     self.is_intaking = False
                     self.robot.funnel_intake.is_intaking = False

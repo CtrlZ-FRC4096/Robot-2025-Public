@@ -94,9 +94,12 @@ class Elevator(Subsystem):
         pass
 
     def get_height(self):
-        rotations = self.elevator_motor_1.get_position().value
-        height = rotations / self.gear_ratio * math.pi * self.sprocket_diameter * 3  # 3 is the mechanical advantage of the elevator
-        return height
+        if self.robot.isSimulation():
+            return self.command_height
+        else:
+            rotations = self.elevator_motor_1.get_position().value
+            height = rotations / self.gear_ratio * math.pi * self.sprocket_diameter * 3  # 3 is the mechanical advantage of the elevator
+            return height
 
     def set_elevator_height(self, height):
         if abs(self.get_height() - height) <= 0.02:
@@ -115,7 +118,7 @@ class Elevator(Subsystem):
             ## Stop the motors and set the position to 0 or the maximum height
             ## Hopefully this prevents the elevator from breaking
         if self.robot.score_intent:
-            if (self.robot.poseEstimator.curEstPoseSingleTag.translation() - self.robot.final_lineup_pose.translation()).norm() < RobotScoringPositions.elevator_raise_threshold and (self.robot.end_effector.get_position() >= RobotScoringPositions.min_end_effector_position_to_move_elevator_up):
+            if (self.robot.poseEstimator.curEstPose.translation() - self.robot.final_lineup_pose.translation()).norm() < RobotScoringPositions.elevator_raise_threshold and (self.robot.end_effector.get_position() >= RobotScoringPositions.min_end_effector_position_to_move_elevator_up):
                 # if we are close to the scoring position and there are no obstacles, begin raising the elevator
                 self.in_proximity_to_begin_raising_elevator = True # just for logging purposes
 

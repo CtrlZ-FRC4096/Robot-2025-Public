@@ -113,7 +113,7 @@ class FieldConstants:
 
 
     class ReefHeight(Enum):
-        L4 = (inchesToMeters(72), -90)
+        L4 = (inchesToMeters(67), -90)
         L3 = (inchesToMeters(47.625), -35)
         L2 = (inchesToMeters(31.875), -35)
         L1 = (inchesToMeters(18), 0)
@@ -143,7 +143,7 @@ class FieldConstants:
             fillRight = []
             fillLeft = []
             for level in [
-                (inchesToMeters(72), -90),
+                (inchesToMeters(67), -90),
                 (inchesToMeters(47.625), -35),
                 (inchesToMeters(31.875), -35),
                 (inchesToMeters(18), 0),
