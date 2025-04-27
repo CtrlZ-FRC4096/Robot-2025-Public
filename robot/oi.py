@@ -242,7 +242,7 @@ class OI:
             self.robot.funnel_intake.is_intaking = True
             self.robot.end_effector.is_intaking = True
             self.robot.at_scoring_position = False
-            robot.at_intake_position = False
+            self.robot.at_intake_position = False
             self.robot.score_intent = False
             self.robot.score_piece = False
 
@@ -265,6 +265,7 @@ class OI:
             self.robot.strafe_for_L1 = False
             self.robot.mechanisms_at_default = False
             self.robot.at_scoring_position = False
+            self.robot.at_intake_position = False
             self.robot.score_piece = False
             self.robot.funnel_intake.is_intaking = True
             self.robot.end_effector.is_intaking = True
@@ -292,6 +293,7 @@ class OI:
             self.robot.end_effector.stop()
             self.robot.raise_elevator_slightly_for_L1 = False
             self.robot.at_scoring_position = False
+            self.robot.at_intake_position = False
             self.robot.strafe_for_L1 = False
             self.robot.score_piece = False
             if self.robot.score_state.number == 1 and not self.robot.score_with_strafing:

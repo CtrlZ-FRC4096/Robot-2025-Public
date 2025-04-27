@@ -526,6 +526,7 @@ class Robot(CoroutineRobot):
         wpilib.SmartDashboard.putBoolean("at intake position", self.at_intake_position)
         wpilib.SmartDashboard.putBoolean("OI Score Intent", self.score_intent)
         wpilib.SmartDashboard.putBoolean("Has Coral", self.has_coral)
+        wpilib.SmartDashboard.putNumberArray("empty pose", [0, 0, 0])
         if self.isSimulation():
             wpilib.SmartDashboard.putNumberArray("RobotPose", [self.poseEstimator.curEstPose.X(), self.poseEstimator.curEstPose.Y(), self.poseEstimator.curEstPose.rotation().degrees()])
             #elevator stage 3
@@ -534,6 +535,12 @@ class Robot(CoroutineRobot):
             wpilib.SmartDashboard.putNumberArray("ZeroedComponentPoses/Pose1", [0.0, 0.0, inchesToMeters(self.elevator.command_height) * 0.87 / 2, 0.0, 0.0, 0.0, 0.0])
             #end effector
             wpilib.SmartDashboard.putNumberArray("ZeroedComponentPoses/Pose2", [0.0, -1 * inchesToMeters(self.end_effector.command_position) / math.sqrt(2), inchesToMeters(self.elevator.command_height) * 0.87 * 4 / 3 + inchesToMeters(self.end_effector.command_position) / math.sqrt(2), 0.0, 0.0, 0.0, 0.0])
+            if self.has_coral:
+                #la coral
+                coral_pose = [0.0, -1 * inchesToMeters(self.end_effector.command_position) / math.sqrt(2), inchesToMeters(self.elevator.command_height) * 0.87 * 4 / 3 + inchesToMeters(self.end_effector.command_position) / math.sqrt(2), 0.0, 0.0, 0.0, 0.0]
+            else:
+                coral_pose = []
+            wpilib.SmartDashboard.putNumberArray("ZeroedComponentPoses/Pose3", coral_pose)
             # new_pose = Pose3d(old_pose.translation(), old_rotation)
             for face in range(6):
                 for level in range(4):
