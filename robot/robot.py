@@ -104,6 +104,8 @@ class Robot(CoroutineRobot):
         
         ### ARE WE USING AN FMS? (EX: IF WE ARE AT COMPETITION) ###
         self.using_FMS = False
+        ## ARE WE RUNNING AN AUTO? (DO WE NEED TO WAIT TO SELECT AN AUTO BEFORE INIT)
+        self.using_auto = False
 
         # DRIVERSTATION #
         self.driverstation = wpilib.DriverStation
@@ -224,11 +226,43 @@ class Robot(CoroutineRobot):
 		# PATH CONSTRAINTS
         self.path_constraints = PathConstraints(4.0, 4.0, degreesToRadians(540), degreesToRadians(540))
 
-        # self.flip_one_piece_f4(False)
+        self.auto_chooser_has_changed = False
+        self.side_chooser_changed = False
         self.autoroutines = autoroutines.AutoRoutines(self)
+        self.auto_side_chooser = wpilib.SendableChooser()
+        self.auto_side_chooser.addOption("Right Side", False)
+        self.auto_side_chooser.addOption("Left Side", True)
+        self.auto_side_chooser.setDefaultOption("None (Choose Side)", None)
+        self.auto_side_chooser.onChange(self.auto_side_chooser_changed)
+        wpilib.SmartDashboard.putData("Auto Side Chooser", self.auto_side_chooser)
+        self.auto_chooser = wpilib.SendableChooser()
+        self.auto_chooser.setDefaultOption("None (Choose Auto)", None)
+        self.auto_chooser.addOption("2 Piece Delayed", 1)
+        self.auto_chooser.addOption("3 Piece to Face 5/6", 2)
+        self.auto_chooser.addOption("3 Piece to Face 5/1", 3)
+        self.auto_chooser.addOption("3 Piece to Face 4/6", 4)
+        self.auto_chooser.onChange(self.auto_chooser_changed)
+        wpilib.SmartDashboard.putData("Auto Chooser", self.auto_chooser)
+        if self.using_auto:
+            while True:
+                if self.auto_side_chooser.getSelected() != None and self.auto_chooser.getSelected() != None and self.auto_chooser_has_changed and self.side_chooser_changed:
+                    break
+                yield from self.wait(0.5)
+
         # NOTE: For TUSH PUSH AUTO, RUN FLIP 3 PIECE TO F5
-        self.flip_3_piece_to_f5(False)
-        self.auto = self.autoroutines.three_piece_to_f5()
+        if self.auto_chooser.getSelected() == 1:
+            self.flip_2_piece_delay_auto(self.auto_side_chooser.getSelected())
+            self.auto = self.autoroutines.two_piece_delayed()
+        elif self.auto_chooser.getSelected() == 2:
+            self.flip_3_piece_to_f5(self.auto_side_chooser.getSelected())
+            self.auto = self.autoroutines.three_piece_to_f5()
+        elif self.auto_chooser.getSelected() == 3:
+            self.flip_3_piece_f1(self.auto_side_chooser.getSelected())
+            self.auto = self.autoroutines.three_piece_f1()
+        elif self.auto_chooser.getSelected() == 4:
+            self.flip_3_piece_auto(self.auto_side_chooser.getSelected())
+            self.auto = self.autoroutines.three_piece_auto()
+
 
         DataLogManager.start()
         DriverStation.startDataLog(DataLogManager.getLog())
@@ -271,6 +305,11 @@ class Robot(CoroutineRobot):
             yield
             self.scheduler.run()
 
+    def auto_side_chooser_changed(self, _):
+        self.side_chooser_changed = True
+
+    def auto_chooser_changed(self, _):
+        self.auto_chooser_has_changed = True
 
     def flip_X_coord(self, x):
         return self.fieldConstants.fieldLength - x
@@ -395,6 +434,8 @@ class Robot(CoroutineRobot):
             self.score_2_right_branch = True
             self.score_3_face = 1
             self.score_3_right_branch = False
+            self.score_4_face = 6
+            self.score_4_right_branch = False
             self.auto_position_source = 3
             self.poseEstimator.poseEst.resetPose(self.fieldConstants.flip_Pose2d(Pose2d(7.167, 1.372, Rotation2d.fromDegrees(270))))
             self.poseEstimator.poseEstSingleTag.resetPose(self.fieldConstants.flip_Pose2d(Pose2d(7.167, 1.372, Rotation2d.fromDegrees(270))))
@@ -406,6 +447,8 @@ class Robot(CoroutineRobot):
             self.score_2_right_branch = False
             self.score_3_face = 1
             self.score_3_right_branch = True
+            self.score_4_face = 2
+            self.score_4_right_branch = True
             self.auto_position_source = 3
             self.poseEstimator.poseEst.resetPose(self.fieldConstants.flip_Pose2d(Pose2d(7.167, self.fieldConstants.fieldWidth - 1.372, Rotation2d.fromDegrees(270))))
             self.poseEstimator.poseEstSingleTag.resetPose(self.fieldConstants.flip_Pose2d(Pose2d(7.167, self.fieldConstants.fieldWidth - 1.372, Rotation2d.fromDegrees(270))))
@@ -470,6 +513,12 @@ class Robot(CoroutineRobot):
             while not self.driverstation.isFMSAttached():
                 yield
             yield from self.wait(2.0)
+        if self.using_auto:
+            while True:
+                if self.auto_side_chooser.getSelected() != None and self.auto_chooser.getSelected() != None and self.auto_chooser_has_changed and self.side_chooser_changed:
+                    break
+                yield from self.wait(2.0)
+
         self.scheduler.cancelAll()
         # self.drivetrain.gyro_offset = self.drivetrain.gyro.get_roll()
 
