@@ -142,12 +142,16 @@ class OI:
                         if self.robot.is_intaking:
                             forward_back *= 0.6
                             left_right *= 0.6
+                            self.robot.drivetrain.go_to_pose_profiled_pid(self.robot.final_lineup_pose, forward_back, left_right, rotate)
                         else:
                             forward_back *= 0.4
                             left_right *= 0.4
-                        self.robot.drivetrain.go_to_pose_profiled_pid(self.robot.final_lineup_pose, forward_back, left_right, rotate)
+                            self.robot.drivetrain.go_to_pose_angle_bisector(self.robot.final_lineup_pose, forward_back, left_right, rotate)
                     else:
-                        self.robot.drivetrain.go_to_pose_profiled_pid(self.robot.final_lineup_pose)
+                        if self.robot.is_intaking:
+                            self.robot.drivetrain.go_to_pose_profiled_pid(self.robot.final_lineup_pose)
+                        else:
+                            self.robot.drivetrain.go_to_pose_angle_bisector(self.robot.final_lineup_pose)
                 else:
                     if self.robot.isSimulation():
                         self.robot.drivetrain.drive(
@@ -259,6 +263,7 @@ class OI:
             self.robot.final_lineup_pose = self.robot.poseEstimator.get_path_to_source(self.robot.poseEstimator.calculate_closest_source()[0], self.robot.position_on_source)
             self.robot.score_intent = False
             self.robot.running_pid_lineup = True
+            self.robot.drivetrain.at_inter_pose = False
             self.robot.is_intaking = True
             self.robot.descoring_algae = False
             self.robot.raise_elevator_slightly_for_L1 = False
@@ -278,6 +283,7 @@ class OI:
             self.robot.leds.mode = self.robot.leds.MODE_ODOMETRY
             self.robot.mechanisms_at_default = True
             self.robot.running_pid_lineup = False
+            self.robot.drivetrain.at_inter_pose = False
             self.robot.score_intent = False
             self.robot_oriented_angle = self.robot.poseEstimator.getYaw().degrees()
             self.robot.drivetrain.stop()
@@ -307,6 +313,7 @@ class OI:
                 )
             self.robot.mechanisms_at_default = False
             self.robot.running_pid_lineup = True
+            self.robot.drivetrain.at_inter_pose = False
             self.robot.score_intent = True
 
         @self.driver1.RIGHT_TRIGGER_AS_BUTTON.whenReleased  # stop profiled PID
@@ -316,6 +323,7 @@ class OI:
             self.robot.strafe_for_L1 = False
             self.robot.mechanisms_at_default = True
             self.robot.running_pid_lineup = False
+            self.robot.drivetrain.at_inter_pose = False
             self.robot.score_intent = False
             self.robot.manual_scoring = False
             self.robot.at_scoring_position = False
@@ -383,6 +391,7 @@ class OI:
             self.robot.score_intent = False
             self.robot.manual_scoring = False
             self.robot.running_pid_lineup = False
+            self.robot.drivetrain.at_inter_pose = False
             self.robot.funnel_intake.is_intaking = False
             self.robot.end_effector.is_intaking = False
             self.robot.descoring_algae = False
@@ -422,6 +431,7 @@ class OI:
             self.robot.score_intent = False
             self.robot.manual_scoring = False
             self.robot.running_pid_lineup = False
+            self.robot.drivetrain.at_inter_pose = False
             self.robot.funnel_intake.is_intaking = False
             self.robot.end_effector.is_intaking = False
             self.robot.manual_scoring = True
@@ -441,6 +451,7 @@ class OI:
             self.robot.score_intent = False
             self.robot.manual_scoring = False
             self.robot.running_pid_lineup = False
+            self.robot.drivetrain.at_inter_pose = False
             self.robot.funnel_intake.is_intaking = False
             self.robot.end_effector.is_intaking = False
             self.robot.manual_scoring = False

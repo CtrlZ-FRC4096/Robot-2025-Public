@@ -226,6 +226,7 @@ class EndEffector(Subsystem):
                 self.robot.strafe_for_L1 = False
                 self.robot.manual_scoring = False
                 self.robot.running_pid_lineup = False
+                self.robot.drivetrain.at_inter_pose = False
                 self.robot.score_intent = False
                 self.robot.at_scoring_position = False
                 self.robot.elevator.set_elevator_height(RobotScoringPositions.elevator_climb_height)

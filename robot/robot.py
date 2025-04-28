@@ -500,6 +500,7 @@ class Robot(CoroutineRobot):
         self.funnel_intake.is_intaking = False
         self.end_effector.is_intaking = False
         self.running_pid_lineup = False
+        self.drivetrain.at_inter_pose = False
         self.score_intent = False
         self.in_autonomous_mode = False
         self.funnel_intake.piece_passing_through = False

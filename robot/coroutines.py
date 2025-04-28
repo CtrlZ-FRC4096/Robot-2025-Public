@@ -59,6 +59,7 @@ class Coroutines:
             robot.mechanisms_at_default = True
             robot.score_piece = False
             robot.running_pid_lineup = False
+            robot.drivetrain.at_inter_pose = False
             robot.score_intent = False
             robot.score_piece = False
             robot.at_scoring_position = False
@@ -77,6 +78,7 @@ class Coroutines:
             robot.score_piece = False
             robot.running_pid_lineup = False
             robot.score_intent = False
+            robot.drivetrain.at_inter_pose = False
             robot.at_scoring_position = False
             robot.at_intake_position = False
             robot.end_effector.stop()
@@ -92,6 +94,7 @@ class Coroutines:
             robot.mechanisms_at_default = True
             robot.score_piece = False
             robot.running_pid_lineup = False
+            robot.drivetrain.at_inter_pose = False
             robot.score_intent = False
             robot.at_scoring_position = False
             robot.at_intake_position = False
@@ -108,6 +111,7 @@ class Coroutines:
             robot.mechanisms_at_default = True
             robot.score_piece = False
             robot.running_pid_lineup = False
+            robot.drivetrain.at_inter_pose = False
             robot.score_intent = False
             robot.at_scoring_position = False
             robot.at_intake_position = False
@@ -154,6 +158,7 @@ class Coroutines:
             robot.right_branch = robot.score_1_right_branch
             robot.mechanisms_at_default = False
             robot.running_pid_lineup = True
+            robot.drivetrain.at_inter_pose = False
             robot.score_intent = True
             while robot.has_coral:
                 yield
@@ -170,6 +175,7 @@ class Coroutines:
             robot.right_branch = robot.score_2_right_branch
             robot.score_state = RobotScoringPositions.L4_Scoring
             robot.running_pid_lineup = True
+            robot.drivetrain.at_inter_pose = False
             while not robot.has_coral:
                 yield # wait til piece hits EE
             robot.funnel_intake.is_intaking = False
@@ -194,6 +200,7 @@ class Coroutines:
             )
             robot.score_state = RobotScoringPositions.L4_Scoring
             robot.running_pid_lineup = True
+            robot.drivetrain.at_inter_pose = False
             robot.right_branch = robot.score_3_right_branch
             while not robot.has_coral:
                 yield # wait til piece hits EE
@@ -218,6 +225,7 @@ class Coroutines:
             )
             robot.score_state = RobotScoringPositions.L4_Scoring
             robot.running_pid_lineup = True
+            robot.drivetrain.at_inter_pose = False
             robot.right_branch = robot.score_4_right_branch
             while not robot.has_coral:
                 yield # wait til piece hits EE
@@ -247,6 +255,7 @@ class Coroutines:
             robot.funnel_intake.is_intaking = True
             robot.end_effector.is_intaking = True
             robot.running_pid_lineup = True
+            robot.drivetrain.at_inter_pose = False
             robot.score_intent = False
             while True:
                 yield
@@ -271,6 +280,7 @@ class Coroutines:
             robot.funnel_intake.is_intaking = True
             robot.end_effector.is_intaking = True
             robot.running_pid_lineup = True
+            robot.drivetrain.at_inter_pose = False
             robot.score_intent = False
             while True:
                 yield
@@ -296,6 +306,7 @@ class Coroutines:
             robot.funnel_intake.is_intaking = True
             robot.end_effector.is_intaking = True
             robot.running_pid_lineup = True
+            robot.drivetrain.at_inter_pose = False
             robot.score_intent = False
             while True:
                 yield
@@ -320,6 +331,7 @@ class Coroutines:
             robot.funnel_intake.is_intaking = True
             robot.end_effector.is_intaking = True
             robot.running_pid_lineup = True
+            robot.drivetrain.at_inter_pose = False
             robot.score_intent = False
             while True:
                 yield
