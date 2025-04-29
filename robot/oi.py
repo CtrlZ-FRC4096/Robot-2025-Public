@@ -201,7 +201,7 @@ class OI:
                                 self.robot_oriented_angle,
                             )
 
-        @self.driver1.X.whenPressed  # Manual elevator raise
+        @self.driver1.POV.LEFT.whenPressed  # Manual elevator raise
         def _():
             self.robot.leds.mode = self.robot.leds.MODE_LOCKED_ON
             self.robot.raise_elevator_slightly_for_L1 = False
@@ -209,33 +209,40 @@ class OI:
             self.robot.manual_scoring = True
             self.robot.mechanisms_at_default = False
 
-        @self.driver1.Y.whenPressed
+        @self.driver1.POV.UP.whenPressed # Mechanisms at Default
         def _():
             self.robot.mechanisms_at_default = True
             self.robot.raise_elevator_slightly_for_L1 = False
             self.robot.strafe_for_L1 = False
             self.robot.manual_scoring = False
             self.robot.leds.mode = self.robot.leds.MODE_ODOMETRY
+            self.robot.is_intaking = False
+            self.robot.score_intent = False
+            self.robot.running_pid_lineup = False
+            self.robot.drivetrain.at_inter_pose = False
+            self.robot.funnel_intake.is_intaking = False
+            self.robot.end_effector.is_intaking = False
+            self.robot.descoring_algae = False
 
-        @self.driver1.POV.DOWN.whenPressed  # Reset Gyro
-        def _():
-            robot.poseEstimator.set_yaw(0.0)
-            self.robot_oriented_angle = 0.0
+        # @self.driver1.POV.DOWN.whenPressed  # Reset Gyro
+        # def _():
+        #     robot.poseEstimator.set_yaw(0.0)
+        #     self.robot_oriented_angle = 0.0
 
-        @self.driver1.POV.LEFT.whenHeld  # Code Crash Input 1
-        def _():
-            self.can_crash = True
+        # @self.driver1.POV.LEFT.whenHeld  # Code Crash Input 1
+        # def _():
+        #     self.can_crash = True
 
-        @self.driver1.POV.LEFT.whenReleased  # Code Crash Input 1
-        def _():
-            self.can_crash = False
+        # @self.driver1.POV.LEFT.whenReleased  # Code Crash Input 1
+        # def _():
+        #     self.can_crash = False
 
-        @self.driver1.START.whenPressed  # Code Crash Input 2
-        def _():
-            if self.can_crash:
-                4096 / 0
+        # @self.driver1.START.whenPressed  # Code Crash Input 2
+        # def _():
+        #     if self.can_crash:
+        #         4096 / 0
 
-        @self.driver1.RIGHT_BUMPER.whenPressed  # begin intake process
+        @self.driver1.RIGHT_BUMPER.whenHeld  # begin intake process
         def _():
             self.robot.is_intaking = True
             self.robot.descoring_algae = False
@@ -250,7 +257,7 @@ class OI:
             self.robot.score_intent = False
             self.robot.score_piece = False
 
-        @self.driver1.LEFT_BUMPER.whenPressed  # manual end to intake process
+        @self.driver1.RIGHT_BUMPER.whenReleased  # manual end to intake process
         def _():
             self.robot.is_intaking = False
             self.robot.leds.mode = self.robot.leds.MODE_ODOMETRY
@@ -260,106 +267,195 @@ class OI:
 
         @self.driver1.LEFT_TRIGGER_AS_BUTTON.whenHeld #run profiled pid to nearest source
         def _():
-            self.robot.final_lineup_pose = self.robot.poseEstimator.get_path_to_source(self.robot.poseEstimator.calculate_closest_source()[0], self.robot.position_on_source)
-            self.robot.score_intent = False
-            self.robot.running_pid_lineup = True
-            self.robot.drivetrain.at_inter_pose = False
-            self.robot.is_intaking = True
-            self.robot.descoring_algae = False
-            self.robot.raise_elevator_slightly_for_L1 = False
-            self.robot.strafe_for_L1 = False
-            self.robot.mechanisms_at_default = False
-            self.robot.at_scoring_position = False
-            self.robot.at_intake_position = False
-            self.robot.score_piece = False
-            self.robot.funnel_intake.is_intaking = True
-            self.robot.end_effector.is_intaking = True
-            self.robot.leds.mode = self.robot.leds.MODE_INTAKING
+            if self.robot.has_coral or self.robot.funnel_intake.piece_passing_through:
+                self.robot.right_branch = False
+                self.robot.is_intaking = False
+                self.robot.descoring_algae = False
+                self.robot.leds.mode = self.robot.leds.MODE_LOCKED_ON
+                self.robot.funnel_intake.is_intaking = False
+                self.robot.end_effector.is_intaking = False
+                self.robot.funnel_intake.stop()
+                self.robot.end_effector.stop()
+                self.robot.raise_elevator_slightly_for_L1 = False
+                self.robot.at_scoring_position = False
+                self.robot.at_intake_position = False
+                self.robot.strafe_for_L1 = False
+                self.robot.score_piece = False
+                if self.robot.score_state.number == 1 and not self.robot.score_with_strafing:
+                    self.robot.final_lineup_pose = self.robot.poseEstimator.get_path_to_reef(True, self.robot.poseEstimator.calculate_closest_reef_tag()[1], self.robot.right_branch, do_manip_offset=False, do_side_offset=False)
+                else:
+                    self.robot.final_lineup_pose = self.robot.poseEstimator.get_path_to_reef(
+                        True, # change to true if wanting to use calibrated field
+                        self.robot.poseEstimator.calculate_closest_reef_tag()[1],
+                        self.robot.right_branch,
+                        do_manip_offset=True,
+                    )
+                self.robot.mechanisms_at_default = False
+                self.robot.running_pid_lineup = True
+                self.robot.drivetrain.at_inter_pose = False
+                self.robot.score_intent = True
+            else:
+                self.robot.final_lineup_pose = self.robot.poseEstimator.get_path_to_source(True, self.robot.position_on_source)
+                self.robot.score_intent = False
+                self.robot.running_pid_lineup = True
+                self.robot.drivetrain.at_inter_pose = False
+                self.robot.is_intaking = True
+                self.robot.descoring_algae = False
+                self.robot.raise_elevator_slightly_for_L1 = False
+                self.robot.strafe_for_L1 = False
+                self.robot.mechanisms_at_default = False
+                self.robot.at_scoring_position = False
+                self.robot.at_intake_position = False
+                self.robot.score_piece = False
+                self.robot.funnel_intake.is_intaking = True
+                self.robot.end_effector.is_intaking = True
+                self.robot.leds.mode = self.robot.leds.MODE_INTAKING
 
 
         @self.driver1.LEFT_TRIGGER_AS_BUTTON.whenReleased #stop pid
         def _():
-            self.robot.is_intaking = False
-            self.robot.leds.mode = self.robot.leds.MODE_ODOMETRY
-            self.robot.mechanisms_at_default = True
-            self.robot.running_pid_lineup = False
-            self.robot.drivetrain.at_inter_pose = False
-            self.robot.score_intent = False
-            self.robot_oriented_angle = self.robot.poseEstimator.getYaw().degrees()
-            self.robot.drivetrain.stop()
+            if self.robot.has_coral or self.robot.funnel_intake.piece_passing_through:
+                self.robot.leds.mode = self.robot.leds.MODE_ODOMETRY
+                self.robot.raise_elevator_slightly_for_L1 = False
+                self.robot.strafe_for_L1 = False
+                self.robot.mechanisms_at_default = True
+                self.robot.running_pid_lineup = False
+                self.robot.drivetrain.at_inter_pose = False
+                self.robot.score_intent = False
+                self.robot.manual_scoring = False
+                self.robot.at_scoring_position = False
+                self.robot_oriented_angle = self.robot.poseEstimator.getYaw().degrees()
+            else:
+                self.robot.is_intaking = False
+                self.robot.leds.mode = self.robot.leds.MODE_ODOMETRY
+                self.robot.mechanisms_at_default = True
+                self.robot.running_pid_lineup = False
+                self.robot.drivetrain.at_inter_pose = False
+                self.robot.score_intent = False
+                self.robot_oriented_angle = self.robot.poseEstimator.getYaw().degrees()
+                # self.robot.drivetrain.stop()
 
         @self.driver1.RIGHT_TRIGGER_AS_BUTTON.whenHeld  # Run profiled PID to tag
         def _():
-            self.robot.is_intaking = False
-            self.robot.descoring_algae = False
-            self.robot.leds.mode = self.robot.leds.MODE_LOCKED_ON
-            self.robot.funnel_intake.is_intaking = False
-            self.robot.end_effector.is_intaking = False
-            self.robot.funnel_intake.stop()
-            self.robot.end_effector.stop()
-            self.robot.raise_elevator_slightly_for_L1 = False
-            self.robot.at_scoring_position = False
-            self.robot.at_intake_position = False
-            self.robot.strafe_for_L1 = False
-            self.robot.score_piece = False
-            if self.robot.score_state.number == 1 and not self.robot.score_with_strafing:
-                self.robot.final_lineup_pose = self.robot.poseEstimator.get_path_to_reef(True, self.robot.poseEstimator.calculate_closest_reef_tag()[1], self.robot.right_branch, do_manip_offset=False, do_side_offset=False)
+            if self.robot.has_coral or self.robot.funnel_intake.piece_passing_through:
+                self.robot.right_branch = True
+                self.robot.is_intaking = False
+                self.robot.descoring_algae = False
+                self.robot.leds.mode = self.robot.leds.MODE_LOCKED_ON
+                self.robot.funnel_intake.is_intaking = False
+                self.robot.end_effector.is_intaking = False
+                self.robot.funnel_intake.stop()
+                self.robot.end_effector.stop()
+                self.robot.raise_elevator_slightly_for_L1 = False
+                self.robot.at_scoring_position = False
+                self.robot.at_intake_position = False
+                self.robot.strafe_for_L1 = False
+                self.robot.score_piece = False
+                if self.robot.score_state.number == 1 and not self.robot.score_with_strafing:
+                    self.robot.final_lineup_pose = self.robot.poseEstimator.get_path_to_reef(True, self.robot.poseEstimator.calculate_closest_reef_tag()[1], self.robot.right_branch, do_manip_offset=False, do_side_offset=False)
+                else:
+                    self.robot.final_lineup_pose = self.robot.poseEstimator.get_path_to_reef(
+                        True, # change to true if wanting to use calibrated field
+                        self.robot.poseEstimator.calculate_closest_reef_tag()[1],
+                        self.robot.right_branch,
+                        do_manip_offset=True,
+                    )
+                self.robot.mechanisms_at_default = False
+                self.robot.running_pid_lineup = True
+                self.robot.drivetrain.at_inter_pose = False
+                self.robot.score_intent = True
             else:
-                self.robot.final_lineup_pose = self.robot.poseEstimator.get_path_to_reef(
-                    True, # change to true if wanting to use calibrated field
-                    self.robot.poseEstimator.calculate_closest_reef_tag()[1],
-                    self.robot.right_branch,
-                    do_manip_offset=True,
-                )
-            self.robot.mechanisms_at_default = False
-            self.robot.running_pid_lineup = True
-            self.robot.drivetrain.at_inter_pose = False
-            self.robot.score_intent = True
+                self.robot.final_lineup_pose = self.robot.poseEstimator.get_path_to_source(False, self.robot.position_on_source)
+                self.robot.score_intent = False
+                self.robot.running_pid_lineup = True
+                self.robot.drivetrain.at_inter_pose = False
+                self.robot.is_intaking = True
+                self.robot.descoring_algae = False
+                self.robot.raise_elevator_slightly_for_L1 = False
+                self.robot.strafe_for_L1 = False
+                self.robot.mechanisms_at_default = False
+                self.robot.at_scoring_position = False
+                self.robot.at_intake_position = False
+                self.robot.score_piece = False
+                self.robot.funnel_intake.is_intaking = True
+                self.robot.end_effector.is_intaking = True
+                self.robot.leds.mode = self.robot.leds.MODE_INTAKING
 
         @self.driver1.RIGHT_TRIGGER_AS_BUTTON.whenReleased  # stop profiled PID
         def _():
-            self.robot.leds.mode = self.robot.leds.MODE_ODOMETRY
-            self.robot.raise_elevator_slightly_for_L1 = False
-            self.robot.strafe_for_L1 = False
-            self.robot.mechanisms_at_default = True
-            self.robot.running_pid_lineup = False
-            self.robot.drivetrain.at_inter_pose = False
-            self.robot.score_intent = False
-            self.robot.manual_scoring = False
-            self.robot.at_scoring_position = False
-            self.robot_oriented_angle = self.robot.poseEstimator.getYaw().degrees()
+            if self.robot.has_coral or self.robot.funnel_intake.piece_passing_through:
+                self.robot.leds.mode = self.robot.leds.MODE_ODOMETRY
+                self.robot.raise_elevator_slightly_for_L1 = False
+                self.robot.strafe_for_L1 = False
+                self.robot.mechanisms_at_default = True
+                self.robot.running_pid_lineup = False
+                self.robot.drivetrain.at_inter_pose = False
+                self.robot.score_intent = False
+                self.robot.manual_scoring = False
+                self.robot.at_scoring_position = False
+                self.robot_oriented_angle = self.robot.poseEstimator.getYaw().degrees()
+            else:
+                self.robot.is_intaking = False
+                self.robot.leds.mode = self.robot.leds.MODE_ODOMETRY
+                self.robot.mechanisms_at_default = True
+                self.robot.running_pid_lineup = False
+                self.robot.drivetrain.at_inter_pose = False
+                self.robot.score_intent = False
+                self.robot_oriented_angle = self.robot.poseEstimator.getYaw().degrees()
+                # self.robot.drivetrain.stop()
             # self.robot.end_effector.stop()
             # self.robot.drivetrain.stop() # May or may not be needed to stop the robot from tracking the PID
-
-        @self.driver2.Y.whenPressed # L4
+        @self.driver1.Y.whenPressed # L4
         def _():
             if self.robot.is_climbing:
                 self.robot.retract_climber = False
             else:
                 self.robot.score_state = RobotScoringPositions.L4_Scoring
-
-        @self.driver2.B.whenPressed #L3
+        
+        @self.driver1.B.whenPressed # L3
         def _():
             self.robot.score_state = RobotScoringPositions.L3_Scoring
-
-        @self.driver2.A.whenPressed # L2 and retract climber
+        
+        @self.driver1.A.whenPressed # L2
         def _():
             if self.robot.is_climbing:
-                self.robot.retract_climber = True
+                self.robot.retract_climber = False
             else:
                 self.robot.score_state = RobotScoringPositions.L2_Scoring
-
-        @self.driver2.X.whenPressed # L1
+        
+        @self.driver1.X.whenPressed # L1
         def _():
             self.robot.score_state = RobotScoringPositions.L1_Scoring
 
-        @self.driver2.RIGHT_TRIGGER_AS_BUTTON.whenPressed  # right face
-        def _():
-            self.robot.right_branch = True
+        # @self.driver2.Y.whenPressed # L4
+        # def _():
+        #     if self.robot.is_climbing:
+        #         self.robot.retract_climber = False
+        #     else:
+        #         self.robot.score_state = RobotScoringPositions.L4_Scoring
 
-        @self.driver2.LEFT_TRIGGER_AS_BUTTON.whenPressed  # left face
-        def _():
-            self.robot.right_branch = False
+        # @self.driver2.B.whenPressed #L3
+        # def _():
+        #     self.robot.score_state = RobotScoringPositions.L3_Scoring
+
+        # @self.driver2.A.whenPressed # L2 and retract climber
+        # def _():
+        #     if self.robot.is_climbing:
+        #         self.robot.retract_climber = True
+        #     else:
+        #         self.robot.score_state = RobotScoringPositions.L2_Scoring
+
+        # @self.driver2.X.whenPressed # L1
+        # def _():
+        #     self.robot.score_state = RobotScoringPositions.L1_Scoring
+
+        # @self.driver2.RIGHT_TRIGGER_AS_BUTTON.whenPressed  # right face
+        # def _():
+        #     self.robot.right_branch = True
+
+        # @self.driver2.LEFT_TRIGGER_AS_BUTTON.whenPressed  # left face
+        # def _():
+        #     self.robot.right_branch = False
 
         @self.driver2.POV.LEFT.whenPressed # position 1 on source
         def _():
@@ -373,30 +469,40 @@ class OI:
         def _():
             self.robot.position_on_source = 3
 
-        @self.driver2.POV.DOWN.whenHeld # outtake piece
+        @self.driver1.POV.RIGHT.whenHeld # outtake piece
         def _():
             self.robot.mechanisms_at_default = False
             self.robot.score_piece = True
 
-        @self.driver2.POV.DOWN.whenReleased
+        @self.driver1.POV.RIGHT.whenReleased
         def _():
             self.robot.score_piece = False
             self.robot.mechanisms_at_default = True
             self.robot.manual_scoring = False
+        # @self.driver2.POV.DOWN.whenHeld # outtake piece
+        # def _():
+        #     self.robot.mechanisms_at_default = False
+        #     self.robot.score_piece = True
 
-        @self.driver1.BACK.whenPressed
-        def _():
-            self.robot.mechanisms_at_default = True
-            self.robot.is_intaking = False
-            self.robot.score_intent = False
-            self.robot.manual_scoring = False
-            self.robot.running_pid_lineup = False
-            self.robot.drivetrain.at_inter_pose = False
-            self.robot.funnel_intake.is_intaking = False
-            self.robot.end_effector.is_intaking = False
-            self.robot.descoring_algae = False
+        # @self.driver2.POV.DOWN.whenReleased
+        # def _():
+        #     self.robot.score_piece = False
+        #     self.robot.mechanisms_at_default = True
+        #     self.robot.manual_scoring = False
 
-        @self.driver2.BACK.whenPressed # raise all setpoints
+        # @self.driver1.BACK.whenPressed
+        # def _():
+        #     self.robot.mechanisms_at_default = True
+        #     self.robot.is_intaking = False
+        #     self.robot.score_intent = False
+        #     self.robot.manual_scoring = False
+        #     self.robot.running_pid_lineup = False
+        #     self.robot.drivetrain.at_inter_pose = False
+        #     self.robot.funnel_intake.is_intaking = False
+        #     self.robot.end_effector.is_intaking = False
+        #     self.robot.descoring_algae = False
+
+        @self.driver1.START.whenPressed # raise all setpoints
         def _():
             self.robot.raise_setpoints += 1
             # RobotScoringPositions.elevator_intake_height += 0.1
@@ -408,7 +514,7 @@ class OI:
             RobotScoringPositions.Descore_Algae_L3.elevator_height += 0.5
             RobotScoringPositions.Descore_Algae_L2.elevator_height += 0.5
 
-        @self.driver2.START.whenPressed # lower all setpoints
+        @self.driver1.BACK.whenPressed # lower all setpoints
         def _():
             self.robot.raise_setpoints -= 1
             # RobotScoringPositions.elevator_intake_height -= 0.1
@@ -424,7 +530,7 @@ class OI:
         def _():
             self.robot.end_effector_canrange_for_reef_returning_bad_values = not self.robot.end_effector_canrange_for_reef_returning_bad_values
 
-        @self.driver2.LEFT_BUMPER.whenHeld # descore algae
+        @self.driver1.LEFT_BUMPER.whenHeld # descore algae
         def _():
             self.robot.mechanisms_at_default = False
             self.robot.is_intaking = False
@@ -444,7 +550,7 @@ class OI:
             elif algae_height_at_closest_side == 2:
                 self.robot.score_state = RobotScoringPositions.Descore_Algae_L2
 
-        @self.driver2.LEFT_BUMPER.whenReleased
+        @self.driver1.LEFT_BUMPER.whenReleased
         def _():
             self.robot.descoring_algae = False
             self.robot.mechanisms_at_default = True
@@ -459,26 +565,26 @@ class OI:
 
             self.robot.score_state = RobotScoringPositions.L4_Scoring
 
-        @self.driver2.RIGHT_BUMPER.whenHeld # climb
-        def _():
-            self.robot.mechanisms_at_default = False
-            self.robot.score_intent = False
-            self.robot.manual_scoring = False
-            self.robot.running_pid_lineup = False
-            self.robot.funnel_intake.is_intaking = False
-            self.robot.end_effector.is_intaking = False
-            self.robot.is_climbing = True
+        # @self.driver2.RIGHT_BUMPER.whenHeld # climb
+        # def _():
+        #     self.robot.mechanisms_at_default = False
+        #     self.robot.score_intent = False
+        #     self.robot.manual_scoring = False
+        #     self.robot.running_pid_lineup = False
+        #     self.robot.funnel_intake.is_intaking = False
+        #     self.robot.end_effector.is_intaking = False
+        #     self.robot.is_climbing = True
 
-        @self.driver2.RIGHT_BUMPER.whenReleased
-        def _():
-            self.robot.mechanisms_at_default = True
-            self.robot.score_intent = False
-            self.robot.manual_scoring = False
-            self.robot.running_pid_lineup = False
-            self.robot.funnel_intake.is_intaking = False
-            self.robot.end_effector.is_intaking = False
-            self.robot.is_climbing = False
-            self.robot.retract_climber = False
+        # @self.driver2.RIGHT_BUMPER.whenReleased
+        # def _():
+        #     self.robot.mechanisms_at_default = True
+        #     self.robot.score_intent = False
+        #     self.robot.manual_scoring = False
+        #     self.robot.running_pid_lineup = False
+        #     self.robot.funnel_intake.is_intaking = False
+        #     self.robot.end_effector.is_intaking = False
+        #     self.robot.is_climbing = False
+        #     self.robot.retract_climber = False
         
         # @self.driver1.A.whenHeld #swerve drive motors to coast
         # def _():
@@ -489,9 +595,13 @@ class OI:
         # def _():
         #     for module in self.robot.poseEstimator.modules:
         #         module.drive_motor.setNeutralMode(NeutralMode.Brake)
-        @self.driver1.A.whenPressed
+        @self.driver1.POV.DOWN.whenPressed # IF SIM: CLEAR REEF. IF MATCH: ZERO GYRO
         def _():
-            self.robot.sim_coral_scored.clear()
+            if self.robot.isSimulation():
+                self.robot.sim_coral_scored.clear()
+            else:
+                robot.poseEstimator.set_yaw(0.0)
+                self.robot_oriented_angle = 0.0
 
 
     def log(self):
