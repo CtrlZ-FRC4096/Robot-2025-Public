@@ -24,7 +24,7 @@ from wpimath.kinematics import (
     SwerveModuleState
 )
 from phoenix6 import configs
-from shapely import Polygon, Point
+# from shapely import Polygon, Point
 
 
 # from pathplannerlib.commands import PathfindHolonomic
@@ -69,12 +69,16 @@ class Drivetrain(Subsystem):
         self.theta_controller = PIDController(0.07, 0.01, 0.0015)
         #constraints = TrapezoidProfile.Constraints(4.0, 4.0)
         self.xy_controller = PIDController(2.0, 0.01, 0.025)#, constraints, period=0.05)
+        self.xy_inter_controller = PIDController(5.0, 0.01, 0.025)
+
+
 
         ## Need to check these tolerances
         self.x_controller.setTolerance(0.03, 0.1) #0.025, 0.1
         self.y_controller.setTolerance(0.03, 0.1) #0.025, 0.1
         self.theta_controller.enableContinuousInput(0, 360)
         self.theta_controller.setTolerance(2.8, 2.0) #3.0, 0.1
+        self.xy_inter_controller.setTolerance(0.1, 1.0)
 
         self.at_inter_pose = False
         self.log_chassis = ChassisSpeeds()
@@ -169,11 +173,11 @@ class Drivetrain(Subsystem):
         # pose = self.robot.poseEstimator.field.getObject("current pose")
 
         # pose.setPose(self.curPose)
-    def in_reef(self, pose: Translation2d):
-            hexagon_points = [(self.reefForInReef[idx].X(), self.reefForInReef[idx].Y()) for idx in range(6)]
-            hexagon = Polygon(hexagon_points)
-            point = Point(pose.X(), pose.Y())
-            return hexagon.contains(point)
+    # def in_reef(self, pose: Translation2d):
+    #         hexagon_points = [(self.reefForInReef[idx].X(), self.reefForInReef[idx].Y()) for idx in range(6)]
+    #         hexagon = Polygon(hexagon_points)
+    #         point = Point(pose.X(), pose.Y())
+    #         return hexagon.contains(point)
 
     def drive_with_pid(self, translation: Translation2d, target_angle):
         pid_output = self.angle_pid.calculate(self.robot.poseEstimator.getYaw().degrees(), target_angle)  # type: ignore
@@ -246,6 +250,70 @@ class Drivetrain(Subsystem):
         SmartDashboard.putNumber("vx", vx)
         SmartDashboard.putNumber("vy", vy)
         SmartDashboard.putNumber("omega", omega)
+
+    def go_to_pose_angle_addition(self, final_pose : Pose2d, feedforward_x=0.0, feedforward_y=0.0, feedfoward_theta=0.0):
+        cur_pose = self.robot.poseEstimator.curEstPose
+        if self.robot.isSimulation():
+            cur_speeds = self.log_chassis
+        else:  
+            cur_speeds = const.SWERVE_KINEMATICS.toChassisSpeeds(self.robot.poseEstimator.get_module_states())
+        if self.at_inter_pose or cur_pose.translation().distance(final_pose.translation()) < 1.0 or cur_speeds == ChassisSpeeds():
+            vx = self.x_controller.calculate(cur_pose.X(), final_pose.X()) + feedforward_x
+            vy = self.y_controller.calculate(cur_pose.Y(), final_pose.Y()) + feedforward_y
+            omega = self.theta_controller.calculate(cur_pose.rotation().degrees(), final_pose.rotation().degrees()) + feedfoward_theta
+            if cur_speeds != ChassisSpeeds():
+                self.at_inter_pose = True
+        else:
+            dist_out = 0.75
+            final_rot_out = degreesToRadians(final_pose.rotation().degrees() + 90)
+            rot_proportion = dist_out / cur_pose.translation().distance(final_pose.translation())
+            rot_diff = final_pose.rotation() - cur_pose.rotation()
+            inter_pose = Pose2d(final_pose.X() + math.cos(final_rot_out) * dist_out, final_pose.Y() + math.sin(final_rot_out) * dist_out, final_pose.rotation() + rot_diff * rot_proportion)
+            final_rot_in = Rotation2d(final_rot_out + math.pi)
+
+            inter_delta = inter_pose.translation() - cur_pose.translation()
+            inter_pose_angle = Rotation2d(math.atan2(inter_delta.y, inter_delta.x))
+
+            alpha_angle = inter_pose_angle - final_rot_in
+            velocity_angle = inter_pose_angle + alpha_angle
+
+            velocity = -1 * self.xy_inter_controller.calculate(inter_pose.translation().distance(cur_pose.translation()), 0)
+            vx = velocity * math.cos(velocity_angle.radians()) + feedforward_x
+            vy = velocity * math.sin(velocity_angle.radians()) + feedforward_y
+
+            omega = self.theta_controller.calculate(
+                cur_pose.rotation().degrees(), inter_pose.rotation().degrees()
+            ) + feedfoward_theta
+        
+        if self.at_inter_pose:
+            if (
+                self.x_controller.atSetpoint()
+                and self.y_controller.atSetpoint()
+                and self.theta_controller.atSetpoint()
+                and self.robot.score_intent
+                and self.robot.running_pid_lineup
+            ):
+                self.robot.at_scoring_position = True
+        else:
+            if (
+                self.xy_inter_controller.atSetpoint()
+                and self.theta_controller.atSetpoint()
+                and self.robot.score_intent
+                and self.robot.running_pid_lineup
+            ):
+                self.at_inter_pose = True
+                self.theta_controller.reset()
+        
+        self.drive(Translation2d(vx, vy), omega, True, False)
+
+        # Update SmartDashboard values for debugging
+        SmartDashboard.putNumber("t_pose x", final_pose.X())
+        SmartDashboard.putNumber("t_pose y", final_pose.Y())
+        SmartDashboard.putNumber("vx", vx)
+        SmartDashboard.putNumber("vy", vy)
+        SmartDashboard.putNumber("omega", omega)
+
+
     def go_to_pose_angle_bisector(self, final_pose : Pose2d, feedforward_x=0.0, feedforward_y=0.0, feedfoward_theta=0.0):
         # ASSUMING FINAL POSE IS A POSE ON REEF FOR L2-L4 W/ END EFFECTOR ON REEF
         cur_pose = self.robot.poseEstimator.curEstPose
@@ -260,18 +328,8 @@ class Drivetrain(Subsystem):
             omega = self.theta_controller.calculate(cur_pose.rotation().degrees(), final_pose.rotation().degrees()) + feedfoward_theta
             if cur_speeds != ChassisSpeeds():
                 self.at_inter_pose = True
-                if self.x_controller.getErrorTolerance() == 0.1:
-                    self.x_controller.setTolerance(0.03, 0.1)
-                    self.y_controller.setTolerance(0.03, 0.1)
-                    self.x_controller.setP(2.0)
-                    self.y_controller.setP(2.0)
 
         else:
-            if self.x_controller.getErrorTolerance() == 0.03:
-                self.x_controller.setTolerance(0.1, 1.0)
-                self.y_controller.setTolerance(0.1, 1.0)
-                self.x_controller.setP(5.0)
-                self.y_controller.setP(5.0)
             dist_out = 0.75
             final_rot_out = degreesToRadians(final_pose.rotation().degrees() + 90)
             rot_proportion = dist_out / cur_pose.translation().distance(final_pose.translation())
@@ -296,7 +354,7 @@ class Drivetrain(Subsystem):
                 bisector_angle = Rotation2d(math.atan2(y_part, x_part))
             SmartDashboard.putNumber("bisector angle", bisector_angle.degrees())
             SmartDashboard.putNumberArray("inter_pose", [inter_pose.X(), inter_pose.Y(), bisector_angle.degrees()])
-            velocity = -1 * self.x_controller.calculate(inter_pose.translation().distance(cur_pose.translation()), 0)
+            velocity = -1 * self.xy_inter_controller.calculate(inter_pose.translation().distance(cur_pose.translation()), 0)
             vx = velocity * math.cos(bisector_angle.radians()) + feedforward_x
             vy = velocity * math.sin(bisector_angle.radians()) + feedforward_y
 
@@ -304,15 +362,24 @@ class Drivetrain(Subsystem):
                 cur_pose.rotation().degrees(), inter_pose.rotation().degrees()
             ) + feedfoward_theta
     
-        if (
-            self.x_controller.atSetpoint()
-            and self.y_controller.atSetpoint()
-            and self.theta_controller.atSetpoint()
-        ):
-            if self.robot.score_intent and self.robot.running_pid_lineup and self.at_inter_pose:
+        if self.at_inter_pose:
+            if (
+                self.x_controller.atSetpoint()
+                and self.y_controller.atSetpoint()
+                and self.theta_controller.atSetpoint()
+                and self.robot.score_intent
+                and self.robot.running_pid_lineup
+            ):
                 self.robot.at_scoring_position = True
-            if self.robot.score_intent and self.robot.running_pid_lineup and not self.at_inter_pose:
+        else:
+            if (
+                self.xy_inter_controller.atSetpoint()
+                and self.theta_controller.atSetpoint()
+                and self.robot.score_intent
+                and self.robot.running_pid_lineup
+            ):
                 self.at_inter_pose = True
+                self.theta_controller.reset()
         
         self.drive(Translation2d(vx, vy), omega, True, False)
 

@@ -29,6 +29,7 @@ from wpimath.geometry import Pose2d, Rotation2d, Translation2d
 import math
 
 from wpimath.estimator import SwerveDrive4PoseEstimator
+from wpimath.kinematics import ChassisSpeeds
 
 import const
 
@@ -54,7 +55,7 @@ from wpilibextra.customcontroller import XboxCommandController
 
 from field_const import FieldConstants
 from path_gen import PathGenerator, PurePursuitController
-from wpimath.units import inchesToMeters, degreesToRadians
+from wpimath.units import inchesToMeters, degreesToRadians, radiansToDegrees
 from phoenix5 import NeutralMode
 from phoenix6.controls import CoastOut
 
@@ -147,12 +148,16 @@ class OI:
                         else:
                             forward_back *= 0.4
                             left_right *= 0.4
-                            self.robot.drivetrain.go_to_pose_angle_bisector(self.robot.final_lineup_pose, forward_back, left_right, rotate)
+                            self.robot.drivetrain.go_to_pose_angle_addition(self.robot.final_lineup_pose, forward_back, left_right, rotate)
                     else:
                         if self.robot.is_intaking:
                             self.robot.drivetrain.go_to_pose_profiled_pid(self.robot.final_lineup_pose)
                         else:
-                            self.robot.drivetrain.go_to_pose_angle_bisector(self.robot.final_lineup_pose)
+                            self.robot.drivetrain.go_to_pose_angle_addition(self.robot.final_lineup_pose)
+                # elif (abs(const.SWERVE_KINEMATICS.toChassisSpeeds(self.robot.poseEstimator.get_module_states()).vx) <= 0.005 and
+                #       abs(const.SWERVE_KINEMATICS.toChassisSpeeds(self.robot.poseEstimator.get_module_states()).vy) <= 0.005 and 
+                #       abs(const.SWERVE_KINEMATICS.toChassisSpeeds(self.robot.poseEstimator.get_module_states()).omega_dps) <= 1):
+                #     self.robot.drivetrain.turn_wheels_to_x()
                 else:
                     if abs(rotate) >= 0.02:
                         self.cardinal_directing = False
@@ -180,15 +185,13 @@ class OI:
                         #             self.find_heading = False
                         #         else:
                         #             self.wait_one_tick = True
-                        if self.robot.has_coral:
-                            # self.robot_oriented_angle = self.robot.fieldConstants.Reef.centerFaces[self.robot.poseEstimator.calculate_closest_reef_tag()[1] - 1].rotation().degrees()
-                            reef_center = self.robot.fieldConstants.Reef.center
-                            cur_pose = self.robot.poseEstimator.curEstPose
-                            vector_delta = cur_pose.translation() - reef_center
-                            self.robot_oriented_angle = Rotation2d(math.atan2(vector_delta.y, vector_delta.x)).degrees()
-                            self.tick_count_max = 1
-                        else:
-                            self.tick_count_max = 5
+                        # if self.robot.has_coral:
+                        #     # self.robot_oriented_angle = self.robot.fieldConstants.Reef.centerFaces[self.robot.poseEstimator.calculate_closest_reef_tag()[1] - 1].rotation().degrees()
+                        #     reef_center = self.robot.fieldConstants.Reef.center
+                        #     cur_pose = self.robot.poseEstimator.curEstPose
+                        #     vector_delta = cur_pose.translation() - reef_center
+                        #     self.robot_oriented_angle = Rotation2d.fromDegrees(radiansToDegrees(math.atan2(vector_delta.y, vector_delta.x)) - 90).degrees()
+                        #     self.find_heading = False
                         if not self.cardinal_directing:
                             if self.find_heading:
                                 if self.tick_count <= self.tick_count_max:
