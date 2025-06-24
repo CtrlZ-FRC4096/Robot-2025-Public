@@ -191,6 +191,10 @@ class EndEffector(Subsystem):
                 self.robot.raise_elevator_slightly_for_L1 = True
                 self.robot.strafe_for_L1 = True
             self.robot.has_coral = False
+            if self.robot.score_state.number == 2:
+                self.robot.score_state= RobotScoringPositions.L2_Scoring
+            elif self.robot.score_state.number == 3:
+                self.robot.score_state = RobotScoringPositions.L3_Scoring
             #face, level, right_branch
             closest_face = self.robot.poseEstimator.calculate_closest_reef_tag()[1]
             if [closest_face, self.robot.score_state.number, self.robot.right_branch] not in self.robot.sim_coral_scored:

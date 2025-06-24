@@ -75,6 +75,7 @@ from commands2 import (
 )
 import time
 from wpilibextra.coroutine import CoroutineCommand
+from wpilib import SmartDashboard
 
 
 log = logging.getLogger("robot")
@@ -287,6 +288,14 @@ class Robot(CoroutineRobot):
 
         self.is_intaking = False
         self.raise_setpoints = 0.0
+
+
+        SmartDashboard.putNumber("L2 Height", 23.5)
+        SmartDashboard.putNumber("L3 Height", 39.5)
+        SmartDashboard.putNumber("L4 Height", 61.5)
+        SmartDashboard.putNumber("L2 Out Speed", 35.0)
+        SmartDashboard.putNumber("L3 Out Speed", 35.0)
+        SmartDashboard.putNumber("L4 Out Speed", 42.0)
 
 
         @self.addPeriodic(period=0.25, offset=0)
@@ -577,6 +586,16 @@ class Robot(CoroutineRobot):
         wpilib.SmartDashboard.putBoolean("OI Score Intent", self.score_intent)
         wpilib.SmartDashboard.putBoolean("Has Coral", self.has_coral)
         wpilib.SmartDashboard.putNumberArray("empty pose", [0, 0, 0])
+
+        
+
+        RobotScoringPositions.L2_Scoring.elevator_height = SmartDashboard.getNumber("L2 Height", 23.5)
+        RobotScoringPositions.L3_Scoring.elevator_height = SmartDashboard.getNumber("L3 Height", 39.5)
+        RobotScoringPositions.L4_Scoring.elevator_height = SmartDashboard.getNumber("L4 Height", 61.5)
+        RobotScoringPositions.L2_Scoring.end_effector_outtake_speed = SmartDashboard.getNumber("L2 Out Speed", 35.0)
+        RobotScoringPositions.L3_Scoring.end_effector_outtake_speed = SmartDashboard.getNumber("L3 Out Speed", 35.0)
+        RobotScoringPositions.L4_Scoring.end_effector_outtake_speed = SmartDashboard.getNumber("L4 Out Speed", 42.0)
+
         if self.isSimulation():
             wpilib.SmartDashboard.putNumberArray("RobotPose", [self.poseEstimator.curEstPose.X(), self.poseEstimator.curEstPose.Y(), self.poseEstimator.curEstPose.rotation().degrees()])
             #elevator stage 3

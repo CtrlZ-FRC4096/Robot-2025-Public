@@ -61,6 +61,9 @@ class FunnelIntake(Subsystem):
         for i in range(funnel_piece_length):
             self.piece_detected_in_funnel.append(False)
 
+        self.outtake_speed = -30
+        SmartDashboard.putNumber("Funnel Outtake", self.outtake_speed)
+
     def stop(self):
         self.intake_motor.set_control(controls.VelocityTorqueCurrentFOC(0.0))
 
@@ -78,7 +81,7 @@ class FunnelIntake(Subsystem):
         if self.is_intaking:
             self.intake(55)
         elif self.robot.score_piece:
-            self.intake(-40)
+            self.intake(SmartDashboard.getNumber("Funnel Outtake", -40))
         elif self.robot.mechanisms_at_default:
             self.piece_passing_through = False
             self.stop()

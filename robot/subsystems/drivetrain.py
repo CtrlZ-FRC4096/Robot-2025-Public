@@ -64,12 +64,15 @@ class Drivetrain(Subsystem):
         self.angle_pid.enableContinuousInput(0, 360)
         self.angle_pid.setTolerance(0.5)  # Set position tolerance to 0.5 degrees
 
-        self.x_controller = PIDController(2.0, 0.01, 0.025)
-        self.y_controller = PIDController(2.0, 0.01, 0.025)
+        self.x_controller = PIDController(2.0, 0.01, 0.025) #0.01
+        self.y_controller = PIDController(2.0, 0.01, 0.025) #0.01
         self.theta_controller = PIDController(0.07, 0.01, 0.0015)
-        #constraints = TrapezoidProfile.Constraints(4.0, 4.0)
-        self.xy_controller = PIDController(2.0, 0.01, 0.025)#, constraints, period=0.05)
-        self.xy_inter_controller = PIDController(5.0, 0.01, 0.025)
+        
+        self.inter_max_vel = 3.0
+        self.inter_max_acc = 3.0
+        constraints = TrapezoidProfile.Constraints(self.inter_max_vel, self.inter_max_acc)
+        # self.xy_controller = ProfiledPIDController(2.0, 0.01, 0.025)#, constraints, period=0.05)
+        self.xy_inter_controller = ProfiledPIDController(1.3, 0.0, 0.0, constraints)
 
 
 
@@ -81,6 +84,7 @@ class Drivetrain(Subsystem):
         self.xy_inter_controller.setTolerance(0.1, 1.0)
 
         self.at_inter_pose = False
+        self.inter_pose = Pose2d()
         self.log_chassis = ChassisSpeeds()
         
         ### Field Visualisation - Needs testing ###
@@ -116,6 +120,10 @@ class Drivetrain(Subsystem):
         for idx in range(6):
             self.reefForInReef.append(Translation2d(reefVertices[idx].X() + (buffer * math.cos(degreesToRadians(reefAngles[idx]))), reefVertices[idx].Y() + (buffer * math.sin(degreesToRadians(reefAngles[idx])))))
         
+        self.coral_blocking_length = 5
+        self.coral_blocking = deque(maxlen=self.coral_blocking_length)
+        for i in range(self.coral_blocking_length):
+            self.coral_blocking.append(False)
 
     def drive(self, translation: Translation2d, rotation, field_relative, is_open_loop):
         SmartDashboard.putNumber("Swerve/Translation X", translation.x)
@@ -264,46 +272,81 @@ class Drivetrain(Subsystem):
             if cur_speeds != ChassisSpeeds():
                 self.at_inter_pose = True
         else:
-            dist_out = 0.75
+            dist_out = 0.6
             final_rot_out = degreesToRadians(final_pose.rotation().degrees() + 90)
             rot_proportion = dist_out / cur_pose.translation().distance(final_pose.translation())
             rot_diff = final_pose.rotation() - cur_pose.rotation()
-            inter_pose = Pose2d(final_pose.X() + math.cos(final_rot_out) * dist_out, final_pose.Y() + math.sin(final_rot_out) * dist_out, final_pose.rotation() + rot_diff * rot_proportion)
+            self.inter_pose = Pose2d(final_pose.X() + math.cos(final_rot_out) * dist_out, final_pose.Y() + math.sin(final_rot_out) * dist_out, final_pose.rotation())
             final_rot_in = Rotation2d(final_rot_out + math.pi)
 
-            inter_delta = inter_pose.translation() - cur_pose.translation()
+            inter_delta = self.inter_pose.translation() - cur_pose.translation()
             inter_pose_angle = Rotation2d(math.atan2(inter_delta.y, inter_delta.x))
 
-            alpha_angle = inter_pose_angle - final_rot_in
+            alpha_angle = (inter_pose_angle - final_rot_in) * 1.35
+            if cur_pose.translation().distance(self.inter_pose.translation()) > 1.0:
+                alpha_angle *= 0.75
             velocity_angle = inter_pose_angle + alpha_angle
 
-            velocity = -1 * self.xy_inter_controller.calculate(inter_pose.translation().distance(cur_pose.translation()), 0)
+            velocity = -1 * self.xy_inter_controller.calculate(self.inter_pose.translation().distance(cur_pose.translation()), 0)
             vx = velocity * math.cos(velocity_angle.radians()) + feedforward_x
             vy = velocity * math.sin(velocity_angle.radians()) + feedforward_y
 
             omega = self.theta_controller.calculate(
-                cur_pose.rotation().degrees(), inter_pose.rotation().degrees()
+                cur_pose.rotation().degrees(), self.inter_pose.rotation().degrees()
             ) + feedfoward_theta
         
+        final_rotation_out = Rotation2d.fromDegrees(final_pose.rotation().degrees() + 90)
+        coral_block_pose_x = math.cos(final_rotation_out.radians()) * inchesToMeters(4.0)
+        coral_block_pose_y = math.sin(final_rotation_out.radians()) * inchesToMeters(4.0)
+        coral_block_pose = Translation2d(final_pose.X() + coral_block_pose_x, final_pose.Y() + coral_block_pose_y)
+
+        delta_pose = cur_pose.translation() - coral_block_pose
+        vector = Translation2d(final_rotation_out.cos(), final_rotation_out.sin())
+        projection_length = delta_pose.X() * vector.X() + delta_pose.Y() * vector.Y()
+        closest_point = Translation2d(
+            coral_block_pose.X() + vector.X() * projection_length,
+            coral_block_pose.Y() + vector.Y() * projection_length
+        )
+
+
+        if (cur_speeds.vx < 0.05 and cur_speeds.vy < 0.05) and (cur_pose.translation().distance(coral_block_pose) < inchesToMeters(2)) and (cur_pose.translation().distance(closest_point) < inchesToMeters(0.8)) and (self.robot.score_state.number == 2 or self.robot.score_state.number == 3):
+            self.coral_blocking.appendleft(True)
+        else:
+            self.coral_blocking.appendleft(False)
+        
         if self.at_inter_pose:
-            if (
+            if ((
                 self.x_controller.atSetpoint()
                 and self.y_controller.atSetpoint()
-                and self.theta_controller.atSetpoint()
-                and self.robot.score_intent
-                and self.robot.running_pid_lineup
-            ):
+                and self.theta_controller.atSetpoint()) or all(self.coral_blocking)) and (self.robot.score_intent
+                and self.robot.running_pid_lineup):
+                if all(self.coral_blocking):
+                    if self.robot.score_state.number == 2:
+                        self.robot.score_state = RobotScoringPositions.L2_Scoring_Blocked
+                    elif self.robot.score_state.number == 3:
+                        self.robot.score_state = RobotScoringPositions.L3_Scoring_Blocked
+                    else:
+                        pass
+                        #add feedback? drive out a bit or something?
+                self.coral_blocking.clear()
+                for i in range(self.coral_blocking_length):
+                    self.coral_blocking.appendleft(False)
+                
                 self.robot.at_scoring_position = True
+                self.x_controller.reset()
+                self.y_controller.reset()
+                self.theta_controller.reset()
         else:
             if (
-                self.xy_inter_controller.atSetpoint()
-                and self.theta_controller.atSetpoint()
+                # self.xy_inter_controller.atSetpoint()
+                self.theta_controller.atSetpoint()
+                and self.robot.poseEstimator.curEstPose.translation().distance(self.inter_pose.translation()) < 0.75
                 and self.robot.score_intent
                 and self.robot.running_pid_lineup
             ):
                 self.at_inter_pose = True
                 self.theta_controller.reset()
-        
+                self.xy_inter_controller.reset()    
         self.drive(Translation2d(vx, vy), omega, True, False)
 
         # Update SmartDashboard values for debugging
@@ -477,15 +520,24 @@ class Drivetrain(Subsystem):
             if self.robot.is_intaking:
                 self.go_to_pose_profiled_pid(self.robot.final_lineup_pose)
             else:
-                self.go_to_pose_angle_bisector(self.robot.final_lineup_pose)
+                self.go_to_pose_profiled_pid(self.robot.final_lineup_pose)
+        self.inter_max_vel = SmartDashboard.getNumber("Inter Max Vel", 3.0)
+        self.inter_max_acc = SmartDashboard.getNumber("Inter Max Accel", 3.0)
+        self.xy_inter_controller.setConstraints(TrapezoidProfile.Constraints(self.inter_max_vel, self.inter_max_acc))
 
     def log(self):
+        SmartDashboard.putNumber("Inter Max Vel", self.inter_max_vel)
+        SmartDashboard.putNumber("Inter Max Accel", self.inter_max_acc)
+
         SmartDashboard.putData("PID Controller for going to reef, x", self.x_controller)
         SmartDashboard.putData("PID Controller for going to reef, y", self.y_controller)
         SmartDashboard.putData(
             "PID Controller for going to reef, theta", self.theta_controller
         )
+        SmartDashboard.putBoolean("At Inter Pose", self.at_inter_pose)
 
         SmartDashboard.putData("PID Controller (Drivetrain)", self.angle_pid)
         SmartDashboard.putBoolean("Angle at Setpoint", self.angle_pid.atSetpoint())
         SmartDashboard.putNumber("PID Controller Error", self.angle_pid.getError())
+        SmartDashboard.putData("PID Controller (XY Inter)", self.xy_inter_controller)
+        SmartDashboard.putBoolean("Controller Blocking", all(self.coral_blocking))
