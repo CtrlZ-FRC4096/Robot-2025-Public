@@ -60,6 +60,9 @@ class Drivetrain(Subsystem):
         super().__init__()
         self.robot = robot
 
+
+        self.counter = 1
+
         self.angle_pid = PIDController(0.075, 0.0, 0.001)
         self.angle_pid.enableContinuousInput(0, 360)
         self.angle_pid.setTolerance(0.5)  # Set position tolerance to 0.5 degrees
@@ -272,20 +275,23 @@ class Drivetrain(Subsystem):
             if cur_speeds != ChassisSpeeds():
                 self.at_inter_pose = True
         else:
-            dist_out = 0.6
+            dist_out = 0.6 
             final_rot_out = degreesToRadians(final_pose.rotation().degrees() + 90)
             rot_proportion = dist_out / cur_pose.translation().distance(final_pose.translation())
             rot_diff = final_pose.rotation() - cur_pose.rotation()
             self.inter_pose = Pose2d(final_pose.X() + math.cos(final_rot_out) * dist_out, final_pose.Y() + math.sin(final_rot_out) * dist_out, final_pose.rotation())
+            dist = cur_pose.translation().distance(self.inter_pose.translation())
+            dist_in = min(0.6 / dist, 0.3)
             final_rot_in = Rotation2d(final_rot_out + math.pi)
-
+            self.inter_pose = Pose2d(self.inter_pose.X() + math.cos(final_rot_in.radians()) * dist_in, self.inter_pose.Y() + math.sin(final_rot_in.radians()) * dist_in, final_pose.rotation())
+            
             inter_delta = self.inter_pose.translation() - cur_pose.translation()
             inter_pose_angle = Rotation2d(math.atan2(inter_delta.y, inter_delta.x))
 
-            alpha_angle = (inter_pose_angle - final_rot_in) * 1.35
-            if cur_pose.translation().distance(self.inter_pose.translation()) > 1.0:
-                alpha_angle *= 0.75
-            velocity_angle = inter_pose_angle + alpha_angle
+            alpha_angle = Rotation2d.fromDegrees((inter_pose_angle - final_rot_in).degrees())
+            # if cur_pose.translation().distance(self.inter_pose.translation()) > 1.0:
+            #     alpha_angle *= 0.75
+            velocity_angle = inter_pose_angle + alpha_angle + Rotation2d.fromDegrees(alpha_angle.degrees() ** 1/4)
 
             velocity = -1 * self.xy_inter_controller.calculate(self.inter_pose.translation().distance(cur_pose.translation()), 0)
             vx = velocity * math.cos(velocity_angle.radians()) + feedforward_x
@@ -346,7 +352,7 @@ class Drivetrain(Subsystem):
             ):
                 self.at_inter_pose = True
                 self.theta_controller.reset()
-                self.xy_inter_controller.reset()    
+                # self.xy_inter_controller.reset()    
         self.drive(Translation2d(vx, vy), omega, True, False)
 
         # Update SmartDashboard values for debugging
@@ -526,6 +532,10 @@ class Drivetrain(Subsystem):
         self.xy_inter_controller.setConstraints(TrapezoidProfile.Constraints(self.inter_max_vel, self.inter_max_acc))
 
     def log(self):
+        if self.robot.running_pid_lineup:
+            object = self.robot.poseEstimator.field_for_single_tag.getObject("lineup curve" + str(self.counter))
+            object.setPose(self.robot.poseEstimator.curEstPose)
+        self.counter += 1
         SmartDashboard.putNumber("Inter Max Vel", self.inter_max_vel)
         SmartDashboard.putNumber("Inter Max Accel", self.inter_max_acc)
 
