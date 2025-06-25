@@ -268,34 +268,72 @@ class Drivetrain(Subsystem):
             cur_speeds = self.log_chassis
         else:  
             cur_speeds = const.SWERVE_KINEMATICS.toChassisSpeeds(self.robot.poseEstimator.get_module_states())
-        if self.at_inter_pose or cur_pose.translation().distance(final_pose.translation()) < 1.0 or cur_speeds == ChassisSpeeds():
+        if self.at_inter_pose or cur_pose.translation().distance(final_pose.translation()) < 1.0:
             vx = self.x_controller.calculate(cur_pose.X(), final_pose.X()) + feedforward_x
             vy = self.y_controller.calculate(cur_pose.Y(), final_pose.Y()) + feedforward_y
             omega = self.theta_controller.calculate(cur_pose.rotation().degrees(), final_pose.rotation().degrees()) + feedfoward_theta
-            if cur_speeds != ChassisSpeeds():
-                self.at_inter_pose = True
+            self.at_inter_pose = True
         else:
-            dist_out = 0.6 
+            dist_out = 0.6
             final_rot_out = degreesToRadians(final_pose.rotation().degrees() + 90)
             rot_proportion = dist_out / cur_pose.translation().distance(final_pose.translation())
             rot_diff = final_pose.rotation() - cur_pose.rotation()
             self.inter_pose = Pose2d(final_pose.X() + math.cos(final_rot_out) * dist_out, final_pose.Y() + math.sin(final_rot_out) * dist_out, final_pose.rotation())
-            dist = cur_pose.translation().distance(self.inter_pose.translation())
-            dist_in = min(0.6 / dist, 0.3)
             final_rot_in = Rotation2d(final_rot_out + math.pi)
-            self.inter_pose = Pose2d(self.inter_pose.X() + math.cos(final_rot_in.radians()) * dist_in, self.inter_pose.Y() + math.sin(final_rot_in.radians()) * dist_in, final_pose.rotation())
             
             inter_delta = self.inter_pose.translation() - cur_pose.translation()
             inter_pose_angle = Rotation2d(math.atan2(inter_delta.y, inter_delta.x))
 
-            alpha_angle = Rotation2d.fromDegrees((inter_pose_angle - final_rot_in).degrees())
-            # if cur_pose.translation().distance(self.inter_pose.translation()) > 1.0:
-            #     alpha_angle *= 0.75
-            velocity_angle = inter_pose_angle + alpha_angle + Rotation2d.fromDegrees(alpha_angle.degrees() ** 1/4)
+            alpha_angle = inter_pose_angle - final_rot_in
+            velocity_angle = inter_pose_angle + alpha_angle
 
             velocity = -1 * self.xy_inter_controller.calculate(self.inter_pose.translation().distance(cur_pose.translation()), 0)
             vx = velocity * math.cos(velocity_angle.radians()) + feedforward_x
             vy = velocity * math.sin(velocity_angle.radians()) + feedforward_y
+
+            ## REDIRECTING VELOCITY BEFORE INTER-FINAL VECTOR
+            predicted_pose = Translation2d(cur_pose.X() + (vx / 20), cur_pose.Y() + (vy / 20))
+
+            inter_final_vec = final_pose.translation() - self.inter_pose.translation()
+            cur_inter_vec = cur_pose.translation() - self.inter_pose.translation()
+            predicted_inter_vec = predicted_pose - self.inter_pose.translation()
+
+            cur_cross = inter_final_vec.X() * cur_inter_vec.Y() - inter_final_vec.Y() * cur_inter_vec.X()
+            predicted_cross = inter_final_vec.X() * predicted_inter_vec.Y() - inter_final_vec.Y() * predicted_inter_vec.X()
+
+            if cur_cross * predicted_cross < 0:
+                vel_dist = math.hypot(vx, vy)
+                # For getting a unit vector
+                length = math.hypot(inter_final_vec.X(), inter_final_vec.Y())
+                dx = inter_final_vec.X() / length
+                dy = inter_final_vec.Y() / length
+
+                # Solve for t such that distance from A + t*v to P is 'distance'
+                # (A + t*v - P)^2 = distance^2
+                # (ax + t*dx - px)^2 + (ay + t*dy - py)^2 = distance^2
+                # => quadratic in t
+                a = (dx ** 2) + (dy ** 2)
+                b = 2 * ((self.inter_pose.X() - cur_pose.X()) * dx + (self.inter_pose.Y() - cur_pose.Y()) * dy)
+                c = ((self.inter_pose.X() - cur_pose.X()) ** 2) + ((self.inter_pose.Y() - cur_pose.Y()) ** 2) - (vel_dist ** 2)
+                
+                # CAREFUL OF NEGATIVE DISCRIMINANT
+                if (b ** 2) - (4 * a * c) < 0:
+                    pass
+                else:
+                    sqrt_disc = math.sqrt((b ** 2) - (4 * a * c))
+                    solution_1 = (-1 * b + sqrt_disc) / (2 * a)
+                    solution_2 = (-1 * b - sqrt_disc) / (2 * a)
+                    
+                    point_1 = Translation2d(self.inter_pose.X() + solution_1 * dx, self.inter_pose.Y() + solution_1 * dy)
+                    point_2 = Translation2d(self.inter_pose.X() + solution_2 * dx, self.inter_pose.Y() + solution_2 * dy)
+                    if self.inter_pose.translation().distance(point_1) > self.inter_pose.translation().distance(point_2):
+                        # POINT 2 CLOSER
+                        vx = (point_2 - cur_pose.translation()).X() * 20
+                        vy = (point_2 - cur_pose.translation()).Y() * 20
+                    else:
+                        # POINT 1 CLOSER
+                        vx = (point_1 - cur_pose.translation()).X() * 20
+                        vy = (point_1 - cur_pose.translation()).Y() * 20
 
             omega = self.theta_controller.calculate(
                 cur_pose.rotation().degrees(), self.inter_pose.rotation().degrees()
@@ -361,84 +399,6 @@ class Drivetrain(Subsystem):
         SmartDashboard.putNumber("vx", vx)
         SmartDashboard.putNumber("vy", vy)
         SmartDashboard.putNumber("omega", omega)
-
-
-    def go_to_pose_angle_bisector(self, final_pose : Pose2d, feedforward_x=0.0, feedforward_y=0.0, feedfoward_theta=0.0):
-        # ASSUMING FINAL POSE IS A POSE ON REEF FOR L2-L4 W/ END EFFECTOR ON REEF
-        cur_pose = self.robot.poseEstimator.curEstPose
-        if self.robot.isSimulation():
-            cur_speeds = self.log_chassis
-        else:  
-            cur_speeds = const.SWERVE_KINEMATICS.toChassisSpeeds(self.robot.poseEstimator.get_module_states())
-        
-        if self.at_inter_pose or cur_pose.translation().distance(final_pose.translation()) < 1.0 or cur_speeds == ChassisSpeeds():
-            vx = self.x_controller.calculate(cur_pose.X(), final_pose.X()) + feedforward_x
-            vy = self.y_controller.calculate(cur_pose.Y(), final_pose.Y()) + feedforward_y
-            omega = self.theta_controller.calculate(cur_pose.rotation().degrees(), final_pose.rotation().degrees()) + feedfoward_theta
-            if cur_speeds != ChassisSpeeds():
-                self.at_inter_pose = True
-
-        else:
-            dist_out = 0.75
-            final_rot_out = degreesToRadians(final_pose.rotation().degrees() + 90)
-            rot_proportion = dist_out / cur_pose.translation().distance(final_pose.translation())
-            rot_diff = final_pose.rotation() - cur_pose.rotation()
-            inter_pose = Pose2d(final_pose.X() + math.cos(final_rot_out) * dist_out, final_pose.Y() + math.sin(final_rot_out) * dist_out, final_pose.rotation() + rot_diff * rot_proportion)
-
-            veloctiy_vector = Translation2d(cur_pose.X() + cur_speeds.vx, cur_pose.Y() + cur_speeds.vy)
-            velocity_delta = veloctiy_vector - cur_pose.translation()
-            inter_pose_delta = inter_pose.translation() - cur_pose.translation()
-            SmartDashboard.putNumberArray("inter_pose", [inter_pose.X(), inter_pose.Y(), ])
-
-            velocity_angle = Rotation2d(math.atan2(velocity_delta.y, velocity_delta.x))
-            inter_pose_angle = Rotation2d(math.atan2(inter_pose_delta.y, inter_pose_delta.x))
-
-            # ANGLE BISECTOR BY CONVERTING TO UNIT VECTORS
-            x_part = velocity_angle.cos() + inter_pose_angle.cos()
-            y_part = velocity_angle.sin() + inter_pose_angle.sin()
-            # ANGLES ARE OPPOSITES
-            if math.isclose(x_part, 0.0, abs_tol=1e-8) and math.isclose(y_part, 0.0, abs_tol=1e-8):
-                bisector_angle = velocity_angle.rotateBy(Rotation2d.fromDegrees(90))
-            else:
-                bisector_angle = Rotation2d(math.atan2(y_part, x_part))
-            SmartDashboard.putNumber("bisector angle", bisector_angle.degrees())
-            SmartDashboard.putNumberArray("inter_pose", [inter_pose.X(), inter_pose.Y(), bisector_angle.degrees()])
-            velocity = -1 * self.xy_inter_controller.calculate(inter_pose.translation().distance(cur_pose.translation()), 0)
-            vx = velocity * math.cos(bisector_angle.radians()) + feedforward_x
-            vy = velocity * math.sin(bisector_angle.radians()) + feedforward_y
-
-            omega = self.theta_controller.calculate(
-                cur_pose.rotation().degrees(), inter_pose.rotation().degrees()
-            ) + feedfoward_theta
-    
-        if self.at_inter_pose:
-            if (
-                self.x_controller.atSetpoint()
-                and self.y_controller.atSetpoint()
-                and self.theta_controller.atSetpoint()
-                and self.robot.score_intent
-                and self.robot.running_pid_lineup
-            ):
-                self.robot.at_scoring_position = True
-        else:
-            if (
-                self.xy_inter_controller.atSetpoint()
-                and self.theta_controller.atSetpoint()
-                and self.robot.score_intent
-                and self.robot.running_pid_lineup
-            ):
-                self.at_inter_pose = True
-                self.theta_controller.reset()
-        
-        self.drive(Translation2d(vx, vy), omega, True, False)
-
-        # Update SmartDashboard values for debugging
-        SmartDashboard.putNumber("t_pose x", final_pose.X())
-        SmartDashboard.putNumber("t_pose y", final_pose.Y())
-        SmartDashboard.putNumber("vx", vx)
-        SmartDashboard.putNumber("vy", vy)
-        SmartDashboard.putNumber("omega", omega)
-        
 
     def go_to_pose_profiled_pid_ghost(self, final_target_pose : Pose2d, feedforward_x=0.0, feedforward_y=0.0, feedfoward_theta=0.0):
         current_pose = self.robot.poseEstimator.curEstPose
