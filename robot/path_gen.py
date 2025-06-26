@@ -155,7 +155,7 @@ class PathGenerator():
         self.currentSlope = 1
         self.useObstacles = useObstacles
         self.smoothity = 6
-        self.tag_layout = AprilTagFieldLayout.loadField(AprilTagField.k2025ReefscapeWelded)
+        self.tag_layout = AprilTagFieldLayout.loadField(AprilTagField.k2025ReefscapeWeldedWelded)
         self.controlPoints = self.buildPath(self.astar(initialPosition.translation(), finalPosition.translation()))
         #self.removeDuplicateSlopes()
         self.controlPoints.reverse()

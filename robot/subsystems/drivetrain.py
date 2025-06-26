@@ -274,7 +274,7 @@ class Drivetrain(Subsystem):
             omega = self.theta_controller.calculate(cur_pose.rotation().degrees(), final_pose.rotation().degrees()) + feedfoward_theta
             self.at_inter_pose = True
         else:
-            dist_out = 0.6
+            dist_out = 0.4
             final_rot_out = degreesToRadians(final_pose.rotation().degrees() + 90)
             rot_proportion = dist_out / cur_pose.translation().distance(final_pose.translation())
             rot_diff = final_pose.rotation() - cur_pose.rotation()
@@ -285,55 +285,55 @@ class Drivetrain(Subsystem):
             inter_pose_angle = Rotation2d(math.atan2(inter_delta.y, inter_delta.x))
 
             alpha_angle = inter_pose_angle - final_rot_in
-            velocity_angle = inter_pose_angle + alpha_angle
+            velocity_angle = inter_pose_angle + alpha_angle + Rotation2d.fromDegrees(alpha_angle.degrees() ** 1/3)
 
             velocity = -1 * self.xy_inter_controller.calculate(self.inter_pose.translation().distance(cur_pose.translation()), 0)
             vx = velocity * math.cos(velocity_angle.radians()) + feedforward_x
             vy = velocity * math.sin(velocity_angle.radians()) + feedforward_y
 
-            ## REDIRECTING VELOCITY BEFORE INTER-FINAL VECTOR
-            predicted_pose = Translation2d(cur_pose.X() + (vx / 20), cur_pose.Y() + (vy / 20))
+            # ## REDIRECTING VELOCITY BEFORE INTER-FINAL VECTOR
+            # predicted_pose = Translation2d(cur_pose.X() + (vx / 20), cur_pose.Y() + (vy / 20))
 
-            inter_final_vec = final_pose.translation() - self.inter_pose.translation()
-            cur_inter_vec = cur_pose.translation() - self.inter_pose.translation()
-            predicted_inter_vec = predicted_pose - self.inter_pose.translation()
+            # inter_final_vec = final_pose.translation() - self.inter_pose.translation()
+            # cur_inter_vec = cur_pose.translation() - self.inter_pose.translation()
+            # predicted_inter_vec = predicted_pose - self.inter_pose.translation()
 
-            cur_cross = inter_final_vec.X() * cur_inter_vec.Y() - inter_final_vec.Y() * cur_inter_vec.X()
-            predicted_cross = inter_final_vec.X() * predicted_inter_vec.Y() - inter_final_vec.Y() * predicted_inter_vec.X()
+            # cur_cross = inter_final_vec.X() * cur_inter_vec.Y() - inter_final_vec.Y() * cur_inter_vec.X()
+            # predicted_cross = inter_final_vec.X() * predicted_inter_vec.Y() - inter_final_vec.Y() * predicted_inter_vec.X()
 
-            if cur_cross * predicted_cross < 0:
-                vel_dist = math.hypot(vx, vy)
-                # For getting a unit vector
-                length = math.hypot(inter_final_vec.X(), inter_final_vec.Y())
-                dx = inter_final_vec.X() / length
-                dy = inter_final_vec.Y() / length
+            # if cur_cross * predicted_cross < 0:
+            #     vel_dist = math.hypot(vx, vy)
+            #     # For getting a unit vector
+            #     length = math.hypot(inter_final_vec.X(), inter_final_vec.Y())
+            #     dx = inter_final_vec.X() / length
+            #     dy = inter_final_vec.Y() / length
 
-                # Solve for t such that distance from A + t*v to P is 'distance'
-                # (A + t*v - P)^2 = distance^2
-                # (ax + t*dx - px)^2 + (ay + t*dy - py)^2 = distance^2
-                # => quadratic in t
-                a = (dx ** 2) + (dy ** 2)
-                b = 2 * ((self.inter_pose.X() - cur_pose.X()) * dx + (self.inter_pose.Y() - cur_pose.Y()) * dy)
-                c = ((self.inter_pose.X() - cur_pose.X()) ** 2) + ((self.inter_pose.Y() - cur_pose.Y()) ** 2) - (vel_dist ** 2)
+            #     # Solve for t such that distance from A + t*v to P is 'distance'
+            #     # (A + t*v - P)^2 = distance^2
+            #     # (ax + t*dx - px)^2 + (ay + t*dy - py)^2 = distance^2
+            #     # => quadratic in t
+            #     a = (dx ** 2) + (dy ** 2)
+            #     b = 2 * ((self.inter_pose.X() - cur_pose.X()) * dx + (self.inter_pose.Y() - cur_pose.Y()) * dy)
+            #     c = ((self.inter_pose.X() - cur_pose.X()) ** 2) + ((self.inter_pose.Y() - cur_pose.Y()) ** 2) - (vel_dist ** 2)
                 
-                # CAREFUL OF NEGATIVE DISCRIMINANT
-                if (b ** 2) - (4 * a * c) < 0:
-                    pass
-                else:
-                    sqrt_disc = math.sqrt((b ** 2) - (4 * a * c))
-                    solution_1 = (-1 * b + sqrt_disc) / (2 * a)
-                    solution_2 = (-1 * b - sqrt_disc) / (2 * a)
+            #     # CAREFUL OF NEGATIVE DISCRIMINANT
+            #     if (b ** 2) - (4 * a * c) < 0:
+            #         pass
+            #     else:
+            #         sqrt_disc = math.sqrt((b ** 2) - (4 * a * c))
+            #         solution_1 = (-1 * b + sqrt_disc) / (2 * a)
+            #         solution_2 = (-1 * b - sqrt_disc) / (2 * a)
                     
-                    point_1 = Translation2d(self.inter_pose.X() + solution_1 * dx, self.inter_pose.Y() + solution_1 * dy)
-                    point_2 = Translation2d(self.inter_pose.X() + solution_2 * dx, self.inter_pose.Y() + solution_2 * dy)
-                    if self.inter_pose.translation().distance(point_1) > self.inter_pose.translation().distance(point_2):
-                        # POINT 2 CLOSER
-                        vx = (point_2 - cur_pose.translation()).X() * 20
-                        vy = (point_2 - cur_pose.translation()).Y() * 20
-                    else:
-                        # POINT 1 CLOSER
-                        vx = (point_1 - cur_pose.translation()).X() * 20
-                        vy = (point_1 - cur_pose.translation()).Y() * 20
+            #         point_1 = Translation2d(self.inter_pose.X() + solution_1 * dx, self.inter_pose.Y() + solution_1 * dy)
+            #         point_2 = Translation2d(self.inter_pose.X() + solution_2 * dx, self.inter_pose.Y() + solution_2 * dy)
+            #         if self.inter_pose.translation().distance(point_1) > self.inter_pose.translation().distance(point_2):
+            #             # POINT 2 CLOSER
+            #             vx = (point_2 - cur_pose.translation()).X() * 20
+            #             vy = (point_2 - cur_pose.translation()).Y() * 20
+            #         else:
+            #             # POINT 1 CLOSER
+            #             vx = (point_1 - cur_pose.translation()).X() * 20
+            #             vy = (point_1 - cur_pose.translation()).Y() * 20
 
             omega = self.theta_controller.calculate(
                 cur_pose.rotation().degrees(), self.inter_pose.rotation().degrees()

@@ -228,7 +228,7 @@ class PoseEstimator(Subsystem):
 
         self.temp_rotation_check = Rotation2d()
 
-        self.tag_layout = AprilTagFieldLayout.loadField(AprilTagField.k2025Reefscape)
+        self.tag_layout = AprilTagFieldLayout.loadField(AprilTagField.k2025ReefscapeWelded)
         self.single_tag = False
         self.possible_pose_gbl = Pose2d()
 

@@ -124,7 +124,7 @@ class FieldConstants:
 
     class Reef:
         center = Translation2d(inchesToMeters(176.746), inchesToMeters(158.501))
-        tag_map = AprilTagFieldLayout.loadField(AprilTagField.k2025Reefscape)
+        tag_map = AprilTagFieldLayout.loadField(AprilTagField.k2025ReefscapeWelded)
         faceToZoneLine = inchesToMeters(
             12
         )  # Side of the reef to the inside of the reef zone line

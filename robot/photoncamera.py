@@ -54,7 +54,7 @@ class WrapperedPhotonCamera:
         self.poseEstimates = []
         self.robotToCam: Transform3d = robotToCam
         self.counter = 0
-        self.tag_map = AprilTagFieldLayout.loadField(AprilTagField.k2025Reefscape)
+        self.tag_map = AprilTagFieldLayout.loadField(AprilTagField.k2025ReefscapeWelded)
 
         self.reef_tags_to_use = [6,7,8,9,10,11,17,18,19,20,21,22]
 
