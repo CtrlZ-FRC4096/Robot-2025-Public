@@ -287,6 +287,7 @@ class OI:
                 self.robot.at_intake_position = False
                 self.robot.strafe_for_L1 = False
                 self.robot.score_piece = False
+                self.robot.drivetrain.limit_reef_acc = False
                 if self.robot.score_state.number == 1 and not self.robot.score_with_strafing:
                     self.robot.final_lineup_pose = self.robot.poseEstimator.get_path_to_reef(True, self.robot.poseEstimator.calculate_closest_reef_tag()[1], self.robot.right_branch, do_manip_offset=False, do_side_offset=False)
                 else:
@@ -356,6 +357,7 @@ class OI:
                 self.robot.at_scoring_position = False
                 self.robot.at_intake_position = False
                 self.robot.strafe_for_L1 = False
+                self.robot.drivetrain.limit_reef_acc = False
                 self.robot.score_piece = False
                 if self.robot.score_state.number == 1 and not self.robot.score_with_strafing:
                     self.robot.final_lineup_pose = self.robot.poseEstimator.get_path_to_reef(True, self.robot.poseEstimator.calculate_closest_reef_tag()[1], self.robot.right_branch, do_manip_offset=False, do_side_offset=False)

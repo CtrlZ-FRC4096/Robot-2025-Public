@@ -79,17 +79,20 @@ class Drivetrain(Subsystem):
 
 
 
+
+
         ## Need to check these tolerances
         self.x_controller.setTolerance(0.03, 0.1) #0.025, 0.1
         self.y_controller.setTolerance(0.03, 0.1) #0.025, 0.1
         self.theta_controller.enableContinuousInput(0, 360)
         self.theta_controller.setTolerance(2.8, 2.0) #3.0, 0.1
-        self.xy_inter_controller.setTolerance(0.1, 1.0)
+        self.xy_inter_controller.setTolerance(0.15, 2.0)
 
         self.at_inter_pose = False
         self.inter_pose = Pose2d()
         self.log_chassis = ChassisSpeeds()
-        
+        self.limit_reef_acc = False
+        self.acc_limit_counter = 1
         ### Field Visualisation - Needs testing ###
         self.previous_chassisspeeds = ChassisSpeeds()
         # self.curPose = Pose2d(inchesToMeters(235.726), 0.8, Rotation2d.fromDegrees(0))
@@ -285,7 +288,7 @@ class Drivetrain(Subsystem):
             inter_pose_angle = Rotation2d(math.atan2(inter_delta.y, inter_delta.x))
 
             alpha_angle = inter_pose_angle - final_rot_in
-            velocity_angle = inter_pose_angle + alpha_angle + Rotation2d.fromDegrees(alpha_angle.degrees() ** 1/3)
+            velocity_angle = inter_pose_angle + alpha_angle #+ Rotation2d.fromDegrees(alpha_angle.degrees() ** 1/3)
 
             velocity = -1 * self.xy_inter_controller.calculate(self.inter_pose.translation().distance(cur_pose.translation()), 0)
             vx = velocity * math.cos(velocity_angle.radians()) + feedforward_x
@@ -339,6 +342,17 @@ class Drivetrain(Subsystem):
                 cur_pose.rotation().degrees(), self.inter_pose.rotation().degrees()
             ) + feedfoward_theta
         
+        if self.limit_reef_acc:
+            acc_mag = (math.sqrt(((vx - cur_speeds.vx) ** 2) + ((vy - cur_speeds.vy) ** 2))) / (0.05)
+            if acc_mag > 1.0 and self.acc_limit_counter < 30:
+                delta_vel = Translation2d(vx, vy) - Translation2d(cur_speeds.vx, cur_speeds.vy)
+                acc_angle = Rotation2d(delta_vel.X(), delta_vel.Y())
+                new_velocities = Translation2d(cur_speeds.vx + math.cos(acc_angle.radians()) * 0.05, cur_speeds.vy + math.sin(acc_angle.radians()) * 0.05)
+                vx = new_velocities.X()
+                vy = new_velocities.Y()
+            self.acc_limit_counter += 1
+        
+        
         final_rotation_out = Rotation2d.fromDegrees(final_pose.rotation().degrees() + 90)
         coral_block_pose_x = math.cos(final_rotation_out.radians()) * inchesToMeters(4.0)
         coral_block_pose_y = math.sin(final_rotation_out.radians()) * inchesToMeters(4.0)
@@ -352,7 +366,10 @@ class Drivetrain(Subsystem):
             coral_block_pose.Y() + vector.Y() * projection_length
         )
 
-
+        
+        if cur_pose.translation().distance(self.inter_pose.translation()) < 0.5:
+            self.limit_reef_acc = True
+            self.acc_limit_counter = 1
         if (cur_speeds.vx < 0.05 and cur_speeds.vy < 0.05) and (cur_pose.translation().distance(coral_block_pose) < inchesToMeters(2)) and (cur_pose.translation().distance(closest_point) < inchesToMeters(0.8)) and (self.robot.score_state.number == 2 or self.robot.score_state.number == 3):
             self.coral_blocking.appendleft(True)
         else:
@@ -375,7 +392,7 @@ class Drivetrain(Subsystem):
                 self.coral_blocking.clear()
                 for i in range(self.coral_blocking_length):
                     self.coral_blocking.appendleft(False)
-                
+                self.limit_reef_acc = False
                 self.robot.at_scoring_position = True
                 self.x_controller.reset()
                 self.y_controller.reset()
@@ -384,7 +401,8 @@ class Drivetrain(Subsystem):
             if (
                 # self.xy_inter_controller.atSetpoint()
                 self.theta_controller.atSetpoint()
-                and self.robot.poseEstimator.curEstPose.translation().distance(self.inter_pose.translation()) < 0.75
+                and self.xy_inter_controller.atSetpoint()
+                # and self.robot.poseEstimator.curEstPose.translation().distance(self.inter_pose.translation()) < 0.75
                 and self.robot.score_intent
                 and self.robot.running_pid_lineup
             ):
@@ -492,9 +510,9 @@ class Drivetrain(Subsystem):
         self.xy_inter_controller.setConstraints(TrapezoidProfile.Constraints(self.inter_max_vel, self.inter_max_acc))
 
     def log(self):
-        if self.robot.running_pid_lineup:
-            object = self.robot.poseEstimator.field_for_single_tag.getObject("lineup curve" + str(self.counter))
-            object.setPose(self.robot.poseEstimator.curEstPose)
+        # if self.robot.running_pid_lineup:
+        #     object = self.robot.poseEstimator.field_for_single_tag.getObject("lineup curve" + str(self.counter))
+        #     object.setPose(self.robot.poseEstimator.curEstPose)
         self.counter += 1
         SmartDashboard.putNumber("Inter Max Vel", self.inter_max_vel)
         SmartDashboard.putNumber("Inter Max Accel", self.inter_max_acc)
