@@ -69,6 +69,7 @@ class Drivetrain(Subsystem):
 
         self.x_controller = PIDController(2.0, 0.01, 0.025) #0.01
         self.y_controller = PIDController(2.0, 0.01, 0.025) #0.01
+        self.xy_controller = ProfiledPIDController(2.0, 0.01, 0.025, TrapezoidProfile.Constraints(4.0, 4.0))
         self.theta_controller = PIDController(0.07, 0.01, 0.0015)
         
         self.inter_max_vel = 3.0
@@ -84,6 +85,7 @@ class Drivetrain(Subsystem):
         ## Need to check these tolerances
         self.x_controller.setTolerance(0.03, 0.1) #0.025, 0.1
         self.y_controller.setTolerance(0.03, 0.1) #0.025, 0.1
+        self.xy_controller.setTolerance(0.0225, 0.15)
         self.theta_controller.enableContinuousInput(0, 360)
         self.theta_controller.setTolerance(2.8, 2.0) #3.0, 0.1
         self.xy_inter_controller.setTolerance(0.15, 2.0)
@@ -93,6 +95,8 @@ class Drivetrain(Subsystem):
         self.log_chassis = ChassisSpeeds()
         self.limit_reef_acc = False
         self.acc_limit_counter = 1
+        self.xy_max_vel = 3.0
+        self.xy_max_acc = 3.0
         ### Field Visualisation - Needs testing ###
         self.previous_chassisspeeds = ChassisSpeeds()
         # self.curPose = Pose2d(inchesToMeters(235.726), 0.8, Rotation2d.fromDegrees(0))
@@ -272,8 +276,11 @@ class Drivetrain(Subsystem):
         else:  
             cur_speeds = const.SWERVE_KINEMATICS.toChassisSpeeds(self.robot.poseEstimator.get_module_states())
         if self.at_inter_pose or cur_pose.translation().distance(final_pose.translation()) < 1.0:
-            vx = self.x_controller.calculate(cur_pose.X(), final_pose.X()) + feedforward_x
-            vy = self.y_controller.calculate(cur_pose.Y(), final_pose.Y()) + feedforward_y
+            vel_angle = (final_pose.translation() - cur_pose.translation()).angle().radians()
+            vel_mag = -1 * self.xy_controller.calculate(cur_pose.translation().distance(final_pose.translation()), 0)
+            
+            vx = vel_mag * math.cos(vel_angle) + feedforward_x
+            vy = vel_mag * math.sin(vel_angle) + feedforward_y
             omega = self.theta_controller.calculate(cur_pose.rotation().degrees(), final_pose.rotation().degrees()) + feedfoward_theta
             self.at_inter_pose = True
         else:
@@ -294,64 +301,14 @@ class Drivetrain(Subsystem):
             vx = velocity * math.cos(velocity_angle.radians()) + feedforward_x
             vy = velocity * math.sin(velocity_angle.radians()) + feedforward_y
 
-            # ## REDIRECTING VELOCITY BEFORE INTER-FINAL VECTOR
-            # predicted_pose = Translation2d(cur_pose.X() + (vx / 20), cur_pose.Y() + (vy / 20))
-
-            # inter_final_vec = final_pose.translation() - self.inter_pose.translation()
-            # cur_inter_vec = cur_pose.translation() - self.inter_pose.translation()
-            # predicted_inter_vec = predicted_pose - self.inter_pose.translation()
-
-            # cur_cross = inter_final_vec.X() * cur_inter_vec.Y() - inter_final_vec.Y() * cur_inter_vec.X()
-            # predicted_cross = inter_final_vec.X() * predicted_inter_vec.Y() - inter_final_vec.Y() * predicted_inter_vec.X()
-
-            # if cur_cross * predicted_cross < 0:
-            #     vel_dist = math.hypot(vx, vy)
-            #     # For getting a unit vector
-            #     length = math.hypot(inter_final_vec.X(), inter_final_vec.Y())
-            #     dx = inter_final_vec.X() / length
-            #     dy = inter_final_vec.Y() / length
-
-            #     # Solve for t such that distance from A + t*v to P is 'distance'
-            #     # (A + t*v - P)^2 = distance^2
-            #     # (ax + t*dx - px)^2 + (ay + t*dy - py)^2 = distance^2
-            #     # => quadratic in t
-            #     a = (dx ** 2) + (dy ** 2)
-            #     b = 2 * ((self.inter_pose.X() - cur_pose.X()) * dx + (self.inter_pose.Y() - cur_pose.Y()) * dy)
-            #     c = ((self.inter_pose.X() - cur_pose.X()) ** 2) + ((self.inter_pose.Y() - cur_pose.Y()) ** 2) - (vel_dist ** 2)
-                
-            #     # CAREFUL OF NEGATIVE DISCRIMINANT
-            #     if (b ** 2) - (4 * a * c) < 0:
-            #         pass
-            #     else:
-            #         sqrt_disc = math.sqrt((b ** 2) - (4 * a * c))
-            #         solution_1 = (-1 * b + sqrt_disc) / (2 * a)
-            #         solution_2 = (-1 * b - sqrt_disc) / (2 * a)
-                    
-            #         point_1 = Translation2d(self.inter_pose.X() + solution_1 * dx, self.inter_pose.Y() + solution_1 * dy)
-            #         point_2 = Translation2d(self.inter_pose.X() + solution_2 * dx, self.inter_pose.Y() + solution_2 * dy)
-            #         if self.inter_pose.translation().distance(point_1) > self.inter_pose.translation().distance(point_2):
-            #             # POINT 2 CLOSER
-            #             vx = (point_2 - cur_pose.translation()).X() * 20
-            #             vy = (point_2 - cur_pose.translation()).Y() * 20
-            #         else:
-            #             # POINT 1 CLOSER
-            #             vx = (point_1 - cur_pose.translation()).X() * 20
-            #             vy = (point_1 - cur_pose.translation()).Y() * 20
-
             omega = self.theta_controller.calculate(
                 cur_pose.rotation().degrees(), self.inter_pose.rotation().degrees()
             ) + feedfoward_theta
         
-        if self.limit_reef_acc:
-            acc_mag = (math.sqrt(((vx - cur_speeds.vx) ** 2) + ((vy - cur_speeds.vy) ** 2))) / (0.05)
-            if acc_mag > 1.0 and self.acc_limit_counter < 30:
-                delta_vel = Translation2d(vx, vy) - Translation2d(cur_speeds.vx, cur_speeds.vy)
-                acc_angle = Rotation2d(delta_vel.X(), delta_vel.Y())
-                new_velocities = Translation2d(cur_speeds.vx + math.cos(acc_angle.radians()) * 0.05, cur_speeds.vy + math.sin(acc_angle.radians()) * 0.05)
-                vx = new_velocities.X()
-                vy = new_velocities.Y()
+        if self.limit_reef_acc and self.acc_limit_counter < 15:
+            self.inter_max_acc = 0.5
+            self.xy_max_acc = 0.5
             self.acc_limit_counter += 1
-        
         
         final_rotation_out = Rotation2d.fromDegrees(final_pose.rotation().degrees() + 90)
         coral_block_pose_x = math.cos(final_rotation_out.radians()) * inchesToMeters(4.0)
@@ -366,19 +323,25 @@ class Drivetrain(Subsystem):
             coral_block_pose.Y() + vector.Y() * projection_length
         )
 
+        delta_pose_final = cur_pose.translation() - final_pose.translation()
+
+        side_to_side_dist = delta_pose_final.X() * final_rotation_out.cos() + delta_pose_final.Y() * final_rotation_out.sin()
+        back_and_forth_dist = delta_pose_final.X() * final_pose.rotation().cos() + delta_pose_final.Y() * final_pose.rotation().sin()
+         
         
         if cur_pose.translation().distance(self.inter_pose.translation()) < 0.5:
             self.limit_reef_acc = True
             self.acc_limit_counter = 1
-        if (cur_speeds.vx < 0.05 and cur_speeds.vy < 0.05) and (cur_pose.translation().distance(coral_block_pose) < inchesToMeters(2)) and (cur_pose.translation().distance(closest_point) < inchesToMeters(0.8)) and (self.robot.score_state.number == 2 or self.robot.score_state.number == 3):
+        if (cur_speeds.vx < 0.05 and cur_speeds.vy < 0.05) and (cur_pose.translation().distance(coral_block_pose) < 0.03) and (cur_pose.translation().distance(closest_point) < 0.01) and (self.robot.score_state.number == 2 or self.robot.score_state.number == 3):
             self.coral_blocking.appendleft(True)
         else:
             self.coral_blocking.appendleft(False)
         
         if self.at_inter_pose:
             if ((
-                self.x_controller.atSetpoint()
-                and self.y_controller.atSetpoint()
+                side_to_side_dist < 0.01
+                and back_and_forth_dist < 0.03
+                and (cur_speeds.vx ** 2) + (cur_speeds.vy ** 2) < 0.1
                 and self.theta_controller.atSetpoint()) or all(self.coral_blocking)) and (self.robot.score_intent
                 and self.robot.running_pid_lineup):
                 if all(self.coral_blocking):
@@ -393,9 +356,12 @@ class Drivetrain(Subsystem):
                 for i in range(self.coral_blocking_length):
                     self.coral_blocking.appendleft(False)
                 self.limit_reef_acc = False
+                self.acc_limit_counter = 1
                 self.robot.at_scoring_position = True
-                self.x_controller.reset()
-                self.y_controller.reset()
+                self.xy_max_acc = 3.0
+                self.xy_max_vel = 3.0
+                # self.x_controller.reset()
+                # self.y_controller.reset()
                 self.theta_controller.reset()
         else:
             if (
@@ -507,16 +473,24 @@ class Drivetrain(Subsystem):
                 self.go_to_pose_profiled_pid(self.robot.final_lineup_pose)
         self.inter_max_vel = SmartDashboard.getNumber("Inter Max Vel", 3.0)
         self.inter_max_acc = SmartDashboard.getNumber("Inter Max Accel", 3.0)
+        if not self.limit_reef_acc:
+            self.xy_max_vel = SmartDashboard.getNumber("XY Max Vel", 3.0)
+            self.xy_max_acc = SmartDashboard.getNumber("XY Max Acc", 3.0)
         self.xy_inter_controller.setConstraints(TrapezoidProfile.Constraints(self.inter_max_vel, self.inter_max_acc))
+        self.xy_controller.setConstraints(TrapezoidProfile.Constraints(self.xy_max_vel, self.xy_max_acc))
 
     def log(self):
         # if self.robot.running_pid_lineup:
         #     object = self.robot.poseEstimator.field_for_single_tag.getObject("lineup curve" + str(self.counter))
         #     object.setPose(self.robot.poseEstimator.curEstPose)
         self.counter += 1
+        SmartDashboard.putNumber("XY Max Vel", self.xy_max_vel)
+        SmartDashboard.putNumber("XY Max Acc", self.xy_max_acc)
+        SmartDashboard.putBoolean("Limit Reef Acc", self.limit_reef_acc)
+        SmartDashboard.putNumber("Reef Acc Counter", self.acc_limit_counter)
         SmartDashboard.putNumber("Inter Max Vel", self.inter_max_vel)
         SmartDashboard.putNumber("Inter Max Accel", self.inter_max_acc)
-
+        SmartDashboard.putData("PID Controller Reef XY", self.xy_controller)
         SmartDashboard.putData("PID Controller for going to reef, x", self.x_controller)
         SmartDashboard.putData("PID Controller for going to reef, y", self.y_controller)
         SmartDashboard.putData(
