@@ -132,7 +132,8 @@ class OI:
                     left_right *= -1
 
                 rotate = -self.driver1.RIGHT_JOY_X()
-
+                # if self.robot.wheels_at_x:
+                #     self.robot.drivetrain.turn_wheels_to_x()
                 if self.robot.running_pid_lineup:
                     # Cancel drive with pid if robot is moving manually
                     if (

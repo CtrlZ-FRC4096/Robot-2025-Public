@@ -1,5 +1,5 @@
 class RobotScoringPositions:
-	elevator_raise_threshold = 1.7 # meters needed to be closer than to reef to raise elevator
+	elevator_raise_threshold = 1.0 # meters needed to be closer than to reef to raise elevator
 	end_effector_travel_position = 8.1 # 8.0
 	elevator_intake_height = 2.0
 	end_effector_intake_position = 0.0
@@ -22,7 +22,7 @@ class RobotScoringPositions:
 		number = 1
 	class L2_Scoring:
 		elevator_height = 23.5
-		end_effector_outtake_speed = 35.0 #35.0
+		end_effector_outtake_speed = 30.0 #35.0
 		end_effector_position = 10.0
 		number = 2
 	class L2_Scoring_Blocked:
@@ -32,7 +32,7 @@ class RobotScoringPositions:
 		number = 2
 	class L3_Scoring:
 		elevator_height = 39.5 # 39.0
-		end_effector_outtake_speed = 35.0 #35.0 # 30.0
+		end_effector_outtake_speed = 30.0 #35.0 # 30.0
 		end_effector_position = 10.0
 		number = 3
 	class L3_Scoring_Blocked:

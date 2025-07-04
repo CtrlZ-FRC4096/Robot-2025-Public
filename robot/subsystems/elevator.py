@@ -38,9 +38,9 @@ class Elevator(Subsystem):
         self.elevator_motor_config.slot0.k_s = 0.0
 
         ## Next we will adjust k_p until the elevator moves to the correct position and slightly overshoots/oscillates
-        self.elevator_motor_config.slot0.k_p = 7.0
+        self.elevator_motor_config.slot0.k_p = 2.3
         ## Next we will adjust k_d until the elevator moves to the correct position without overshooting/oscillating
-        self.elevator_motor_config.slot0.k_d = 0.0
+        self.elevator_motor_config.slot0.k_d = 0.02
 
         ## Adjust other stuff if we need it like k_v and k_a for feed forward
         self.elevator_motor_config.current_limits.supply_current_limit = 80
@@ -60,8 +60,8 @@ class Elevator(Subsystem):
         self.elevator_motor_config.motor_output.inverted = signals.InvertedValue(1)
 
         # We will adjust these values later to get the elevator moving faster
-        self.elevator_motor_config.motion_magic.motion_magic_cruise_velocity = 175 # Recalc has us at 16 RPS, but starting slow
-        self.elevator_motor_config.motion_magic.motion_magic_acceleration = 100 # Recalc has us at 100 RPS/s^2, but starting slow
+        self.elevator_motor_config.motion_magic.motion_magic_cruise_velocity = 291 # Recalc has us at 16 RPS, but starting slow
+        self.elevator_motor_config.motion_magic.motion_magic_acceleration = 200 # Recalc has us at 100 RPS/s^2, but starting slow
 
         self.elevator_motor_1.configurator.apply(self.elevator_motor_config)  # type: ignore
         self.elevator_motor_2.configurator.apply(self.elevator_motor_config)  # type: ignore

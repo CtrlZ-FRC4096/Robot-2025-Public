@@ -69,14 +69,14 @@ class Drivetrain(Subsystem):
 
         self.x_controller = PIDController(2.0, 0.01, 0.025) #0.01
         self.y_controller = PIDController(2.0, 0.01, 0.025) #0.01
-        self.xy_controller = ProfiledPIDController(2.0, 0.01, 0.025, TrapezoidProfile.Constraints(4.0, 4.0))
+        self.xy_controller = ProfiledPIDController(2.0, 0.0, 0.025, TrapezoidProfile.Constraints(4.0, 4.0))
         self.theta_controller = PIDController(0.07, 0.01, 0.0015)
         
-        self.inter_max_vel = 3.0
-        self.inter_max_acc = 3.0
+        self.inter_max_vel = 4.0
+        self.inter_max_acc = 4.0
         constraints = TrapezoidProfile.Constraints(self.inter_max_vel, self.inter_max_acc)
         # self.xy_controller = ProfiledPIDController(2.0, 0.01, 0.025)#, constraints, period=0.05)
-        self.xy_inter_controller = ProfiledPIDController(1.3, 0.0, 0.0, constraints)
+        self.xy_inter_controller = ProfiledPIDController(1.55, 0.0, 0.0, constraints)
 
 
 
@@ -95,8 +95,8 @@ class Drivetrain(Subsystem):
         self.log_chassis = ChassisSpeeds()
         self.limit_reef_acc = False
         self.acc_limit_counter = 1
-        self.xy_max_vel = 3.0
-        self.xy_max_acc = 3.0
+        self.xy_max_vel = 4.0
+        self.xy_max_acc = 4.0
         ### Field Visualisation - Needs testing ###
         self.previous_chassisspeeds = ChassisSpeeds()
         # self.curPose = Pose2d(inchesToMeters(235.726), 0.8, Rotation2d.fromDegrees(0))
@@ -277,7 +277,7 @@ class Drivetrain(Subsystem):
             cur_speeds = const.SWERVE_KINEMATICS.toChassisSpeeds(self.robot.poseEstimator.get_module_states())
         if self.at_inter_pose or cur_pose.translation().distance(final_pose.translation()) < 1.0:
             vel_angle = (final_pose.translation() - cur_pose.translation()).angle().radians()
-            vel_mag = -1 * self.xy_controller.calculate(cur_pose.translation().distance(final_pose.translation()), 0)
+            vel_mag = -1 * self.xy_controller.calculate(cur_pose.translation().distance(final_pose.translation()), 0) + 0.03
             
             vx = vel_mag * math.cos(vel_angle) + feedforward_x
             vy = vel_mag * math.sin(vel_angle) + feedforward_y
@@ -304,11 +304,19 @@ class Drivetrain(Subsystem):
             omega = self.theta_controller.calculate(
                 cur_pose.rotation().degrees(), self.inter_pose.rotation().degrees()
             ) + feedfoward_theta
+
+            if cur_pose.translation().distance(self.inter_pose.translation()) < 0.1:
+                self.limit_reef_acc = True
+                self.acc_limit_counter = 1
         
-        if self.limit_reef_acc and self.acc_limit_counter < 15:
-            self.inter_max_acc = 0.5
-            self.xy_max_acc = 0.5
-            self.acc_limit_counter += 1
+        if self.limit_reef_acc:
+            if  self.acc_limit_counter < 15:
+                self.inter_max_acc = 0.5
+                self.xy_max_acc = 0.5
+                self.acc_limit_counter += 1
+            else:
+                self.inter_max_acc = 4.0
+                self.xy_max_acc = 4.0
         
         final_rotation_out = Rotation2d.fromDegrees(final_pose.rotation().degrees() + 90)
         coral_block_pose_x = math.cos(final_rotation_out.radians()) * inchesToMeters(4.0)
@@ -329,9 +337,7 @@ class Drivetrain(Subsystem):
         back_and_forth_dist = delta_pose_final.X() * final_pose.rotation().cos() + delta_pose_final.Y() * final_pose.rotation().sin()
          
         
-        if cur_pose.translation().distance(self.inter_pose.translation()) < 0.5:
-            self.limit_reef_acc = True
-            self.acc_limit_counter = 1
+        
         if (cur_speeds.vx < 0.05 and cur_speeds.vy < 0.05) and (cur_pose.translation().distance(coral_block_pose) < 0.03) and (cur_pose.translation().distance(closest_point) < 0.01) and (self.robot.score_state.number == 2 or self.robot.score_state.number == 3):
             self.coral_blocking.appendleft(True)
         else:
@@ -358,8 +364,8 @@ class Drivetrain(Subsystem):
                 self.limit_reef_acc = False
                 self.acc_limit_counter = 1
                 self.robot.at_scoring_position = True
-                self.xy_max_acc = 3.0
-                self.xy_max_vel = 3.0
+                self.xy_max_acc = 4.0
+                self.xy_max_vel = 4.0
                 # self.x_controller.reset()
                 # self.y_controller.reset()
                 self.theta_controller.reset()
@@ -433,19 +439,11 @@ class Drivetrain(Subsystem):
         )
 
     def turn_wheels_to_x(self): #, left_source : bool):
-        module_angles = []
-        #source_rotation = FieldConstants.flip_Rotation2d(FieldConstants.CoralStation.leftCenterFace.rotation()) if left_source else FieldConstants.flip_Rotation2d(FieldConstants.CoralStation.rightCenterFace.rotation())
-        battery_facing = self.robot.poseEstimator.getYaw()
-        #source_rotation + Rotation2d.fromDegrees(90)
-        module_angles.append(Rotation2d.fromDegrees(45))
-        module_angles.append(Rotation2d.fromDegrees(-45))
-        module_angles.append(Rotation2d.fromDegrees(135))
-        module_angles.append(Rotation2d.fromDegrees(-135))
         module_states = [
-            SwerveModuleState(0, module_angles[0]),
-            SwerveModuleState(0, module_angles[1]),
-            SwerveModuleState(0, module_angles[2]),
-            SwerveModuleState(0, module_angles[3]),
+            SwerveModuleState(1, Rotation2d.fromDegrees(45)),
+            SwerveModuleState(0, Rotation2d.fromDegrees(135)),
+            SwerveModuleState(0, Rotation2d.fromDegrees(135)),
+            SwerveModuleState(0, Rotation2d.fromDegrees(45)),
         ]
         for idx, module in enumerate(self.robot.poseEstimator.modules):
             module.set_desired_state(module_states[idx], False)
@@ -456,6 +454,7 @@ class Drivetrain(Subsystem):
         self.theta_controller.reset()
         
     def get_robot_relative_speeds(self):
+
         module_states = (
             self.robot.poseEstimator.get_module_states()
         )  # Check this in swervemodule.py, we need to convert kraken speed to m/s
@@ -471,18 +470,30 @@ class Drivetrain(Subsystem):
                 self.go_to_pose_profiled_pid(self.robot.final_lineup_pose)
             else:
                 self.go_to_pose_profiled_pid(self.robot.final_lineup_pose)
-        self.inter_max_vel = SmartDashboard.getNumber("Inter Max Vel", 3.0)
-        self.inter_max_acc = SmartDashboard.getNumber("Inter Max Accel", 3.0)
+        self.inter_max_vel = SmartDashboard.getNumber("Inter Max Vel", 4.0)
+        self.inter_max_acc = SmartDashboard.getNumber("Inter Max Accel", 4.0)
         if not self.limit_reef_acc:
-            self.xy_max_vel = SmartDashboard.getNumber("XY Max Vel", 3.0)
-            self.xy_max_acc = SmartDashboard.getNumber("XY Max Acc", 3.0)
+            self.xy_max_vel = SmartDashboard.getNumber("XY Max Vel", 4.0)
+            self.xy_max_acc = SmartDashboard.getNumber("XY Max Acc", 4.0)
         self.xy_inter_controller.setConstraints(TrapezoidProfile.Constraints(self.inter_max_vel, self.inter_max_acc))
         self.xy_controller.setConstraints(TrapezoidProfile.Constraints(self.xy_max_vel, self.xy_max_acc))
+
+        if not self.robot.in_autonomous_mode:
+            cur_speeds = const.SWERVE_KINEMATICS.toChassisSpeeds(self.robot.poseEstimator.get_module_states())
+            if (not self.robot.running_pid_lineup) and (math.sqrt((cur_speeds.vx ** 2) + (cur_speeds.vy ** 2)) < 0.02) and (cur_speeds.omega_dps < 1.0) and (abs(self.robot.oi.driver1.LEFT_JOY_X()) < 0.05
+                and abs(self.robot.oi.driver1.LEFT_JOY_Y()) < 0.05
+                and abs(self.robot.oi.driver1.RIGHT_JOY_X()) < 0.1
+                and abs(self.robot.oi.driver1.RIGHT_JOY_Y()) < 0.1):
+                    self.robot.wheels_at_x = True
+            else:
+                    self.robot.wheels_at_x = False
+
 
     def log(self):
         # if self.robot.running_pid_lineup:
         #     object = self.robot.poseEstimator.field_for_single_tag.getObject("lineup curve" + str(self.counter))
         #     object.setPose(self.robot.poseEstimator.curEstPose)
+        SmartDashboard.putBoolean("Wheels to X", self.robot.wheels_at_x)
         self.counter += 1
         SmartDashboard.putNumber("XY Max Vel", self.xy_max_vel)
         SmartDashboard.putNumber("XY Max Acc", self.xy_max_acc)

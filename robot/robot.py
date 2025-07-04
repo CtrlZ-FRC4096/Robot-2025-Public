@@ -285,6 +285,7 @@ class Robot(CoroutineRobot):
         self.strafe_for_L1 = False
         self.raise_elevator_slightly_for_L1 = False
         self.score_with_strafing = False
+        self.wheels_at_x = False
 
         self.is_intaking = False
         self.raise_setpoints = 0.0
