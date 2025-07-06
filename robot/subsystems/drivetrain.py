@@ -24,7 +24,8 @@ from wpimath.kinematics import (
     SwerveModuleState
 )
 from phoenix6 import configs
-# from shapely import Polygon, Point
+from shapely import Polygon, Point
+from shapely.affinity import rotate, translate
 
 
 # from pathplannerlib.commands import PathfindHolonomic
@@ -186,16 +187,25 @@ class Drivetrain(Subsystem):
                 SmartDashboard.putNumber("module state " + str(idx + 1), module_states[idx].speed)
                 module.set_desired_state(module_states[idx], is_open_loop)
 
-        # self.curPose = Pose2d(self.curPose.X() + min(translation.X(), (3.0 * translation.X()) / abs(translation.X()) if translation.X() != 0 else 3.0), self.curPose.Y() + min(translation.Y(), (3.0 * translation.Y()) / abs(translation.Y()) if translation.Y() != 0 else 3.0), Rotation2d.fromDegrees(0))
-        # print(self.curPose)
-        # pose = self.robot.poseEstimator.field.getObject("current pose")
 
-        # pose.setPose(self.curPose)
-    # def in_reef(self, pose: Translation2d):
-    #         hexagon_points = [(self.reefForInReef[idx].X(), self.reefForInReef[idx].Y()) for idx in range(6)]
-    #         hexagon = Polygon(hexagon_points)
-    #         point = Point(pose.X(), pose.Y())
-    #         return hexagon.contains(point)
+    def get_robot_shape(self):
+        cur_pose = self.robot.poseEstimator.curEstPose
+        half_side = inchesToMeters(29.5 + 7.25) / 2
+        robot_base = Polygon([
+            (half_side, half_side),
+            (-half_side, half_side),
+            (-half_side, -half_side),
+            (half_side, -half_side)
+        ])
+        rotated_base = rotate(robot_base, cur_pose.rotation().degrees(), use_radians=False)
+        robot_poly = translate(rotated_base, xoff=cur_pose.X(), yoff=cur_pose.Y())
+        return robot_poly
+
+
+    def in_reef(self, pose: Translation2d):
+            hexagon_points = [(self.reefForInReef[idx].X(), self.reefForInReef[idx].Y()) for idx in range(6)]
+            hexagon = Polygon(hexagon_points)
+            return hexagon.overlaps(self.get_robot_shape())
 
     def drive_with_pid(self, translation: Translation2d, target_angle):
         pid_output = self.angle_pid.calculate(self.robot.poseEstimator.getYaw().degrees(), target_angle)  # type: ignore
