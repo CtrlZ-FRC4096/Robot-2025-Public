@@ -80,7 +80,9 @@ class Drivetrain(Subsystem):
         self.xy_inter_controller = ProfiledPIDController(1.55, 0.0, 0.0, constraints)
 
 
-
+        self.previous_sim_speeds = ChassisSpeeds()
+        self.two_previous_sim_speeds = ChassisSpeeds()
+        self.damping_accel = False
 
 
         ## Need to check these tolerances
@@ -98,15 +100,11 @@ class Drivetrain(Subsystem):
         self.acc_limit_counter = 1
         self.xy_max_vel = 4.0
         self.xy_max_acc = 4.0
-        ### Field Visualisation - Needs testing ###
-        self.previous_chassisspeeds = ChassisSpeeds()
-        # self.curPose = Pose2d(inchesToMeters(235.726), 0.8, Rotation2d.fromDegrees(0))
-        # self.isFirstTick = True
 
-        # self.scoring_position_length = 2
-        # self.at_scoring_position_drivetrain = deque(maxlen=self.scoring_position_length)
-        # for i in range(self.scoring_position_length):
-        #     self.at_scoring_position_drivetrain.append(False)
+        self.coral_blocking_length = 5
+        self.coral_blocking = deque(maxlen=self.coral_blocking_length)
+        for i in range(self.coral_blocking_length):
+            self.coral_blocking.append(False)
 
         buffer = 0.47
         reefVertices = [
@@ -116,25 +114,40 @@ class Drivetrain(Subsystem):
                 self.robot.poseEstimator.get_path_to_reef(False, 4, True, margin_dist_offset=-18.375, do_side_offset=True, do_manip_offset=False),
                 self.robot.poseEstimator.get_path_to_reef(False, 5, True, margin_dist_offset=-18.375, do_side_offset=True, do_manip_offset=False),
                 self.robot.poseEstimator.get_path_to_reef(False, 6, True, margin_dist_offset=-18.375, do_side_offset=True, do_manip_offset=False),
-            ]#face's right branch point
-        reefAngles = []
-        for idx in range(6):
-            # face: idx + 1
-            angle_face = FieldConstants.Reef.centerFaces[idx].rotation().degrees()
-            angle_face_minus_1 = FieldConstants.Reef.centerFaces[(idx - 1) % 6].rotation().degrees()
-            delta_angle = (angle_face_minus_1 - angle_face) % 360
-            if delta_angle > 180:
-                delta_angle -= 360
-            angle_mid = (angle_face + delta_angle / 2) % 360
-            reefAngles.append(angle_mid)
-        self.reefForInReef = []
-        for idx in range(6):
-            self.reefForInReef.append(Translation2d(reefVertices[idx].X() + (buffer * math.cos(degreesToRadians(reefAngles[idx]))), reefVertices[idx].Y() + (buffer * math.sin(degreesToRadians(reefAngles[idx])))))
+            ]
+        # reefAngles = []
+        # for idx in range(6):
+        #     # face: idx + 1
+        #     angle_face = FieldConstants.Reef.centerFaces[idx].rotation().degrees()
+        #     angle_face_minus_1 = FieldConstants.Reef.centerFaces[(idx - 1) % 6].rotation().degrees()
+        #     delta_angle = (angle_face_minus_1 - angle_face) % 360
+        #     if delta_angle > 180:
+        #         delta_angle -= 360
+        #     angle_mid = (angle_face + delta_angle / 2) % 360
+        #     reefAngles.append(angle_mid)
+        # self.reefForInReef = []
+        # for idx in range(6):
+        #     self.reefForInReef.append(Translation2d(reefVertices[idx].X() + (buffer * math.cos(degreesToRadians(reefAngles[idx]))), reefVertices[idx].Y() + (buffer * math.sin(degreesToRadians(reefAngles[idx])))))
         
-        self.coral_blocking_length = 5
-        self.coral_blocking = deque(maxlen=self.coral_blocking_length)
-        for i in range(self.coral_blocking_length):
-            self.coral_blocking.append(False)
+        reef_points = [(reefVertices[idx].X(), reefVertices[idx].Y()) for idx in range(6)] + [(reefVertices[0].X(), reefVertices[0].Y())]
+        reef = Polygon(reef_points)
+
+        field_boundary_translations = [Translation2d(0, inchesToMeters(268)),
+                                        Translation2d(inchesToMeters(65), inchesToMeters(318)),
+                                        Translation2d(inchesToMeters(623), inchesToMeters(318)),
+                                        Translation2d(inchesToMeters(688), inchesToMeters(268)),
+                                        Translation2d(inchesToMeters(688), inchesToMeters(50)),
+                                        Translation2d(inchesToMeters(623), 0),
+                                        Translation2d(inchesToMeters(65), 0),   
+                                        Translation2d(0, inchesToMeters(50))]
+        field_boundary_pts = [(pt.x, pt.y) for pt in field_boundary_translations] + [(field_boundary_translations[0].x, field_boundary_translations[0].y)]
+        field_boundary = Polygon(field_boundary_pts)
+
+        self.sim_obstacles = [
+            (reef, "overlaps"),
+            (field_boundary, "within")
+        ]
+        self.final_velo = Translation2d()
 
     def drive(self, translation: Translation2d, rotation, field_relative, is_open_loop):
         SmartDashboard.putNumber("Swerve/Translation X", translation.x)
@@ -176,19 +189,41 @@ class Drivetrain(Subsystem):
         SmartDashboard.putNumber("chassis log omega dps", self.log_chassis.omega_dps / 20)
         if self.robot.isSimulation():
             curPose = self.robot.poseEstimator.curEstPose
-            # self.robot.poseEstimator.poseEstSingleTag.resetPose(Pose2d(curPose.X() + log_chassis.vx, curPose.Y() + log_chassis.vx, Rotation2d.fromDegrees(curPose.rotation().degrees() + log_chassis.omega_dps / 50)))
-            # self.robot.poseEstimator.set_yaw(curPose.rotation().degrees() + log_chassis.omega_dps / 20)
-            self.robot.poseEstimator.curEstPose = Pose2d(curPose.X() + self.log_chassis.vx / 38, curPose.Y() + self.log_chassis.vy / 38, Rotation2d.fromDegrees(curPose.rotation().degrees() + self.log_chassis.omega_dps / 27))
-            if self.robot.poseEstimator.poseIsOffField(self.robot.poseEstimator.curEstPose) or self.in_reef(self.robot.poseEstimator.curEstPose.translation()):
+            
+            ## Acceleration limits
+            final_vel = Pose2d(self.log_chassis.vx, self.log_chassis.vy, degreesToRadians(self.log_chassis.omega_dps))
+            max_accel = 3.0
+            stop_linear_vel_threshold = 0.08
+
+
+            current_vel = Translation2d(self.two_previous_sim_speeds.vx, self.two_previous_sim_speeds.vy)
+            commanded_vel = Translation2d(self.log_chassis.vx, self.log_chassis.vy)
+
+            if abs(commanded_vel.x) < 0.05 and abs(commanded_vel.y) < 0.05:
+                final_vel = Pose2d(0, 0, final_vel.rotation())
+            elif ((current_vel.distance(commanded_vel) / 0.1) > max_accel):
+                self.damping_accel = True
+                delta_vel = commanded_vel - current_vel
+                vel_rad = Rotation2d(delta_vel.X(), delta_vel.Y()).radians()
+                new_vel = Translation2d(current_vel.X() + max_accel * 0.95 * math.cos(vel_rad), current_vel.Y() + max_accel * 0.95 * math.sin(vel_rad))
+                final_vel = Pose2d(new_vel, final_vel.rotation())
+            else:
+                self.damping_accel = False
+            self.final_velo = final_vel.translation()
+
+            self.robot.poseEstimator.curEstPose = Pose2d(curPose.X() + final_vel.X() / 45, curPose.Y() + final_vel.Y() / 45, Rotation2d.fromDegrees(curPose.rotation().degrees() + final_vel.rotation().degrees() / 27))
+            if self.robot.poseEstimator.poseIsOffField(self.robot.poseEstimator.curEstPose) or self.in_obstacle(self.robot.poseEstimator.curEstPose.translation()):
                 self.robot.poseEstimator.curEstPose = curPose
             self.robot.poseEstimator.set_yaw(self.robot.poseEstimator.curEstPose.rotation().degrees() + self.log_chassis.omega_dps / 20)
+            
+            self.two_previous_sim_speeds = self.previous_sim_speeds
+            self.previous_sim_speeds = ChassisSpeeds(final_vel.X(), final_vel.Y())
+
         else:
             for idx, module in enumerate(self.robot.poseEstimator.modules):
                 SmartDashboard.putNumber("module state " + str(idx + 1), module_states[idx].speed)
                 module.set_desired_state(module_states[idx], is_open_loop)
 
-
-        # pose.setPose(self.curPose)
     def get_robot_shape(self):
         cur_pose = self.robot.poseEstimator.curEstPose
         half_length = inchesToMeters(29.5 + 7.25) / 2
@@ -197,16 +232,23 @@ class Drivetrain(Subsystem):
         p3 = (half_length, -half_length)
         p4 = (half_length, half_length)
 
-        base_robot = Polygon(p1, p2, p3, p4)
+        base_robot = Polygon([p1, p2, p3, p4])
         rotated_robot = rotate(base_robot, cur_pose.rotation().degrees(), use_radians=False)
         final_robot = translate(rotated_robot, xoff=cur_pose.X(), yoff=cur_pose.Y())
         return final_robot
-    def in_reef(self, pose: Translation2d):
-            hexagon_points = [(self.reefForInReef[idx].X(), self.reefForInReef[idx].Y()) for idx in range(6)]
-            hexagon = Polygon(hexagon_points)
-            robot = self.get_robot_shape()
-            return hexagon.overlaps(robot)
-
+    
+    def in_obstacle(self, pose: Translation2d):
+        robot = self.get_robot_shape()
+        for obstacle in self.sim_obstacles:
+            match obstacle[1]:
+                case "overlaps":
+                    if obstacle[0].overlaps(robot):
+                        return True
+                case "within":
+                    if not robot.within(obstacle[0]):
+                        return True
+        return False
+    
     def drive_with_pid(self, translation: Translation2d, target_angle):
         pid_output = self.angle_pid.calculate(self.robot.poseEstimator.getYaw().degrees(), target_angle)  # type: ignore
 
@@ -500,9 +542,11 @@ class Drivetrain(Subsystem):
 
 
     def log(self):
-        # if self.robot.running_pid_lineup:
-        #     object = self.robot.poseEstimator.field_for_single_tag.getObject("lineup curve" + str(self.counter))
-        #     object.setPose(self.robot.poseEstimator.curEstPose)
+        # SmartDashboard.putNumber("final vx", self.final_velo.x)
+        # SmartDashboard.putNumber("final vy", self.final_velo.y)
+        # SmartDashboard.putNumber("two previous vx", self.two_previous_sim_speeds.vx)
+        # SmartDashboard.putNumber("two previous vy", self.two_previous_sim_speeds.vy)
+        SmartDashboard.putBoolean("Damping Accel", self.damping_accel)
         SmartDashboard.putBoolean("Wheels to X", self.robot.wheels_at_x)
         self.counter += 1
         SmartDashboard.putNumber("XY Max Vel", self.xy_max_vel)
