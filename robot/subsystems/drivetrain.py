@@ -24,7 +24,8 @@ from wpimath.kinematics import (
     SwerveModuleState
 )
 from phoenix6 import configs
-# from shapely import Polygon, Point
+from shapely import Polygon, Point
+from shapely.affinity import translate, rotate
 
 
 # from pathplannerlib.commands import PathfindHolonomic
@@ -177,7 +178,7 @@ class Drivetrain(Subsystem):
             curPose = self.robot.poseEstimator.curEstPose
             # self.robot.poseEstimator.poseEstSingleTag.resetPose(Pose2d(curPose.X() + log_chassis.vx, curPose.Y() + log_chassis.vx, Rotation2d.fromDegrees(curPose.rotation().degrees() + log_chassis.omega_dps / 50)))
             # self.robot.poseEstimator.set_yaw(curPose.rotation().degrees() + log_chassis.omega_dps / 20)
-            self.robot.poseEstimator.curEstPose = Pose2d(curPose.X() + self.log_chassis.vx / 45, curPose.Y() + self.log_chassis.vy / 45, Rotation2d.fromDegrees(curPose.rotation().degrees() + self.log_chassis.omega_dps / 20))
+            self.robot.poseEstimator.curEstPose = Pose2d(curPose.X() + self.log_chassis.vx / 38, curPose.Y() + self.log_chassis.vy / 38, Rotation2d.fromDegrees(curPose.rotation().degrees() + self.log_chassis.omega_dps / 27))
             if self.robot.poseEstimator.poseIsOffField(self.robot.poseEstimator.curEstPose) or self.in_reef(self.robot.poseEstimator.curEstPose.translation()):
                 self.robot.poseEstimator.curEstPose = curPose
             self.robot.poseEstimator.set_yaw(self.robot.poseEstimator.curEstPose.rotation().degrees() + self.log_chassis.omega_dps / 20)
@@ -191,11 +192,23 @@ class Drivetrain(Subsystem):
         # pose = self.robot.poseEstimator.field.getObject("current pose")
 
         # pose.setPose(self.curPose)
-    # def in_reef(self, pose: Translation2d):
-    #         hexagon_points = [(self.reefForInReef[idx].X(), self.reefForInReef[idx].Y()) for idx in range(6)]
-    #         hexagon = Polygon(hexagon_points)
-    #         point = Point(pose.X(), pose.Y())
-    #         return hexagon.contains(point)
+    def get_robot_shape(self):
+        cur_pose = self.robot.poseEstimator.curEstPose
+        half_length = inchesToMeters(29.5 + 7.25) / 2
+        p1 = (-half_length, -half_length)
+        p2 = (-half_length, half_length)
+        p3 = (half_length, -half_length)
+        p4 = (half_length, half_length)
+
+        base_robot = Polygon(p1, p2, p3, p4)
+        rotated_robot = rotate(base_robot, cur_pose.rotation().degrees(), use_radians=False)
+        final_robot = translate(rotated_robot, xoff=cur_pose.X(), yoff=cur_pose.Y())
+        return final_robot
+    def in_reef(self, pose: Translation2d):
+            hexagon_points = [(self.reefForInReef[idx].X(), self.reefForInReef[idx].Y()) for idx in range(6)]
+            hexagon = Polygon(hexagon_points)
+            robot = self.get_robot_shape()
+            return hexagon.overlaps(robot)
 
     def drive_with_pid(self, translation: Translation2d, target_angle):
         pid_output = self.angle_pid.calculate(self.robot.poseEstimator.getYaw().degrees(), target_angle)  # type: ignore
@@ -469,7 +482,7 @@ class Drivetrain(Subsystem):
             if self.robot.is_intaking:
                 self.go_to_pose_profiled_pid(self.robot.final_lineup_pose)
             else:
-                self.go_to_pose_profiled_pid(self.robot.final_lineup_pose)
+                self.go_to_pose_angle_addition(self.robot.final_lineup_pose)
         self.inter_max_vel = SmartDashboard.getNumber("Inter Max Vel", 4.0)
         self.inter_max_acc = SmartDashboard.getNumber("Inter Max Accel", 4.0)
         if not self.limit_reef_acc:

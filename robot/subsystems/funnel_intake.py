@@ -75,7 +75,10 @@ class FunnelIntake(Subsystem):
 
     def periodic(self):
         if self.robot.in_autonomous_mode or not self.robot.in_autonomous_mode:
-            self.piece_detected_in_funnel.append(self.funnel_cannrange.get_is_detected().value)
+            if self.robot.isSimulation():
+                self.piece_detected_in_funnel.append(False)
+            else:
+                self.piece_detected_in_funnel.append(self.funnel_cannrange.get_is_detected().value)
             self.piece_passing_through = all(self.piece_detected_in_funnel)
             
         if self.is_intaking:

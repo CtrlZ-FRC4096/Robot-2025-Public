@@ -298,8 +298,8 @@ class Robot(CoroutineRobot):
         SmartDashboard.putNumber("L3 Out Speed", 35.0)
         SmartDashboard.putNumber("L4 Out Speed", 42.0)
 
-
-        @self.addPeriodic(period=0.25, offset=0)
+        log_refresh_rate = 0.05 if self.isSimulation() else 0.25
+        @self.addPeriodic(period=log_refresh_rate, offset=0)
         def _():
             self.log()
             pass
@@ -644,7 +644,7 @@ class Robot(CoroutineRobot):
                         appending_pose_left = [pose_left.X(), pose_left.Y(), pose_left.Z(), quat_left.W(), quat_left.X(), quat_left.Y(), quat_left.Z()]
                     wpilib.SmartDashboard.putNumberArray("coral right " + str(face + 1) + str(4 -level), appending_pose_right)
                     wpilib.SmartDashboard.putNumberArray("coral left " + str(face + 1) + str(4 - level), appending_pose_left)
-        
+            wpilib.SmartDashboard.putNumber("Sim Pieces Scored", len(self.sim_coral_scored))
             # wpilib.SmartDashboard.putNumberArray("FinalComponentPoses/Pose3", [0.0,0.0, inchesToMeters(elevator_height) * 1.5, pose3quat.X(), pose3quat.Y(), pose3quat.Z(), pose3quat.W()])
             # wpilib.SmartDashboard.putNumberArray("FinalComponentPoses/Pose4", [0.0, 0.0, inchesToMeters(elevator_height) / 2, 0.0, 0.0, 0.0, 0.0])
             # wpilib.SmartDashboard.putNumberArray("FinalComponentPoses/Pose5", [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
