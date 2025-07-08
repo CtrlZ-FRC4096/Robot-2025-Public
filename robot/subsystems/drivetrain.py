@@ -187,9 +187,6 @@ class Drivetrain(Subsystem):
                 SmartDashboard.putNumber("module state " + str(idx + 1), module_states[idx].speed)
                 module.set_desired_state(module_states[idx], is_open_loop)
 
-        # self.curPose = Pose2d(self.curPose.X() + min(translation.X(), (3.0 * translation.X()) / abs(translation.X()) if translation.X() != 0 else 3.0), self.curPose.Y() + min(translation.Y(), (3.0 * translation.Y()) / abs(translation.Y()) if translation.Y() != 0 else 3.0), Rotation2d.fromDegrees(0))
-        # print(self.curPose)
-        # pose = self.robot.poseEstimator.field.getObject("current pose")
 
         # pose.setPose(self.curPose)
     def get_robot_shape(self):
