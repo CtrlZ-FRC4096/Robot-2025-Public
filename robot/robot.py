@@ -61,7 +61,7 @@ from pathplannerlib.auto import AutoBuilder, PathPlannerAuto, NamedCommands, Fol
 from pathplannerlib.config import PIDConstants, RobotConfig
 from pathplannerlib.controller import PPHolonomicDriveController
 
-from wpimath.geometry import Rotation2d, Pose2d, Translation2d, Pose3d, Rotation3d, Transform3d
+from wpimath.geometry import Rotation2d, Pose2d, Translation2d, Pose3d, Rotation3d, Transform3d, Translation3d
 from wpimath.units import degreesToRadians
 
 from field_const import FieldConstants
@@ -80,6 +80,18 @@ from wpilib import SmartDashboard
 
 log = logging.getLogger("robot")
 
+class SimAlgae():
+    def __init__(self, pose : Translation3d, face_num : int, blue_side : bool):
+        self.face = face_num
+        self.blue_side = blue_side
+        self.is_descored = False
+        self.is_in_contact = False
+        self.contact_start_time = 0.0
+        self.distance_traveled_while_touching = 0.0
+        self.last_wheel_contact_pose = None
+        self.radius = 0.2
+        self.pose = pose  
+        
 
 class Robot(CoroutineRobot):
     """
@@ -126,7 +138,6 @@ class Robot(CoroutineRobot):
         ## SIMMING STUFF ##
         # const.IS_SIMULATION = self.isSimulation()
         self.sim_coral_scored = []
-
         self.has_coral = False
 
         # Command scheduler
@@ -290,6 +301,32 @@ class Robot(CoroutineRobot):
         self.is_intaking = False
         self.raise_setpoints = 0.0
 
+        # # ALGAE SIM #
+        # if self.isSimulation():
+        #     if self.fieldConstants.shouldFlip:
+        #         # RED
+        #         pass
+        #     else:
+        #         # BLUE
+        #         self.algae_on_reef = []
+        #         self.descoring_time_threshold = 0.5
+        #         self.descoring_arc_threshold = 0.15
+        #         self.descoring_wheel_radius = 0.04
+        #         for face in range (1,7):
+        #             if (face % 2): #l3-4 algae
+        #                 right_branch = self.poseEstimator.get_path_to_reef(False, face, True, margin_dist_offset=-18.375, do_side_offset=False, do_manip_offset=False)
+        #                 branch_up = Pose3d(right_branch.x, right_branch.y, 1.3, Rotation3d())
+        #                 angle_branch : Pose3d = self.fieldConstants.Reef.branchPositions[(face - 1) * 2][1]
+        #                 algae_back = angle_branch.transformBy(Transform3d(1, 0.0, 0.0, Rotation3d(-angle_branch.rotation().Z(), -angle_branch.rotation().Y(), -angle_branch.rotation().X())))
+        #                 print(angle_branch)
+        #                 SmartDashboard.putNumberArray("Algae" + str(face), [algae_back.x, algae_back.y, algae_back.z, 0.0, 0.0, 0.0, 0.0])
+
+        #             else: #l2-3 algae
+        #                 pass
+
+        #         # place dummy algae on red side
+        #         self.dummy_algae = []
+
 
         SmartDashboard.putNumber("L2 Height", 23.5)
         SmartDashboard.putNumber("L3 Height", 39.5)
@@ -298,7 +335,7 @@ class Robot(CoroutineRobot):
         SmartDashboard.putNumber("L3 Out Speed", 35.0)
         SmartDashboard.putNumber("L4 Out Speed", 42.0)
 
-        log_refresh_rate = 0.05 if self.isSimulation() else 0.25
+        log_refresh_rate = 0.02 if self.isSimulation() else 0.25
         @self.addPeriodic(period=log_refresh_rate, offset=0)
         def _():
             self.log()
@@ -644,6 +681,10 @@ class Robot(CoroutineRobot):
                         appending_pose_left = [pose_left.X(), pose_left.Y(), pose_left.Z(), quat_left.W(), quat_left.X(), quat_left.Y(), quat_left.Z()]
                     wpilib.SmartDashboard.putNumberArray("coral right " + str(face + 1) + str(4 -level), appending_pose_right)
                     wpilib.SmartDashboard.putNumberArray("coral left " + str(face + 1) + str(4 - level), appending_pose_left)
+            coral_points_scored = 0
+            for coral in self.sim_coral_scored:
+                coral_points_scored += coral[1] + 1
+            SmartDashboard.putNumber("Sim Points Scored", coral_points_scored)
             wpilib.SmartDashboard.putNumber("Sim Pieces Scored", len(self.sim_coral_scored))
             # wpilib.SmartDashboard.putNumberArray("FinalComponentPoses/Pose3", [0.0,0.0, inchesToMeters(elevator_height) * 1.5, pose3quat.X(), pose3quat.Y(), pose3quat.Z(), pose3quat.W()])
             # wpilib.SmartDashboard.putNumberArray("FinalComponentPoses/Pose4", [0.0, 0.0, inchesToMeters(elevator_height) / 2, 0.0, 0.0, 0.0, 0.0])

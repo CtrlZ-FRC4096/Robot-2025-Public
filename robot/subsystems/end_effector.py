@@ -197,7 +197,7 @@ class EndEffector(Subsystem):
                 self.robot.score_state = RobotScoringPositions.L3_Scoring
             #face, level, right_branch
             closest_face = self.robot.poseEstimator.calculate_closest_reef_tag()[1]
-            if [closest_face, self.robot.score_state.number, self.robot.right_branch] not in self.robot.sim_coral_scored:
+            if self.robot.isSimulation() and ([closest_face, self.robot.score_state.number, self.robot.right_branch] not in self.robot.sim_coral_scored) and not self.robot.score_piece:
                 self.robot.sim_coral_scored.append([closest_face, self.robot.score_state.number, self.robot.right_branch])
         elif self.is_intaking:
             if self.robot.elevator.get_height() <= RobotScoringPositions.min_elevator_height_to_bring_in_end_effector:

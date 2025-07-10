@@ -108,12 +108,12 @@ class Drivetrain(Subsystem):
 
         buffer = 0.47
         reefVertices = [
-                self.robot.poseEstimator.get_path_to_reef(False, 1, True, margin_dist_offset=-18.375, do_side_offset=True, do_manip_offset=False),
-                self.robot.poseEstimator.get_path_to_reef(False, 2, True, margin_dist_offset=-18.375, do_side_offset=True, do_manip_offset=False),
-                self.robot.poseEstimator.get_path_to_reef(False, 3, True, margin_dist_offset=-18.375, do_side_offset=True, do_manip_offset=False),
-                self.robot.poseEstimator.get_path_to_reef(False, 4, True, margin_dist_offset=-18.375, do_side_offset=True, do_manip_offset=False),
-                self.robot.poseEstimator.get_path_to_reef(False, 5, True, margin_dist_offset=-18.375, do_side_offset=True, do_manip_offset=False),
-                self.robot.poseEstimator.get_path_to_reef(False, 6, True, margin_dist_offset=-18.375, do_side_offset=True, do_manip_offset=False),
+                self.robot.poseEstimator.get_path_to_reef(False, 1, True, margin_dist_offset=-18.375, do_side_offset=True, do_manip_offset=False, margin_side_offset=12.0),
+                self.robot.poseEstimator.get_path_to_reef(False, 2, True, margin_dist_offset=-18.375, do_side_offset=True, do_manip_offset=False, margin_side_offset=12.0),
+                self.robot.poseEstimator.get_path_to_reef(False, 3, True, margin_dist_offset=-18.375, do_side_offset=True, do_manip_offset=False, margin_side_offset=12.0),
+                self.robot.poseEstimator.get_path_to_reef(False, 4, True, margin_dist_offset=-18.375, do_side_offset=True, do_manip_offset=False, margin_side_offset=12.0),
+                self.robot.poseEstimator.get_path_to_reef(False, 5, True, margin_dist_offset=-18.375, do_side_offset=True, do_manip_offset=False, margin_side_offset=12.0),
+                self.robot.poseEstimator.get_path_to_reef(False, 6, True, margin_dist_offset=-18.375, do_side_offset=True, do_manip_offset=False, margin_side_offset=12.0),
             ]
         # reefAngles = []
         # for idx in range(6):
@@ -205,7 +205,7 @@ class Drivetrain(Subsystem):
                 self.damping_accel = True
                 delta_vel = commanded_vel - current_vel
                 vel_rad = Rotation2d(delta_vel.X(), delta_vel.Y()).radians()
-                new_vel = Translation2d(current_vel.X() + max_accel * 0.95 * math.cos(vel_rad), current_vel.Y() + max_accel * 0.95 * math.sin(vel_rad))
+                new_vel = Translation2d(current_vel.X() + max_accel * 0.75 * math.cos(vel_rad), current_vel.Y() + max_accel * 0.75 * math.sin(vel_rad))
                 final_vel = Pose2d(new_vel, final_vel.rotation())
             else:
                 self.damping_accel = False

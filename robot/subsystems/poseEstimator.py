@@ -400,10 +400,21 @@ class PoseEstimator(Subsystem):
         return [closest_reef_tag, self.robot.fieldConstants.tag_to_face[closest_reef_tag]]
 
 
-    def get_path_to_reef(self, use_calibrated_field, face: int, right_branch: bool, margin_dist_offset=1.0, do_side_offset=True, do_manip_offset=True):
+    def get_path_to_reef(self, use_calibrated_field, face: int, right_branch: bool, margin_dist_offset=1.0, do_side_offset=True, do_manip_offset=True, margin_side_offset=0.0):
         manip_offset = 3.25
 
-        side_offset = (inchesToMeters(6.47) if not do_manip_offset else (inchesToMeters(6.47 + manip_offset) if right_branch else inchesToMeters(6.47 - manip_offset)))  # distance b/w center of face to branch
+        side_offset = (inchesToMeters(6.47) if not do_manip_offset else (inchesToMeters(6.47 + manip_offset) if right_branch else inchesToMeters(6.47 - manip_offset))) + margin_side_offset  # distance b/w center of face to branch
+        if right_branch:
+            if do_manip_offset:
+                side_offset = inchesToMeters(6.47 + manip_offset + margin_side_offset)
+            else:
+                side_offset = inchesToMeters(6.47 + margin_side_offset)
+        else:
+            if do_manip_offset:
+                side_offset = inchesToMeters(6.47 - manip_offset + margin_side_offset)
+            else:
+                side_offset = inchesToMeters(6.47 + margin_side_offset)
+                
         dist_offset = (
             (inchesToMeters(29.5) / 2) + (inchesToMeters(7.25) / 2) + inchesToMeters(margin_dist_offset)
         )  # robot size + bumper addition + error protection
