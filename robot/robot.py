@@ -298,7 +298,7 @@ class Robot(CoroutineRobot):
         SmartDashboard.putNumber("L3 Out Speed", 35.0)
         SmartDashboard.putNumber("L4 Out Speed", 42.0)
 
-        log_refresh_rate = 0.05 if self.isSimulation() else 0.25
+        log_refresh_rate = 0.02 if self.isSimulation() else 0.25
         @self.addPeriodic(period=log_refresh_rate, offset=0)
         def _():
             self.log()

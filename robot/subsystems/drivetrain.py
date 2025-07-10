@@ -193,7 +193,6 @@ class Drivetrain(Subsystem):
             ## Acceleration limits
             final_vel = Pose2d(self.log_chassis.vx, self.log_chassis.vy, degreesToRadians(self.log_chassis.omega_dps))
             max_accel = 3.0
-            stop_linear_vel_threshold = 0.08
 
 
             current_vel = Translation2d(self.two_previous_sim_speeds.vx, self.two_previous_sim_speeds.vy)
@@ -205,7 +204,7 @@ class Drivetrain(Subsystem):
                 self.damping_accel = True
                 delta_vel = commanded_vel - current_vel
                 vel_rad = Rotation2d(delta_vel.X(), delta_vel.Y()).radians()
-                new_vel = Translation2d(current_vel.X() + max_accel * 0.95 * math.cos(vel_rad), current_vel.Y() + max_accel * 0.95 * math.sin(vel_rad))
+                new_vel = Translation2d(current_vel.X() + max_accel * 0.77 * math.cos(vel_rad), current_vel.Y() + max_accel * 0.77 * math.sin(vel_rad))
                 final_vel = Pose2d(new_vel, final_vel.rotation())
             else:
                 self.damping_accel = False
