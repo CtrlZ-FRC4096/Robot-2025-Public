@@ -645,6 +645,10 @@ class Robot(CoroutineRobot):
                     wpilib.SmartDashboard.putNumberArray("coral right " + str(face + 1) + str(4 -level), appending_pose_right)
                     wpilib.SmartDashboard.putNumberArray("coral left " + str(face + 1) + str(4 - level), appending_pose_left)
             wpilib.SmartDashboard.putNumber("Sim Pieces Scored", len(self.sim_coral_scored))
+            coral_points_scored = 0
+            for coral in self.sim_coral_scored:
+                coral_points_scored += coral[1] + 1
+            SmartDashboard.putNumber("Sim Points Scored", coral_points_scored)
             # wpilib.SmartDashboard.putNumberArray("FinalComponentPoses/Pose3", [0.0,0.0, inchesToMeters(elevator_height) * 1.5, pose3quat.X(), pose3quat.Y(), pose3quat.Z(), pose3quat.W()])
             # wpilib.SmartDashboard.putNumberArray("FinalComponentPoses/Pose4", [0.0, 0.0, inchesToMeters(elevator_height) / 2, 0.0, 0.0, 0.0, 0.0])
             # wpilib.SmartDashboard.putNumberArray("FinalComponentPoses/Pose5", [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
