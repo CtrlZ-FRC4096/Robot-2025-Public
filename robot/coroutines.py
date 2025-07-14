@@ -143,6 +143,7 @@ class Coroutines:
 
         @commandify
         def score_piece_1():
+            robot.is_intaking = False
             robot.score_state = RobotScoringPositions.L4_Scoring
             robot.funnel_intake.is_intaking = False
             robot.end_effector.is_intaking = False

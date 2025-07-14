@@ -210,7 +210,7 @@ class Drivetrain(Subsystem):
                 self.damping_accel = False
             self.final_velo = final_vel.translation()
 
-            self.robot.poseEstimator.curEstPose = Pose2d(curPose.X() + final_vel.X() / 45, curPose.Y() + final_vel.Y() / 45, Rotation2d.fromDegrees(curPose.rotation().degrees() + final_vel.rotation().degrees() / 27))
+            self.robot.poseEstimator.curEstPose = Pose2d(curPose.X() + final_vel.X() / 30, curPose.Y() + final_vel.Y() / 30, Rotation2d.fromDegrees(curPose.rotation().degrees() + final_vel.rotation().degrees() / 27))
             if self.robot.poseEstimator.poseIsOffField(self.robot.poseEstimator.curEstPose) or self.in_obstacle(self.robot.poseEstimator.curEstPose.translation()):
                 self.robot.poseEstimator.curEstPose = curPose
             self.robot.poseEstimator.set_yaw(self.robot.poseEstimator.curEstPose.rotation().degrees() + self.log_chassis.omega_dps / 20)
@@ -328,7 +328,7 @@ class Drivetrain(Subsystem):
             cur_speeds = const.SWERVE_KINEMATICS.toChassisSpeeds(self.robot.poseEstimator.get_module_states())
         if self.at_inter_pose or cur_pose.translation().distance(final_pose.translation()) < 1.0:
             vel_angle = (final_pose.translation() - cur_pose.translation()).angle().radians()
-            vel_mag = -1 * self.xy_controller.calculate(cur_pose.translation().distance(final_pose.translation()), 0) + 0.03
+            vel_mag = -1 * self.xy_controller.calculate(cur_pose.translation().distance(final_pose.translation()), 0) + (0.0 if self.robot.isSimulation() else 0.03)
             
             vx = vel_mag * math.cos(vel_angle) + feedforward_x
             vy = vel_mag * math.sin(vel_angle) + feedforward_y
@@ -529,15 +529,15 @@ class Drivetrain(Subsystem):
         self.xy_inter_controller.setConstraints(TrapezoidProfile.Constraints(self.inter_max_vel, self.inter_max_acc))
         self.xy_controller.setConstraints(TrapezoidProfile.Constraints(self.xy_max_vel, self.xy_max_acc))
 
-        if not self.robot.in_autonomous_mode:
-            cur_speeds = const.SWERVE_KINEMATICS.toChassisSpeeds(self.robot.poseEstimator.get_module_states())
-            if (not self.robot.running_pid_lineup) and (math.sqrt((cur_speeds.vx ** 2) + (cur_speeds.vy ** 2)) < 0.02) and (cur_speeds.omega_dps < 1.0) and (abs(self.robot.oi.driver1.LEFT_JOY_X()) < 0.05
-                and abs(self.robot.oi.driver1.LEFT_JOY_Y()) < 0.05
-                and abs(self.robot.oi.driver1.RIGHT_JOY_X()) < 0.1
-                and abs(self.robot.oi.driver1.RIGHT_JOY_Y()) < 0.1):
-                    self.robot.wheels_at_x = True
-            else:
-                    self.robot.wheels_at_x = False
+        # if not self.robot.in_autonomous_mode:
+        #     cur_speeds = const.SWERVE_KINEMATICS.toChassisSpeeds(self.robot.poseEstimator.get_module_states())
+        #     if (not self.robot.running_pid_lineup) and (math.sqrt((cur_speeds.vx ** 2) + (cur_speeds.vy ** 2)) < 0.02) and (cur_speeds.omega_dps < 1.0) and (abs(self.robot.oi.driver1.LEFT_JOY_X()) < 0.05
+        #         and abs(self.robot.oi.driver1.LEFT_JOY_Y()) < 0.05
+        #         and abs(self.robot.oi.driver1.RIGHT_JOY_X()) < 0.1
+        #         and abs(self.robot.oi.driver1.RIGHT_JOY_Y()) < 0.1):
+        #             self.robot.wheels_at_x = True
+        #     else:
+        #             self.robot.wheels_at_x = False
 
 
     def log(self):

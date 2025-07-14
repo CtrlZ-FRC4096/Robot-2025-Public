@@ -107,6 +107,8 @@ class Robot(CoroutineRobot):
         self.using_FMS = False
         ## ARE WE RUNNING AN AUTO? (DO WE NEED TO WAIT TO SELECT AN AUTO BEFORE INIT)
         self.using_auto = False
+        ## ARE WE RUNNING 1 DRIVER (TRUE) OR 2 DRIVERS (FALSE) ##
+        self.one_driver_ctrl = True
 
         # DRIVERSTATION #
         self.driverstation = wpilib.DriverStation
@@ -477,7 +479,9 @@ class Robot(CoroutineRobot):
             self.score_4_right_branch = True
             self.left_source_auto = False
             self.auto_position_source = 3
-            # self.poseEstimator.poseEstSingleTag.resetPose(Pose2d(self.fieldConstants.flip_Translation2d(Translation2d(7.13, self.fieldConstants.fieldWidth - 6.772)), self.poseEstimator.getYaw()))
+            self.poseEstimator.poseEstSingleTag.resetPose(Pose2d(self.fieldConstants.flip_Translation2d(Translation2d(7.13, self.fieldConstants.fieldWidth - 6.772)), self.poseEstimator.getYaw()))
+            if self.isSimulation():
+                self.poseEstimator.curEstPose = Pose2d(self.fieldConstants.flip_Translation2d(Translation2d(7.13, self.fieldConstants.fieldWidth - 6.772)), self.poseEstimator.getYaw())
         else:
             self.score_1_face = 3
             self.score_1_right_branch = True
@@ -489,7 +493,7 @@ class Robot(CoroutineRobot):
             self.auto_position_source = 3
             self.score_4_face = 1
             self.score_4_right_branch = False
-            # self.poseEstimator.poseEstSingleTag.resetPose(Pose2d(self.fieldConstants.flip_Translation2d(Translation2d(7.13, 6.772)), self.poseEstimator.getYaw()))
+            self.poseEstimator.poseEstSingleTag.resetPose(Pose2d(self.fieldConstants.flip_Translation2d(Translation2d(7.13, 6.772)), self.poseEstimator.getYaw()))
             
             # for idx, command in enumerate(self.p_for_f5):
             #     self.p_for_f5[idx] = self.flip_path_cmd_across_x(command)
