@@ -24,8 +24,8 @@ from wpimath.kinematics import (
     SwerveModuleState
 )
 from phoenix6 import configs
-from shapely import Polygon, Point
-from shapely.affinity import translate, rotate
+# from shapely import Polygon, Point
+# from shapely.affinity import translate, rotate
 
 
 # from pathplannerlib.commands import PathfindHolonomic
@@ -68,16 +68,16 @@ class Drivetrain(Subsystem):
         self.angle_pid.enableContinuousInput(0, 360)
         self.angle_pid.setTolerance(0.5)  # Set position tolerance to 0.5 degrees
 
-        self.x_controller = PIDController(2.0, 0.01, 0.025) #0.01
-        self.y_controller = PIDController(2.0, 0.01, 0.025) #0.01
-        self.xy_controller = ProfiledPIDController(2.0, 0.0, 0.025, TrapezoidProfile.Constraints(4.0, 4.0))
+        self.x_controller = PIDController(2.25, 0.01, 0.025) #0.01
+        self.y_controller = PIDController(2.25, 0.01, 0.025) #0.01
+        self.xy_controller = ProfiledPIDController(2.3, 0.0, 0.025, TrapezoidProfile.Constraints(4.0, 4.0))
         self.theta_controller = PIDController(0.07, 0.01, 0.0015)
         
         self.inter_max_vel = 4.0
         self.inter_max_acc = 4.0
         constraints = TrapezoidProfile.Constraints(self.inter_max_vel, self.inter_max_acc)
         # self.xy_controller = ProfiledPIDController(2.0, 0.01, 0.025)#, constraints, period=0.05)
-        self.xy_inter_controller = ProfiledPIDController(1.55, 0.0, 0.0, constraints)
+        self.xy_inter_controller = ProfiledPIDController(1.9, 0.0, 0.0, constraints)
 
 
         self.previous_sim_speeds = ChassisSpeeds()
@@ -129,24 +129,24 @@ class Drivetrain(Subsystem):
         # for idx in range(6):
         #     self.reefForInReef.append(Translation2d(reefVertices[idx].X() + (buffer * math.cos(degreesToRadians(reefAngles[idx]))), reefVertices[idx].Y() + (buffer * math.sin(degreesToRadians(reefAngles[idx])))))
         
-        reef_points = [(reefVertices[idx].X(), reefVertices[idx].Y()) for idx in range(6)] + [(reefVertices[0].X(), reefVertices[0].Y())]
-        reef = Polygon(reef_points)
+        # reef_points = [(reefVertices[idx].X(), reefVertices[idx].Y()) for idx in range(6)] + [(reefVertices[0].X(), reefVertices[0].Y())]
+        # reef = Polygon(reef_points)
 
-        field_boundary_translations = [Translation2d(0, inchesToMeters(268)),
-                                        Translation2d(inchesToMeters(65), inchesToMeters(318)),
-                                        Translation2d(inchesToMeters(623), inchesToMeters(318)),
-                                        Translation2d(inchesToMeters(688), inchesToMeters(268)),
-                                        Translation2d(inchesToMeters(688), inchesToMeters(50)),
-                                        Translation2d(inchesToMeters(623), 0),
-                                        Translation2d(inchesToMeters(65), 0),   
-                                        Translation2d(0, inchesToMeters(50))]
-        field_boundary_pts = [(pt.x, pt.y) for pt in field_boundary_translations] + [(field_boundary_translations[0].x, field_boundary_translations[0].y)]
-        field_boundary = Polygon(field_boundary_pts)
+        # field_boundary_translations = [Translation2d(0, inchesToMeters(268)),
+        #                                 Translation2d(inchesToMeters(65), inchesToMeters(318)),
+        #                                 Translation2d(inchesToMeters(623), inchesToMeters(318)),
+        #                                 Translation2d(inchesToMeters(688), inchesToMeters(268)),
+        #                                 Translation2d(inchesToMeters(688), inchesToMeters(50)),
+        #                                 Translation2d(inchesToMeters(623), 0),
+        #                                 Translation2d(inchesToMeters(65), 0),   
+        #                                 Translation2d(0, inchesToMeters(50))]
+        # field_boundary_pts = [(pt.x, pt.y) for pt in field_boundary_translations] + [(field_boundary_translations[0].x, field_boundary_translations[0].y)]
+        # field_boundary = Polygon(field_boundary_pts)
 
-        self.sim_obstacles = [
-            (reef, "overlaps"),
-            (field_boundary, "within")
-        ]
+        # self.sim_obstacles = [
+        #     (reef, "overlaps"),
+        #     (field_boundary, "within")
+        # ]
         self.final_velo = Translation2d()
 
     def drive(self, translation: Translation2d, rotation, field_relative, is_open_loop):
@@ -173,7 +173,7 @@ class Drivetrain(Subsystem):
                 )
             )
         if self.robot.in_autonomous_mode:
-            max_speed = 3.4
+            max_speed = 4.0
         else:
             max_speed = const.SWERVE_MAX_SPEED
         module_states = SwerveDrive4Kinematics.desaturateWheelSpeeds(
@@ -223,30 +223,30 @@ class Drivetrain(Subsystem):
                 SmartDashboard.putNumber("module state " + str(idx + 1), module_states[idx].speed)
                 module.set_desired_state(module_states[idx], is_open_loop)
 
-    def get_robot_shape(self):
-        cur_pose = self.robot.poseEstimator.curEstPose
-        half_length = inchesToMeters(29.5 + 7.25) / 2
-        p1 = (-half_length, -half_length)
-        p2 = (-half_length, half_length)
-        p3 = (half_length, -half_length)
-        p4 = (half_length, half_length)
+    # def get_robot_shape(self):
+    #     cur_pose = self.robot.poseEstimator.curEstPose
+    #     half_length = inchesToMeters(29.5 + 7.25) / 2
+    #     p1 = (-half_length, -half_length)
+    #     p2 = (-half_length, half_length)
+    #     p3 = (half_length, -half_length)
+    #     p4 = (half_length, half_length)
 
-        base_robot = Polygon([p1, p2, p3, p4])
-        rotated_robot = rotate(base_robot, cur_pose.rotation().degrees(), use_radians=False)
-        final_robot = translate(rotated_robot, xoff=cur_pose.X(), yoff=cur_pose.Y())
-        return final_robot
+    #     base_robot = Polygon([p1, p2, p3, p4])
+    #     rotated_robot = rotate(base_robot, cur_pose.rotation().degrees(), use_radians=False)
+    #     final_robot = translate(rotated_robot, xoff=cur_pose.X(), yoff=cur_pose.Y())
+    #     return final_robot
     
-    def in_obstacle(self, pose: Translation2d):
-        robot = self.get_robot_shape()
-        for obstacle in self.sim_obstacles:
-            match obstacle[1]:
-                case "overlaps":
-                    if obstacle[0].overlaps(robot):
-                        return True
-                case "within":
-                    if not robot.within(obstacle[0]):
-                        return True
-        return False
+    # def in_obstacle(self, pose: Translation2d):
+    #     robot = self.get_robot_shape()
+    #     for obstacle in self.sim_obstacles:
+    #         match obstacle[1]:
+    #             case "overlaps":
+    #                 if obstacle[0].overlaps(robot):
+    #                     return True
+    #             case "within":
+    #                 if not robot.within(obstacle[0]):
+    #                     return True
+    #     return False
     
     def drive_with_pid(self, translation: Translation2d, target_angle):
         pid_output = self.angle_pid.calculate(self.robot.poseEstimator.getYaw().degrees(), target_angle)  # type: ignore
@@ -328,7 +328,7 @@ class Drivetrain(Subsystem):
             cur_speeds = const.SWERVE_KINEMATICS.toChassisSpeeds(self.robot.poseEstimator.get_module_states())
         if self.at_inter_pose or cur_pose.translation().distance(final_pose.translation()) < 1.0:
             vel_angle = (final_pose.translation() - cur_pose.translation()).angle().radians()
-            vel_mag = -1 * self.xy_controller.calculate(cur_pose.translation().distance(final_pose.translation()), 0) + (0.0 if self.robot.isSimulation() else 0.03)
+            vel_mag = -1 * self.xy_controller.calculate(cur_pose.translation().distance(final_pose.translation()), 0) + (0.0 if self.robot.isSimulation() else 0.04)
             
             vx = vel_mag * math.cos(vel_angle) + feedforward_x
             vy = vel_mag * math.sin(vel_angle) + feedforward_y

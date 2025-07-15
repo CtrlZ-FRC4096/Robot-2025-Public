@@ -293,16 +293,18 @@ class OI:
                 self.robot.end_effector.is_intaking = False
                 self.robot.mechanisms_at_default = True
         
-        @self.driver1.LEFT_BUMPER.whenPressed
+        @self.driver1.LEFT_BUMPER.whenHeld
         def _():
             if self.robot.one_driver_ctrl:
+                self.robot.mechanisms_at_default = False
                 self.robot.is_intaking = False
                 self.robot.score_intent = False
-                self.robot.manual_scoring = False
                 self.robot.running_pid_lineup = False
                 self.robot.drivetrain.at_inter_pose = False
                 self.robot.funnel_intake.is_intaking = False
                 self.robot.end_effector.is_intaking = False
+                self.robot.manual_scoring = True
+                self.robot.score_piece = True
                 self.robot.descoring_algae = True
 
                 algae_height_at_closest_side = self.robot.poseEstimator.calculate_algae_height_at_closest_side()
@@ -316,6 +318,21 @@ class OI:
                 self.robot.funnel_intake.is_intaking = False
                 self.robot.end_effector.is_intaking = False
                 self.robot.mechanisms_at_default = True
+        @self.driver1.LEFT_BUMPER.whenReleased
+        def _():
+            if self.robot.one_driver_ctrl:
+                self.robot.descoring_algae = False
+                self.robot.mechanisms_at_default = True
+                self.robot.score_intent = False
+                self.robot.manual_scoring = False
+                self.robot.running_pid_lineup = False
+                self.robot.drivetrain.at_inter_pose = False
+                self.robot.funnel_intake.is_intaking = False
+                self.robot.end_effector.is_intaking = False
+                self.robot.manual_scoring = False
+                self.robot.score_piece = False
+
+                self.robot.score_state = RobotScoringPositions.L4_Scoring
         
         @self.driver1.RIGHT_TRIGGER_AS_BUTTON.whenHeld
         def _():
@@ -671,8 +688,8 @@ class OI:
                 self.robot.drivetrain.at_inter_pose = False
                 self.robot.funnel_intake.is_intaking = False
                 self.robot.end_effector.is_intaking = False
-                self.robot.manual_scoring = True
-                self.robot.score_piece = True
+                # self.robot.manual_scoring = True
+                # self.robot.score_piece = True
                 self.robot.descoring_algae = True
 
                 algae_height_at_closest_side = self.robot.poseEstimator.calculate_algae_height_at_closest_side()

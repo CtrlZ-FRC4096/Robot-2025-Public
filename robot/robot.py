@@ -273,12 +273,12 @@ class Robot(CoroutineRobot):
 		### STATE MACHINE VARIABLES ###
         self.running_pid_lineup = False
         self.manual_scoring = False
-        self.position_on_source = 2
+        self.position_on_source = 1
         self.score_intent = False
         self.final_lineup_pose = Pose2d()
         self.right_branch = True
         self.previous_right_branch = True
-        self.previous_position_on_source = 2
+        self.previous_position_on_source = 1
 
         self.end_effector_canrange_for_reef_returning_bad_values = False
         self.is_climbing = False
@@ -591,6 +591,7 @@ class Robot(CoroutineRobot):
         wpilib.SmartDashboard.putBoolean("OI Score Intent", self.score_intent)
         wpilib.SmartDashboard.putBoolean("Has Coral", self.has_coral)
         wpilib.SmartDashboard.putNumberArray("empty pose", [0, 0, 0])
+        wpilib.SmartDashboard.putBoolean("Connected to FMS", self.driverstation.isFMSAttached())
 
         
 
